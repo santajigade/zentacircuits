@@ -2,7 +2,10 @@
 import Logo from './Logo.astro';
 import { CATEGORIES } from '../data/categories';
 import { liveArticles } from '../lib/content';
-const live = new Set((await liveArticles()).map((a) => `${a.data.category}/${a.data.subcategory}`));
+const all = await liveArticles();
+const live = new Set(all.map((a) => `${a.data.category}/${a.data.subcategory}`));
+const nCat = (c: string) => all.filter((a) => a.data.category === c).length;
+const nSub = (c: string, s: string) => all.filter((a) => a.data.category === c && a.data.subcategory === s).length;
 const subHref = (c: string, s: string) => (live.has(`${c}/${s}`) ? `/${c}/${s}/` : `/${c}/`);
 ---
 <header class="hdr">
@@ -17,10 +20,10 @@ const subHref = (c: string, s: string) => (live.has(`${c}/${s}`) ? `/${c}/${s}/`
               <div class="mm-col">
                 <a class="mm-cat" href={`/${c.slug}/`}>
                   <span class="mm-ic" style={`background:${c.color}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={c.icon} /></svg></span>
-                  {c.name}
+                  {c.name}{nCat(c.slug) > 0 && <span class="mm-n">({nCat(c.slug)})</span>}
                 </a>
                 <ul>
-                  {c.subs.slice(0, 5).map((s) => <li><a href={subHref(c.slug, s.slug)}>{s.name}</a></li>)}
+                  {c.subs.slice(0, 5).map((s) => <li><a href={subHref(c.slug, s.slug)}>{s.name}{nSub(c.slug, s.slug) > 0 && <span class="mm-n">({nSub(c.slug, s.slug)})</span>}</a></li>)}
                   {c.subs.length > 5 && <li><a class="mm-all" href={`/${c.slug}/`} style={`color:${c.color}`}>All {c.short} topics →</a></li>}
                 </ul>
               </div>
@@ -75,6 +78,7 @@ const subHref = (c: string, s: string) => (live.has(`${c}/${s}`) ? `/${c}/${s}/`
   .mm-col li a { display: block; padding: 3px 0; font-size: 14px; color: var(--muted); text-decoration: none; }
   .mm-col li a:hover { color: var(--red-dark); }
   .mm-all { font-weight: 600; }
+  .mm-n { margin-left: 4px; font-weight: 400; color: var(--faint); font-size: 13px; }
   .icon { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--ink); }
   @media (max-width: 1100px) { .mm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 900px) { .mm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .start { display: none; } }
