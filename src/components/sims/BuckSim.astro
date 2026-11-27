@@ -200,11 +200,11 @@ const parts = [
       const dcm = tab === 'steady' ? res.dcm : !th.ccm;
       const b = $('[data-mode]'); b.textContent = dcm ? 'DCM' : 'CCM'; b.classList.toggle('dcm', dcm);
       const acc = accuracy(p);
-      $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${fmt(r.theory, r.unit)}</td><td>${fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(2)}%</td><td class="${r.pass ? 'ok' : 'bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
+      $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${fmt(r.theory, r.unit)}</td><td>${fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(2)}%</td><td class="${r.pass ? 'sim-ok' : 'sim-bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
       const st = tab === 'steady' ? res : steadyState(p);
       const L = st.loss;
       $('[data-loss]').innerHTML = [[p.sync ? 'High side MOSFET conduction' : 'MOSFET conduction', L.switchCond], [p.sync ? 'Low side MOSFET conduction' : 'Diode conduction', L.lowSide], ['Inductor DCR', L.dcr], ['Switching (estimate)', L.switching]]
-        .map(([a, v]) => `<span>${a}</span><b>${fmt(v as number, 'W')}</b>`).join('') + `<span class="tot">Output power</span><b class="tot">${fmt(st.pOut, 'W')}</b><span class="tot">Efficiency</span><b class="tot ok">${(st.eff * 100).toFixed(1)} %</b>`;
+        .map(([a, v]) => `<span>${a}</span><b>${fmt(v as number, 'W')}</b>`).join('') + `<span class="tot">Output power</span><b class="tot">${fmt(st.pOut, 'W')}</b><span class="tot">Efficiency</span><b class="tot sim-ok">${(st.eff * 100).toFixed(1)} %</b>`;
       $('[data-hint]').textContent = tab === 'steady' ? 'Two switching periods in steady state. Drag the orange cursors C1 and C2 to measure.' : 'Power-up from zero with no soft start. Shaded bands show the switching ripple. Drag C1 and C2 to measure.';
       draw();
       history.replaceState(null, '', `#buck=${encodeURIComponent(new URLSearchParams(Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value]))).toString())}`);
@@ -283,8 +283,8 @@ const parts = [
   .sim :global(table) { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
   .sim :global(th) { text-align: left; color: #94a3b8; font-weight: 400; padding: 6px 8px; background: none; }
   .sim :global(td) { padding: 6px 8px; border-top: 1px solid var(--bench-line); color: #e2e8f0; white-space: nowrap; }
-  :global(.ok) { color: #34d399 !important; }
-  :global(.bad) { color: #f87171 !important; }
+  .sim :global(.sim-ok) { color: #34d399; }
+  .sim :global(.sim-bad) { color: #f87171; }
   .loss { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
   .loss :global(.tot) { border-top: 1px solid var(--bench-line); padding-top: 4px; color: #fff; }
   .note { margin: 12px 0 0; font-size: 12px; color: #64748b; }

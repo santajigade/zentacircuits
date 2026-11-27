@@ -1,22 +1,34 @@
 ---
-// Common mistakes with the fix for each, on a light red background.
+// Common mistakes and the better practice for each.
 interface Props { items: { m: string; fix: string }[] }
 const { items } = Astro.props;
 ---
 <div class="mk">
+  <div class="hd"><span class="h-bad">Common mistake</span><span class="h-good">Better practice</span></div>
   {items.map((x) => (
     <div class="row">
-      <div class="bad"><span class="ic" aria-hidden="true">✕</span><p>{x.m}</p></div>
-      <div class="good"><span class="ic" aria-hidden="true">✓</span><p set:html={x.fix} /></div>
+      <div class="cell bad"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg></span><p><span class="sr-only">Mistake: </span>{x.m}</p></div>
+      <div class="cell good"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg></span><p><span class="sr-only">Better practice: </span><Fragment set:html={x.fix} /></p></div>
     </div>
   ))}
 </div>
 <style>
-  .mk { background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin: 8px 0 22px; }
-  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-  .bad, .good { display: flex; gap: 10px; border-radius: 12px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); }
-  .ic { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
-  .bad .ic { background: #E11D48; }
-  .good .ic { background: #059669; }
-  p { margin: 0 !important; font-size: 16px; line-height: 1.55; }
+  .mk { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; margin: 8px 0 22px; }
+  .hd, .row { display: grid; grid-template-columns: 1fr 1fr; }
+  .hd span { padding: 12px 18px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .h-bad { background: #FFF1F2; color: #9F1239; }
+  .h-good { background: #ECFDF5; color: #065F46; }
+  .row { border-top: 1px solid var(--line); }
+  .cell { display: flex; gap: 12px; padding: 16px 18px; }
+  .bad { border-left: 4px solid #E11D48; border-right: 1px solid var(--line); }
+  .good { border-left: 4px solid #059669; }
+  .ic { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .bad .ic { background: #FFE4E6; color: #BE123C; }
+  .good .ic { background: #D1FAE5; color: #047857; }
+  p { margin: 0 !important; font-size: 16px; line-height: 1.6; color: var(--ink); }
+  @media (max-width: 640px) {
+    .hd { display: none; }
+    .row { grid-template-columns: 1fr; }
+    .bad { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
 </style>
