@@ -15,14 +15,17 @@ export const SITE = {
   newsletterAction: '', // MailerLite or Brevo form URL; signup boxes hide while empty
 };
 
-export type Author = { slug: string; name: string; role: string; bio: string; linkedin: string; initials: string };
+export type Author = { slug: string; name: string; title: string; role: string; bio: string; linkedin: string; initials: string; photo: string; topics: string[] };
 
 export const AUTHORS: Record<string, Author> = {
   'santaji-gadepatil': {
     slug: 'santaji-gadepatil',
     name: 'Santaji Gadepatil',
+    title: 'Founder of ZentaCircuits',
     role: 'B.E. Electronics and Telecommunication',
-    bio: 'Electronics and telecommunication engineer who writes about circuits, instrumentation and industrial electronics.', // TODO: final bio from Santaji
+    bio: 'Santaji is an electronics and telecommunication engineer who works with industrial process instrumentation. He writes about circuits, power electronics, sensors and industrial electronics, and shares practical, formula first explanations through ZentaCircuits, InstrumentationBlog and his LinkedIn newsletter, Innovations in Instrumentation.', // TODO: confirm with Santaji
+    photo: '/images/authors/santaji-gadepatil.webp',
+    topics: ['Electronics', 'Power Electronics', 'Instrumentation', 'Industrial Automation'],
     linkedin: 'https://www.linkedin.com/in/santaji-gadepatil6680/',
     initials: 'SG',
   },

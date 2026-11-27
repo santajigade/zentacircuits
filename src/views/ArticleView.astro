@@ -6,6 +6,7 @@ import Newsletter from '../components/Newsletter.astro';
 import AdSlot from '../components/AdSlot.astro';
 import ShareBar from '../components/ShareBar.astro';
 import Toc from '../components/Toc.astro';
+import AuthorBox from '../components/AuthorBox.astro';
 import SideRelated from '../components/SideRelated.astro';
 import { articleUrl, featuredSrc, type Article } from '../lib/content';
 import { catBySlug, subName } from '../data/categories';
@@ -25,7 +26,7 @@ const abs = (p: string) => new URL(p, SITE.url).href;
 const schema = [
   { '@context': 'https://schema.org', '@type': 'TechArticle', headline: d.title, description: d.description, image: [abs(img)],
     datePublished: d.pubDate.toISOString(), dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
-    author: { '@type': 'Person', name: author.name, url: abs(`/author/${author.slug}/`), sameAs: [author.linkedin] },
+    author: { '@type': 'Person', name: author.name, url: abs(`/author/${author.slug}/`), image: abs(author.photo), jobTitle: author.title, sameAs: [author.linkedin] },
     publisher: { '@type': 'Organization', name: SITE.name, logo: { '@type': 'ImageObject', url: abs('/icon-512.png') } },
     mainEntityOfPage: abs(url), educationalLevel: d.level, isAccessibleForFree: true, inLanguage: 'en' },
   { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
@@ -45,7 +46,7 @@ const schema = [
       <p class="eyebrow" style={`color:${cat.color};font-weight:600`}>{cat.name} · {subName(d.category, d.subcategory)}</p>
       <h1>{d.title}</h1>
       <div class="byline">
-        <span class="av" aria-hidden="true">{author.initials}</span>
+        <img class="av" src={author.photo} alt="" width="44" height="44" />
         <span>By <a href={`/author/${author.slug}/`}>{author.name}</a>, {author.role.replace('B.E. Electronics and Telecommunication', 'B.E. E&TC')}</span>
         <span>Published {fmt(d.pubDate)}</span>
         {d.updatedDate && <span>Updated {fmt(d.updatedDate)}</span>}
@@ -76,10 +77,7 @@ const schema = [
         <h2 id="references">References</h2>
         <ol class="refs">{d.references.map((r) => <li>{r.url ? <a href={r.url} target="_blank" rel="noopener nofollow">{r.text}</a> : r.text}</li>)}</ol>
       </div>
-      <div class="authorbox card">
-        <span class="av big" aria-hidden="true">{author.initials}</span>
-        <div><p class="an">{author.name}</p><p class="muted">{author.role}</p><p>{author.bio}</p><a href={author.linkedin} rel="noopener" target="_blank">LinkedIn</a> · <a href="/editorial-policy/">Editorial policy</a></div>
-      </div>
+      <AuthorBox au={author} />
       <Newsletter />
       {(d.prev || d.next) && (
         <div class="pn">
@@ -105,8 +103,7 @@ const schema = [
   .side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
   h1 { margin: 0 0 18px; font-weight: 700; font-size: clamp(32px, 4vw, 44px); line-height: 1.15; }
   .byline { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 15px; color: var(--muted); }
-  .av { width: 44px; height: 44px; border-radius: 50%; background: var(--line); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: var(--ink); }
-  .av.big { width: 72px; height: 72px; font-size: 22px; flex: 0 0 72px; }
+  .av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--red-tint); }
   .feat { margin: 0 0 24px; }
   .feat img { display: block; width: 100%; height: auto; border-radius: 16px; }
   .answer { background: #fff; border: 1.5px solid var(--red); border-radius: 16px; padding: 22px 24px; font-size: 18px; line-height: 1.7; }
@@ -117,9 +114,6 @@ const schema = [
   .faq { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 0 0 10px; }
   .faq summary { font-weight: 600; cursor: pointer; }
   .faq p { margin: 8px 0 0; }
-  .authorbox { display: flex; gap: 18px; padding: 22px; margin-top: 40px; flex-wrap: wrap; }
-  .authorbox p { margin: 0 0 6px; }
-  .an { font-weight: 600; font-size: 19px; }
   .pn { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
   .pn a { padding: 18px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; }
   .pn .r { text-align: right; }
