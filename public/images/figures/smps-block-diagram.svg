@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="1520" height="600"><rect width="760" height="300" fill="#FFFFFF"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker></defs>
+<g font-family="Open Sans, DejaVu Sans, sans-serif" font-size="13" fill="#0F172A" text-anchor="middle">
+<rect x="10" y="60" width="90" height="60" rx="8" fill="#F1F5F9" stroke="#94A3B8"/><text x="55" y="86">AC input</text><text x="55" y="104" font-size="11" fill="#475569">85 to 265 V</text>
+<rect x="125" y="60" width="90" height="60" rx="8" fill="#FFF7ED" stroke="#FDBA74"/><text x="170" y="86">EMI filter</text>
+<rect x="240" y="60" width="110" height="60" rx="8" fill="#EFF6FF" stroke="#93C5FD"/><text x="295" y="86">Rectifier and</text><text x="295" y="104">bulk capacitor</text>
+<rect x="375" y="60" width="110" height="60" rx="8" fill="#FFE4E6" stroke="#FDA4AF"/><text x="430" y="86">HF switch and</text><text x="430" y="104">transformer</text>
+<rect x="510" y="60" width="110" height="60" rx="8" fill="#ECFDF5" stroke="#6EE7B7"/><text x="565" y="86">Output rectifier</text><text x="565" y="104">and LC filter</text>
+<rect x="645" y="60" width="100" height="60" rx="8" fill="#F1F5F9" stroke="#94A3B8"/><text x="695" y="86">DC output</text><text x="695" y="104" font-size="11" fill="#475569">for example 12 V</text>
+<rect x="375" y="190" width="110" height="60" rx="8" fill="#F5F3FF" stroke="#C4B5FD"/><text x="430" y="216">PWM</text><text x="430" y="234">controller</text>
+<rect x="510" y="190" width="110" height="60" rx="8" fill="#F5F3FF" stroke="#C4B5FD"/><text x="565" y="216">Optocoupler and</text><text x="565" y="234">reference</text>
+</g>
+<g stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"><path d="M100 90H123"/><path d="M215 90H238"/><path d="M350 90H373"/><path d="M485 90H508"/><path d="M620 90H643"/><path d="M695 120V220H622"/><path d="M510 220H487"/><path d="M430 190V122"/></g>
+<text x="380" y="285" text-anchor="middle" font-family="Open Sans, DejaVu Sans, sans-serif" font-size="12" fill="#475569">Feedback keeps the output steady by adjusting the switch duty cycle</text>
+</svg>

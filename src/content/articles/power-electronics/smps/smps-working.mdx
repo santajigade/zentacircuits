@@ -1,0 +1,234 @@
+---
+title: 'SMPS Working: Block Diagram, Types and Design Basics'
+seoTitle: 'SMPS Working Principle, Block Diagram and Types'
+description: 'How an SMPS works: block diagram from AC input to regulated DC, flyback and forward types, why high frequency shrinks the transformer, and a design example.'
+focusKeyword: 'smps'
+category: power-electronics
+subcategory: smps
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: try-the-switching-stage
+shortAnswer: 'An SMPS (switched mode power supply) converts power by switching a transistor on and off tens or hundreds of thousands of times a second, then filtering the pulses into steady DC. High frequency lets it use a small transformer, so it is far smaller and more efficient than a linear supply, often 80% to 95%.'
+featured:
+  kicker: 'Power Electronics'
+  line1: 'SMPS Working'
+  line2: 'Block diagram, types and design'
+  art: generic
+image:
+  alt: 'SMPS featured image with switching waveforms representing a switched mode power supply'
+prerequisites:
+  - name: 'Buck converter'
+    href: '/power-electronics/buck-converter/'
+  - name: 'Boost converter'
+    href: '/power-electronics/boost-converter/'
+learn:
+  - The full SMPS block diagram from mains input to regulated DC output
+  - Why high switching frequency makes the transformer small
+  - The main SMPS types and where each one fits
+  - How feedback through an optocoupler regulates the output
+  - How to estimate duty cycle and switch voltage in a flyback design
+interview:
+  - q: 'Why is an SMPS smaller than a linear power supply of the same rating?'
+    a: 'A linear supply needs a 50 Hz transformer, which must be large to avoid core saturation. An SMPS rectifies the mains first and then drives a transformer at tens or hundreds of kHz. Higher frequency means fewer turns and a smaller core for the same power.'
+  - q: 'What does the optocoupler do in an offline SMPS?'
+    a: 'It carries the feedback signal from the output side to the controller on the mains side while keeping the two electrically isolated. A shunt reference such as a TL431 compares the output with a reference and drives the optocoupler LED.'
+  - q: 'Why does a flyback MOSFET need a high voltage rating?'
+    a: 'During the off time it sees the rectified input voltage plus the output voltage reflected through the turns ratio, plus a leakage inductance spike. From a 230 V mains input this often reaches 500 V or more, so 600 V to 800 V MOSFETs are common.'
+  - q: 'What is power factor correction in an SMPS?'
+    a: 'A plain rectifier and capacitor draw current in short peaks near the mains voltage peak. An active PFC stage, usually a boost converter, shapes the input current to follow the sine wave, which lowers harmonics and raises the power factor close to 1.'
+  - q: 'What are the main drawbacks of an SMPS?'
+    a: 'Electromagnetic interference from fast switching, more complex circuits, higher output ripple and noise than a linear supply, and the need for careful layout and filtering.'
+  - q: 'Name three isolated SMPS topologies.'
+    a: 'Flyback for low power, forward for medium power, and half bridge, full bridge or LLC resonant converters for higher power.'
+faq:
+  - q: 'What is the full form of SMPS?'
+    a: 'Switched mode power supply, also called a switch mode or switching power supply.'
+  - q: 'Is a mobile charger an SMPS?'
+    a: 'Yes. Almost every modern phone and laptop charger is an offline flyback SMPS, which is why it is so small and light.'
+  - q: 'Why does an SMPS make a high pitched sound?'
+    a: 'At light load some controllers enter burst mode and switch in short bursts that fall in the audible range. The transformer or capacitors can then vibrate slightly and whine.'
+  - q: 'Can an SMPS work on DC input?'
+    a: 'Many offline SMPS units will run from a suitable DC voltage because their first stage is a rectifier. Check the datasheet, since the PFC stage and input fuse may not be rated for DC.'
+references:
+  - text: 'Texas Instruments, SNVA559, Switching Regulator Fundamentals'
+    url: 'https://www.ti.com/lit/pdf/snva559'
+  - text: 'Erickson and Maksimović, Fundamentals of Power Electronics, 3rd edition, Springer, 2020'
+    url: 'https://link.springer.com/book/10.1007/978-3-030-43881-4'
+  - text: 'Mohan, Undeland and Robbins, Power Electronics: Converters, Applications, and Design, 3rd edition, Wiley'
+    url: 'https://www.wiley-vch.de/en/areas-interest/engineering/power-electronics-978-0-471-22693-2'
+prev:
+  name: 'Boost converter'
+  href: '/power-electronics/boost-converter/'
+---
+
+import BuckSim from '../../../../components/sims/BuckSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is an SMPS?
+
+An SMPS, or switched mode power supply, is a power supply that regulates its output by switching a transistor fully on and fully off at high frequency. The chopped voltage is then filtered by inductors and capacitors into smooth DC.
+
+You use dozens of them every day. Phone chargers, laptop adapters, LED drivers, TV and computer supplies, and the [24 V supplies in industrial panels](https://instrumentationblog.in/24-volts-in-plc-systems/) are almost all switched mode designs.
+
+The two building blocks you may already know, the [buck converter](/power-electronics/buck-converter/) and the [boost converter](/power-electronics/boost-converter/), are themselves simple SMPS circuits. A mains powered SMPS adds rectification, isolation and feedback around the same switching idea.
+
+## SMPS block diagram
+
+<figure>
+  <img src="/images/figures/smps-block-diagram.webp" alt="SMPS block diagram: AC input, EMI filter, rectifier and bulk capacitor, high frequency switch and transformer, output rectifier and LC filter, DC output, with feedback through an optocoupler to the PWM controller" width="1520" height="600" loading="lazy" />
+  <figcaption>Figure 1. Block diagram of an offline SMPS. Feedback from the output adjusts the switch duty cycle to hold the output steady.</figcaption>
+</figure>
+
+### 1. EMI filter
+
+A small filter of common mode chokes and X and Y capacitors stops the switching noise from travelling back into the mains wiring. It also protects the supply from fast transients on the line.
+
+### 2. Rectifier and bulk capacitor
+
+A bridge rectifier turns the AC into pulsating DC, and a large electrolytic capacitor smooths it. From 230 V AC the capacitor charges to about 230 × √2 ≈ 325 V DC. Higher power supplies add an active power factor correction stage here, usually a boost converter.
+
+### 3. High frequency switch and transformer
+
+A MOSFET chops the high DC voltage at tens to hundreds of kHz. The transformer steps the pulses down and provides safety isolation between the mains and the output.
+
+### 4. Output rectifier and filter
+
+Fast diodes or synchronous MOSFETs rectify the transformer output, and an LC filter removes the switching ripple.
+
+### 5. Feedback and PWM controller
+
+A precision reference such as a TL431 compares the output with its set point and drives an optocoupler. The optocoupler carries this error signal across the isolation barrier to the PWM controller, which adjusts the duty cycle.
+
+## Why high frequency makes it small
+
+A transformer's core must not saturate. For a given voltage, the number of turns times the core area must rise as frequency falls. That is why a 50 Hz mains transformer is so heavy.
+
+An SMPS runs its transformer at 50 kHz to several hundred kHz, which is a thousand times higher or more. The same power then needs a far smaller core and fewer turns. Filter inductors and capacitors shrink for the same reason.
+
+<Callout type="insight">
+Higher frequency shrinks the magnetics but increases switching loss in every cycle. Choosing the switching frequency is always a trade off between size and efficiency.
+</Callout>
+
+## Types of SMPS
+
+| Type | Isolated | Typical power | Where it is used |
+| --- | --- | --- | --- |
+| Buck, boost, buck-boost | No | mW to kW | Point of load regulators, battery devices |
+| Flyback | Yes | Up to about 100 to 150 W | Chargers, adapters, auxiliary supplies |
+| Forward | Yes | About 100 to 500 W | Industrial and telecom supplies |
+| Push pull, half bridge | Yes | Hundreds of W | Inverters, bench supplies |
+| Full bridge, LLC resonant | Yes | Hundreds of W to kW | Server, TV and EV charger supplies |
+
+The flyback is the most common offline type because it needs only one switch and the transformer doubles as the energy storage inductor.
+
+<figure>
+  <img src="/images/figures/smps-flyback-circuit.webp" alt="Flyback converter circuit with DC input, transformer primary Np and MOSFET Q1, secondary Ns, output diode D, capacitor C and load" width="1360" height="520" loading="lazy" />
+  <figcaption>Figure 2. Flyback converter, the most common SMPS in chargers and adapters. Energy is stored in the transformer while Q1 is on and delivered to the output while it is off.</figcaption>
+</figure>
+
+## How a flyback SMPS regulates
+
+While the MOSFET is on, current builds up in the primary winding and energy is stored in the transformer's magnetic field. The output diode is reverse biased, so the output capacitor feeds the load.
+
+When the MOSFET turns off, the winding voltages reverse. The diode conducts and the stored energy flows to the output. In continuous conduction the ideal output is:
+
+$$
+V_{out} = V_{in}\,\frac{N_s}{N_p}\,\frac{D}{1 - D}
+$$
+
+The controller changes D to hold the output steady as the input voltage or load changes. For the step-up and step-down behaviour of the DC-DC stage, the [flyback transformer calculator](https://zentacalculator.com/electronics/flyback-transformer/) helps with first estimates of turns ratio and inductance.
+
+## Try the switching stage
+
+Every SMPS has a switching stage like the buck converter below. Change the frequency and watch the inductor ripple shrink, the same reason SMPS magnetics get smaller at higher frequency.
+
+<BuckSim />
+
+## SMPS vs linear power supply
+
+| Feature | Linear supply | SMPS |
+| --- | --- | --- |
+| Efficiency | Often 30% to 60% | Often 80% to 95% |
+| Size and weight | Large 50 Hz transformer, heavy | Small and light |
+| Input range | Narrow | Wide, often 85 to 265 V AC |
+| Output noise | Very low | Switching ripple and EMI |
+| Complexity | Simple | More complex |
+| Best use | Audio, precision analog, low power | Almost everything else |
+
+## Advantages and disadvantages of SMPS
+
+The main advantage is efficiency. Because the switch is either fully on or fully off, little power is lost in it, so an SMPS runs cool and needs only a small heat sink. The second advantage is size: high frequency magnetics make a 65 W laptop adapter fit in a pocket. A third is the wide input range, which lets one design work on mains supplies around the world.
+
+The drawbacks come from the same fast switching. Sharp voltage and current edges create electromagnetic interference that must be filtered. The output carries some switching ripple and noise, which can disturb sensitive audio or measurement circuits. The design is also more complex, and a fault in the primary side can expose dangerous voltages.
+
+## Protection features in an SMPS
+
+A good SMPS protects itself and the load. Most controllers include several of these functions:
+
+- **Soft start:** the duty cycle rises slowly at power up, so the output capacitors charge without a large inrush current.
+- **Overcurrent and short circuit protection:** a current sense resistor in the MOSFET source limits peak current on every cycle and shuts down or hiccups during a short.
+- **Overvoltage protection:** if the feedback loop fails, a separate sensing circuit stops switching before the output rises too high.
+- **Thermal shutdown:** the controller stops when its temperature passes a safe limit.
+- **Brown out protection:** the supply stays off until the input voltage is high enough to run correctly.
+
+## Working safely on an SMPS
+
+The bulk capacitor in an offline SMPS holds over 300 V DC and can stay charged after the plug is pulled. Always discharge it through a suitable resistor and confirm with a meter before touching the primary side. Use an isolation transformer when probing the primary with an oscilloscope, because the scope ground is tied to earth.
+
+## Key formulas
+
+| Quantity | Formula | Note |
+| --- | --- | --- |
+| Bulk capacitor voltage | Vdc ≈ Vac × √2 | 230 V AC gives about 325 V DC |
+| Flyback output (CCM) | Vout = Vin × (Ns / Np) × D / (1 − D) | Ideal |
+| Reflected voltage | Vor = (Np / Ns) × (Vout + Vf) | Seen by the MOSFET |
+| MOSFET stress | Vds ≈ Vdc(max) + Vor + spike | Choose 600 to 800 V parts |
+| Efficiency | η = Pout / Pin | |
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a flyback SMPS from 230 V AC to 12 V, turns ratio Np / Ns = 10, diode drop 0.5 V
+
+**Find:** bulk DC voltage, duty cycle and MOSFET voltage stress at 265 V AC maximum input
+
+**Solution:**
+
+1. Vdc = 230 × √2 ≈ 325 V
+2. From 12 = 325 × (1 / 10) × D / (1 − D): 120 (1 − D) = 325 D, so D = 120 / 445 ≈ 0.27
+3. Vor = 10 × (12 + 0.5) = 125 V
+4. At 265 V AC: Vdc(max) = 265 × √2 ≈ 375 V
+5. Vds ≈ 375 + 125 = 500 V before the leakage spike
+
+**Answer:** about 325 V DC bus, D ≈ 0.27 and about 500 V across the MOSFET before ringing. A 650 V or 700 V MOSFET with a clamp circuit is a sensible choice.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="A rectified and smoothed 230 V AC supply charges the bulk capacitor to about:" options={['115 V', '230 V', '325 V', '460 V']} answer={2} explain="The capacitor charges to the peak of the sine wave: 230 × √2 ≈ 325 V." />
+
+## Design steps
+
+<Steps items={[
+  { t: 'Define the specification', d: 'Input range, output voltage and current, isolation, efficiency and ripple targets.' },
+  { t: 'Choose the topology', d: 'Flyback for low power, forward or LLC for higher power.' },
+  { t: 'Set frequency and turns ratio', d: 'Balance transformer size against switching loss and MOSFET voltage stress.' },
+  { t: 'Select switch and rectifiers', d: 'Rate them for peak voltage, RMS current and temperature with margin.' },
+  { t: 'Design feedback', d: 'Set the reference, optocoupler gain and loop compensation for a stable response.' },
+  { t: 'Add filtering and protection', d: 'EMI filter, snubber or clamp, overcurrent, overvoltage and thermal protection.' },
+]} />
+
+## Common design mistakes
+
+<Mistakes items={[
+  { m: 'Ignoring the leakage inductance spike on the MOSFET.', fix: 'Add an RCD clamp or snubber and check Vds on a scope at maximum input.' },
+  { m: 'Laying out the high current switching loop loosely.', fix: 'Keep the bulk capacitor, primary winding and MOSFET loop as small as possible.' },
+  { m: 'Using a general purpose diode on the output.', fix: 'Use fast recovery or Schottky diodes, or synchronous rectification.' },
+  { m: 'Skipping the EMI filter to save cost.', fix: 'Fit a proper input filter so the supply passes conducted emission limits.' },
+]} />
