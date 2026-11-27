@@ -1,13 +1,13 @@
 // Site wide settings. Only true information here.
 export const IS_PREVIEW = process.env.PREVIEW === '1';
-const LAUNCHED = false; // set true on launch day: opens robots.txt, sitemap and indexing
+const LAUNCHED = true; // launched 2026-11-27: robots.txt, sitemap and indexing open
 
 export const SITE = {
   name: 'ZentaCircuits',
   url: IS_PREVIEW ? 'https://preview.zentacircuits.com' : 'https://zentacircuits.com',
   tagline: 'Learn electronics. Run the circuit. See it work.',
   description: 'Free electronics lessons with worked examples and a live simulator on every topic, for students, hobbyists and young engineers.',
-  email: 'contact@zentacircuits.com', // TODO: confirm contact email
+  email: 'contact@zentacircuits.com',
   launched: LAUNCHED && !IS_PREVIEW,
   categoryMinItems: 3, // a category hub is indexable from this many live articles
   ga4: IS_PREVIEW ? '' : 'G-TVXCKNHN81', // Google Analytics 4 measurement ID (live site only)
