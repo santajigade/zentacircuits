@@ -78,7 +78,15 @@ const subHref = (c: string, s: string) => (live.has(`${c}/${s}`) ? `/${c}/${s}/`
   .icon { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--ink); }
   @media (max-width: 1100px) { .mm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 900px) { .mm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .start { display: none; } }
-  @media (max-width: 560px) { .mm-grid { grid-template-columns: 1fr; } .mm-panel { top: var(--hdr-h, 120px); } }
+  @media (max-width: 700px) {
+    .hdr { position: static; }
+    .row { gap: 10px 14px; padding-top: 10px; padding-bottom: 6px; }
+    .home { flex: 1 1 auto; }
+    .nav { order: 3; flex: 1 1 100%; gap: 18px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    .nav > a, .mm-btn { font-size: 15px; white-space: nowrap; }
+    .mm-panel { position: fixed; top: var(--hdr-h, 110px); }
+  }
+  @media (max-width: 560px) { .mm-grid { grid-template-columns: 1fr; } }
 </style>
 <script>
   // Keep the mega menu right under the header, whatever its height.

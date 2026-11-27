@@ -23,7 +23,7 @@ const articles = defineCollection({
     learn: z.array(z.string()).default([]),
     simulator: z.string().optional(),
     faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
-    interview: z.array(z.string()).default([]),
+    interview: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
     references: z.array(z.object({ text: z.string(), url: z.string().url().optional() })).min(3),
     prev: z.object({ name: z.string(), href: z.string() }).optional(),
     next: z.object({ name: z.string(), href: z.string() }).optional(),

@@ -10,19 +10,27 @@ const files = [];
 const walk = (d) => readdirSync(d).forEach((f) => { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : /\.mdx?$/.test(f) && files.push(p); });
 walk(join(root, 'src/content/articles'));
 const errors = [];
+const cats = readFileSync(join(root, 'src/data/categories.ts'), 'utf8');
+const seen = new Map();
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
   const rel = f.slice(root.length);
   const slug = basename(f).replace(/\.mdx?$/, '');
   if (/[–—]/.test(src)) errors.push(`${rel}: contains an em or en dash`);
   if (slug.length >= 60) errors.push(`${rel}: slug is ${slug.length} characters (limit 59)`);
+  if (seen.has(slug)) errors.push(`${rel}: slug "${slug}" is already used by ${seen.get(slug)}`); seen.set(slug, rel);
+  const catSlug = (src.match(/^category:\s*(\S+)/m) || [])[1];
+  const catLine = cats.split('\n').find((l) => l.includes(`slug: '${catSlug}'`)) || '';
+  const subsLine = cats.slice(cats.indexOf(catLine)).split('subs: s(')[1]?.split(')')[0] || '';
+  if (subsLine.split('|').some((x) => x.replace(/^'/, '').split(':')[0] === slug)) errors.push(`${rel}: slug "${slug}" clashes with a subcategory URL in ${catSlug}`);
   const fm = (src.match(/^---\n([\s\S]*?)\n---/) || [])[1] || '';
   const body = src.slice(fm.length + 8);
   const words = (fm.match(/shortAnswer:.*$/m)?.[0] ?? '') + ' ' + body
     .replace(/^import .*$/gm, '').replace(/<[^>]+>/g, ' ').replace(/\$\$[\s\S]*?\$\$/g, ' ').replace(/[#*_`|>\[\]()]/g, ' ');
   const n = words.split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length;
   if (n < 1200) errors.push(`${rel}: ${n} words (minimum 1,200)`);
-  for (const m of src.matchAll(/https?:\/\/([^/\s)"']+)/g)) {
+  const noRefs = src.replace(/references:\n(?:\s+.*\n)+?(?=\S)/, '');
+  for (const m of noRefs.matchAll(/https?:\/\/([^/\s)"']+)/g)) {
     const host = m[1].replace(/^www\./, '');
     if (!ALLOWED.some((a) => host === a || host.endsWith('.' + a))) errors.push(`${rel}: outbound link to ${host} is not on the allowed list`);
   }

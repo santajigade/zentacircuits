@@ -1,17 +1,16 @@
 ---
 import 'katex/dist/katex.min.css';
 import { render } from 'astro:content';
-import Base from '../../../layouts/Base.astro';
-import Newsletter from '../../../components/Newsletter.astro';
-import AdSlot from '../../../components/AdSlot.astro';
-import { liveArticles, articleUrl, featuredSrc, slugOf, type Article } from '../../../lib/content';
-import { catBySlug, subName } from '../../../data/categories';
-import { AUTHORS, SITE } from '../../../data/site';
+import Base from '../layouts/Base.astro';
+import Newsletter from '../components/Newsletter.astro';
+import AdSlot from '../components/AdSlot.astro';
+import ShareBar from '../components/ShareBar.astro';
+import Toc from '../components/Toc.astro';
+import SideRelated from '../components/SideRelated.astro';
+import { articleUrl, featuredSrc, type Article } from '../lib/content';
+import { catBySlug, subName } from '../data/categories';
+import { AUTHORS, SITE } from '../data/site';
 
-export async function getStaticPaths() {
-  const list = await liveArticles();
-  return list.map((a) => ({ params: { category: a.data.category, sub: a.data.subcategory, slug: slugOf(a) }, props: { a, all: list } }));
-}
 const { a, all } = Astro.props as { a: Article; all: Article[] };
 const d = a.data;
 const { Content, headings } = await render(a);
@@ -51,13 +50,8 @@ const schema = [
         <span>Published {fmt(d.pubDate)}</span>
         {d.updatedDate && <span>Updated {fmt(d.updatedDate)}</span>}
         <span>{d.readMinutes} min read</span>
-        <span class="lvl">{d.level}</span>
       </div>
-      <div class="share">
-        <a href={`https://wa.me/?text=${encodeURIComponent(d.title + ' ' + abs(url))}`} rel="noopener" target="_blank">WhatsApp</a>
-        <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(abs(url))}`} rel="noopener" target="_blank">LinkedIn</a>
-        <a href={`https://x.com/intent/post?url=${encodeURIComponent(abs(url))}&text=${encodeURIComponent(d.title)}`} rel="noopener" target="_blank">X</a>
-      </div>
+      <ShareBar url={abs(url)} title={d.title} image={abs(img)} />
       <figure class="feat">
         <img src={img} alt={d.image.alt} width="1200" height="675" fetchpriority="high" />
       </figure>
@@ -69,18 +63,18 @@ const schema = [
         <div class="pre">
           {d.prerequisites.length > 0 && <span class="muted">Before this:</span>}
           {d.prerequisites.map((p) => <a class="chip" href={p.href}>{p.name}</a>)}
-          {d.simulator && <a class="jump" href="#simulator">Jump to simulator ↓</a>}
+          {d.simulator && <a class="jump" href={`#${d.simulator}`}>Jump to simulator ↓</a>}
         </div>
       )}
       <AdSlot label="Ad slot 1" />
       <div class="prose">
         {d.learn.length > 0 && (<><h2 id="what-you-will-learn">What you will learn</h2><ul>{d.learn.map((l) => <li>{l}</li>)}</ul></>)}
         <Content />
-        {d.interview.length > 0 && (<><h2 id="interview-questions">Interview and viva questions</h2><ol>{d.interview.map((q) => <li>{q}</li>)}</ol></>)}
+        {d.interview.length > 0 && (<><h2 id="interview-questions">Interview and viva questions</h2><p>Tap a question to see a model answer.</p><div class="iv">{d.interview.map((x, i) => <details class="ivq"><summary><span class="ivn">Q{i + 1}</span>{x.q}</summary><p>{x.a}</p></details>)}</div></>)}
         <AdSlot label="Ad slot 3" />
         {d.faq.length > 0 && (<><h2 id="faq">FAQ</h2>{d.faq.map((f, i) => <details class="faq" open={i === 0}><summary>{f.q}</summary><p>{f.a}</p></details>)}</>)}
         <h2 id="references">References</h2>
-        <ol>{d.references.map((r) => <li>{r.url ? <a href={r.url}>{r.text}</a> : r.text}</li>)}</ol>
+        <ol class="refs">{d.references.map((r) => <li>{r.url ? <a href={r.url} target="_blank" rel="noopener nofollow">{r.text}</a> : r.text}</li>)}</ol>
       </div>
       <div class="authorbox card">
         <span class="av big" aria-hidden="true">{author.initials}</span>
@@ -96,10 +90,8 @@ const schema = [
       {more.length > 0 && (<><h2 class="more-h">More in {subName(d.category, d.subcategory)}</h2><ul class="more">{more.map((m) => <li><a href={articleUrl(m)}>{m.data.title}</a></li>)}</ul></>)}
     </article>
     <aside class="side" aria-label="Sidebar">
-      <div class="card toc">
-        <p class="tt">On this page</p>
-        <ol>{(d.learn.length ? [{ slug: 'what-you-will-learn', text: 'What you will learn' }] : []).concat(toc).concat(d.faq.length ? [{ slug: 'faq', text: 'FAQ' }] : []).map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
-      </div>
+      <Toc items={(d.learn.length ? [{ slug: 'what-you-will-learn', text: 'What you will learn' }] : []).concat(toc).concat(d.interview.length ? [{ slug: 'interview-questions', text: 'Interview questions' }] : []).concat(d.faq.length ? [{ slug: 'faq', text: 'FAQ' }] : [])} />
+      <SideRelated a={a} />
       <Newsletter compact />
       <AdSlot label="Sidebar ad" height={250} />
     </aside>
@@ -110,14 +102,11 @@ const schema = [
   .crumbs { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
   .layout { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; padding-top: 20px; }
   .main { flex: 999 1 640px; min-width: 0; }
-  .side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 84px; }
+  .side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
   h1 { margin: 0 0 18px; font-weight: 700; font-size: clamp(32px, 4vw, 44px); line-height: 1.15; }
   .byline { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 15px; color: var(--muted); }
   .av { width: 44px; height: 44px; border-radius: 50%; background: var(--line); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: var(--ink); }
   .av.big { width: 72px; height: 72px; font-size: 22px; flex: 0 0 72px; }
-  .lvl { background: var(--red-tint); color: var(--red-deep); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
-  .share { display: flex; gap: 8px; margin: 16px 0 24px; flex-wrap: wrap; }
-  .share a { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 14px; text-decoration: none; color: var(--ink); background: #fff; }
   .feat { margin: 0 0 24px; }
   .feat img { display: block; width: 100%; height: auto; border-radius: 16px; }
   .answer { background: #fff; border: 1.5px solid var(--red); border-radius: 16px; padding: 22px 24px; font-size: 18px; line-height: 1.7; }
@@ -135,8 +124,14 @@ const schema = [
   .pn a { padding: 18px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; }
   .pn .r { text-align: right; }
   .more-h { font-size: 24px; margin: 36px 0 12px; }
-  .toc { padding: 20px; }
-  .tt { margin: 0 0 10px; font-weight: 600; font-size: 17px; }
-  .toc ol { margin: 0; padding-left: 20px; font-size: 15px; line-height: 2; }
+  .iv { background: #F1F5F9; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .ivq { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .ivq summary { cursor: pointer; font-weight: 600; color: var(--ink); display: flex; gap: 12px; align-items: baseline; list-style: none; }
+  .ivq summary::after { content: '+'; margin-left: auto; color: var(--red); font-size: 20px; line-height: 1; }
+  .ivq[open] summary::after { content: '−'; }
+  .ivn { flex: none; font-size: 13px; font-weight: 700; color: var(--red-dark); background: var(--red-tint); border-radius: 6px; padding: 2px 8px; }
+  .ivq p { margin: 10px 0 0; color: var(--text); }
+  .faq { background: #F8FAFC; }
+  .main :global(.prose h2) { padding-top: 4px; }
   @media (max-width: 980px) { .side { position: static; } .side :global(.nl) { display: none; } }
 </style>

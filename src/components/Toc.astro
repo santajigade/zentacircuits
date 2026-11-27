@@ -1,0 +1,47 @@
+---
+// Sticky "On this page" with reading progress and the current section highlighted.
+interface Props { items: { slug: string; text: string }[] }
+const { items } = Astro.props;
+---
+{items.length > 2 && (
+  <nav class="card toc" aria-label="On this page">
+    <div class="toc-head"><span class="toc-label">On this page</span><span class="toc-pct" aria-hidden="true">0%</span></div>
+    <div class="toc-bar" aria-hidden="true"><span></span></div>
+    <ol>{items.map((h, i) => <li><a href={`#${h.slug}`} data-toc={h.slug}><b>{String(i + 1).padStart(2, '0')}</b>{h.text}</a></li>)}</ol>
+  </nav>
+)}
+<script>
+  const toc = document.querySelector<HTMLElement>('.toc');
+  const art = document.querySelector<HTMLElement>('article');
+  if (toc && art) {
+    const links = [...toc.querySelectorAll<HTMLAnchorElement>('a[data-toc]')];
+    const heads = links.map((a) => document.getElementById(a.dataset.toc!)).filter(Boolean) as HTMLElement[];
+    const bar = toc.querySelector<HTMLElement>('.toc-bar span')!, pct = toc.querySelector<HTMLElement>('.toc-pct')!;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const r = art.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+      bar.style.width = `${p * 100}%`; pct.textContent = `${Math.round(p * 100)}%`;
+      let cur = -1;
+      heads.forEach((h, i) => { if (h.getBoundingClientRect().top < 140) cur = i; });
+      links.forEach((a, i) => a.classList.toggle('on', i === cur));
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
+  }
+</script>
+<style>
+  .toc { padding: 18px 20px; }
+  .toc-head { display: flex; justify-content: space-between; align-items: center; }
+  .toc-label { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .toc-pct { font-size: 12px; font-weight: 700; color: var(--red-dark); }
+  .toc-bar { height: 4px; border-radius: 4px; background: var(--line); margin: 10px 0 6px; overflow: hidden; }
+  .toc-bar span { display: block; height: 100%; width: 0; background: var(--red); }
+  .toc ol { list-style: none; margin: 6px 0 0; padding: 0; }
+  .toc a { display: flex; gap: 10px; padding: 7px 10px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: 14px; line-height: 1.35; }
+  .toc a b { flex: none; font-size: 12px; color: var(--red-dark); padding-top: 1px; }
+  .toc a:hover { background: var(--red-tint); color: var(--ink); }
+  .toc a.on { background: var(--ink); color: #fff; }
+  .toc a.on b { color: #fda4af; }
+</style>

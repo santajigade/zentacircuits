@@ -9,6 +9,7 @@ level: Intermediate
 author: santaji-gadepatil
 pubDate: 2026-11-27
 readMinutes: 12
+simulator: buck-converter-simulator
 shortAnswer: 'A buck converter is a switching regulator that steps a DC voltage down. A MOSFET switches the input on and off at high frequency, and an inductor and capacitor smooth the pulses into steady DC. In continuous conduction the output is Vout = D × Vin, and far less power is lost as heat than in a linear regulator.'
 featured:
   kicker: 'Power Electronics'
@@ -24,12 +25,18 @@ learn:
   - The difference between CCM and DCM, and how to stay in CCM
   - Where the losses come from and how designers reduce them
 interview:
-  - Why is a buck converter more efficient than a linear regulator?
-  - Derive Vout = D × Vin using volt-second balance.
-  - Which parameters set the inductor ripple current?
-  - What happens to Vout when the converter enters DCM?
-  - Why do synchronous bucks replace the diode with a MOSFET?
-  - Which components decide the output voltage ripple?
+  - q: 'Why is a buck converter more efficient than a linear regulator?'
+    a: 'Its switch is either fully on (low voltage across it) or fully off (no current through it), so it dissipates little power. A linear regulator drops (Vin − Vout) × Iout as heat, so its best efficiency is only Vout / Vin.'
+  - q: 'Derive Vout = D × Vin using volt-second balance.'
+    a: 'In steady state the average inductor voltage over one period is zero. During the on time it is (Vin − Vout) for D × T, during the off time it is −Vout for (1 − D) × T. Setting (Vin − Vout) D T = Vout (1 − D) T gives Vout = D × Vin.'
+  - q: 'Which parameters set the inductor ripple current?'
+    a: 'ΔIL = (Vin − Vout) × D / (L × fs). The voltage across the inductor during the on time, the duty cycle, the inductance and the switching frequency set it. Larger L or higher fs means less ripple.'
+  - q: 'What happens to Vout when the converter enters DCM?'
+    a: 'The inductor current falls to zero before the next cycle, so Vout no longer equals D × Vin. It depends on the load and rises at light load; the controller must reduce D to hold the output.'
+  - q: 'Why do synchronous bucks replace the diode with a MOSFET?'
+    a: 'The low side MOSFET drops only Iout × RDS(on), far less than a diode forward voltage of 0.3 V to 0.7 V. This cuts conduction loss, which matters most at low output voltage and high current.'
+  - q: 'Which components decide the output voltage ripple?'
+    a: 'The output capacitor value and its ESR, together with the inductor ripple current and switching frequency. Ideal capacitor ripple is ΔIL / (8 × fs × C); ESR adds about ΔIL × ESR.'
 faq:
   - q: 'Can a buck converter raise the voltage?'
     a: 'No. Its output is always below the input. To step up, use a boost converter; to go above or below the input, use a buck-boost or SEPIC converter.'
@@ -40,13 +47,22 @@ faq:
   - q: 'Is a bigger inductor always better?'
     a: 'No. It lowers ripple, but it is larger, has more winding resistance and slows the response to load steps.'
 references:
-  - text: 'Erickson and Maksimović, Fundamentals of Power Electronics, Springer'
-  - text: 'Mohan, Undeland and Robbins, Power Electronics: Converters, Applications, and Design, Wiley'
-  - text: "Texas Instruments, SLVA477, Basic Calculation of a Buck Converter's Power Stage"
+  - text: 'Erickson and Maksimović, Fundamentals of Power Electronics, 3rd edition, Springer, 2020'
+    url: 'https://link.springer.com/book/10.1007/978-3-030-43881-4'
+  - text: 'Mohan, Undeland and Robbins, Power Electronics: Converters, Applications, and Design, 3rd edition, Wiley'
+    url: 'https://www.wiley-vch.de/en/areas-interest/engineering/power-electronics-978-0-471-22693-2'
+  - text: "Texas Instruments, SLVA477B, Basic Calculation of a Buck Converter's Power Stage"
+    url: 'https://www.ti.com/lit/pdf/slva477'
 next:
   name: 'Boost converter'
   href: '/power-electronics/dc-dc-converters/'
 ---
+
+import BuckSim from '../../../../components/sims/BuckSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
 
 ## What is a buck converter?
 
@@ -92,6 +108,10 @@ $$
 
 A 24 V input at 50% [duty cycle](https://zentacalculator.com/electronics/pwm-duty-cycle/) therefore gives 12 V. In a real circuit, switch resistance and the diode drop pull the output slightly lower, and the feedback loop raises D a little to correct it.
 
+<Callout type="insight">
+The output voltage depends only on the duty cycle and the input voltage, not on the inductor, capacitor or load, as long as the converter stays in CCM. L and C only set how much ripple rides on top.
+</Callout>
+
 ## Inductor current ripple
 
 During the on time, current rises by a fixed amount and falls by the same amount during the off time:
@@ -128,11 +148,21 @@ $$
 
 If L is above Lcrit at your lightest load, the converter stays in CCM.
 
+<Callout type="tip">
+Raise the load resistance in the simulator below until the badge changes from CCM to DCM, then compare that point with Lcrit for your settings.
+</Callout>
+
 ## Losses and efficiency
 
 Four losses matter most. The MOSFET loses about Iout² × RDS(on) × D while on, plus a small switching loss at every edge; a [MOSFET power loss calculator](https://zentacalculator.com/electronics/mosfet-power-loss/) estimates both. The diode loses Vf × Iout × (1 − D). The inductor loses Iout² × DCR in its winding.
 
 At low output voltage the diode loss dominates, because Vf is a large fraction of Vout. A synchronous buck replaces the diode with a second MOSFET and removes most of that loss, which is why most modern low voltage regulators are synchronous.
+
+## Buck converter simulator
+
+Change any value and the waveforms update instantly. The table under the scope runs the same circuit with ideal parts and checks it against the formulas on this page.
+
+<BuckSim />
 
 ## Buck converter vs linear regulator
 
@@ -166,7 +196,7 @@ Buck converters power processors and memory on computer motherboards, charge pho
 
 ## Worked example
 
-<div class="box">
+<Callout type="example" title="Worked example">
 
 **Given:** Vin = 24 V, Vout = 12 V, Iout = 2 A, fs = 100 kHz, L = 47 µH, C = 100 µF
 
@@ -184,26 +214,30 @@ Buck converters power processors and memory on computer motherboards, charge pho
 
 Note: 64% ripple is above the usual 20% to 40% target. A 100 µH inductor would bring it near 30%.
 
-</div>
+</Callout>
 
 ## Quick check
 
-An ideal buck converter has Vin = 20 V and D = 0.25. What is Vout? The answer is 5 V, because Vout = D × Vin = 0.25 × 20 V.
+<QuickCheck q="An ideal buck converter has Vin = 20 V and D = 0.25. What is Vout?" options={['2.5 V', '5 V', '15 V', '80 V']} answer={1} explain="Vout = D × Vin = 0.25 × 20 V = 5 V." />
 
 If you double the switching frequency while keeping L the same, the inductor ripple halves, because fs sits in the denominator of the ripple formula. The output ripple drops to a quarter, since it depends on both ΔIL and fs.
 
 ## Choosing parts step by step
 
-1. **Set the duty cycle** from the input and output voltages, using the lowest and highest input you expect.
-2. **Pick the inductor** for 20% to 40% ripple at the highest input voltage, where ripple is largest.
-3. **Check the peak current** and choose an inductor and MOSFET rated above it with margin.
-4. **Pick the output capacitor** for the ripple you can accept, including its ESR.
-5. **Check light load** against Lcrit if your controller must stay in CCM.
-6. **Estimate losses** and confirm the MOSFET and diode stay within their temperature limits.
+<Steps items={[
+  { t: 'Set the duty cycle', d: 'From the input and output voltages, using the lowest and highest input you expect.' },
+  { t: 'Pick the inductor', d: 'For 20% to 40% ripple at the highest input voltage, where ripple is largest.' },
+  { t: 'Check the peak current', d: 'Choose an inductor and MOSFET rated above it with margin.' },
+  { t: 'Pick the output capacitor', d: 'For the ripple you can accept, including its ESR.' },
+  { t: 'Check light load', d: 'Compare L with Lcrit if your controller must stay in CCM.' },
+  { t: 'Estimate losses', d: 'Confirm the MOSFET and diode stay within their temperature limits.' },
+]} />
 
 ## Common design mistakes
 
-- Picking an inductor by inductance alone and ignoring its saturation current.
-- Long switch node traces that ring and radiate [electromagnetic interference](https://instrumentationblog.in/what-is-electromagnetic-interference-emi/).
-- Leaving ESR out of the ripple calculation.
-- Placing the input capacitor far from the MOSFET. The input loop carries sharp pulsed current and must stay small.
+<Mistakes items={[
+  { m: 'Picking an inductor by inductance alone and ignoring its saturation current.', fix: 'Check the saturation current against IL(peak) at the highest input and load.' },
+  { m: 'Long switch node traces that ring and radiate noise.', fix: 'Keep the switch node small; long traces radiate <a href="https://instrumentationblog.in/what-is-electromagnetic-interference-emi/" target="_blank" rel="noopener">electromagnetic interference</a>.' },
+  { m: 'Leaving ESR out of the ripple calculation.', fix: 'Add ΔIL × ESR to the capacitive ripple, or use low ESR ceramic capacitors.' },
+  { m: 'Placing the input capacitor far from the MOSFET.', fix: 'Put it right at the switch: the input loop carries sharp pulsed current and must stay small.' },
+]} />

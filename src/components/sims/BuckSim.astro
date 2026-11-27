@@ -1,0 +1,292 @@
+---
+// Live buck converter lab. Runs entirely in the browser (src/sim/buck.js), no server.
+const E6 = [1, 1.5, 2.2, 3.3, 4.7, 6.8];
+const dec = (from: number, to: number) => { const o: number[] = []; for (let d = from; d <= to * 1.0001; d *= 10) E6.forEach((m) => { const v = +(m * d).toPrecision(3); if (v <= to * 1.0001) o.push(v); }); return o; };
+const sliders = [
+  { k: 'vin', label: 'Input voltage Vin', min: 3, max: 60, step: 0.5, val: 24, unit: 'V' },
+  { k: 'd', label: 'Duty cycle D', min: 0.05, max: 0.95, step: 0.005, val: 0.5, unit: '' },
+  { k: 'fs', label: 'Switching frequency fs', list: [10e3, 20e3, 50e3, 100e3, 150e3, 200e3, 250e3, 300e3, 400e3, 500e3, 750e3, 1e6, 1.5e6, 2e6], val: 100e3, unit: 'Hz' },
+  { k: 'L', label: 'Inductor L', list: [...dec(1e-6, 1e-4), 1e-3], val: 47e-6, unit: 'H' },
+  { k: 'C', label: 'Output capacitor C', list: [...dec(1e-6, 1e-3).filter((v) => v <= 2.2e-3)], val: 100e-6, unit: 'F' },
+  { k: 'R', label: 'Load resistance R', list: [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200, 300, 500], val: 6, unit: 'Ω' },
+];
+const parts = [
+  { k: 'rds', label: 'MOSFET RDS(on)', min: 0, max: 0.2, step: 0.005, val: 0.025, unit: 'Ω' },
+  { k: 'vf', label: 'Diode Vf', min: 0, max: 1, step: 0.01, val: 0.45, unit: 'V' },
+  { k: 'dcr', label: 'Inductor DCR', min: 0, max: 0.2, step: 0.005, val: 0.03, unit: 'Ω' },
+  { k: 'esr', label: 'Capacitor ESR', min: 0, max: 0.2, step: 0.005, val: 0, unit: 'Ω' },
+];
+---
+<section class="sim" data-buck-sim data-pagefind-ignore aria-label="Buck converter simulator">
+  <div class="top">
+    <div><p class="kick">Simulator</p><p class="ttl">Buck converter lab</p></div>
+    <div class="topr"><span class="badge" data-mode>CCM</span><button type="button" class="tb" data-fs>Full screen</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tb on" data-tab="steady" aria-selected="true">Steady state</button>
+    <button type="button" role="tab" class="tb" data-tab="startup" aria-selected="false">Startup</button>
+  </div>
+  <div class="body">
+    <div class="panel">
+      <p class="grp">Power stage</p>
+      {sliders.map((s) => (
+        <label class="ctl">
+          <span class="row"><span>{s.label}</span><output data-out={s.k}></output></span>
+          {s.list
+            ? <input type="range" data-k={s.k} data-scale="list" data-list={JSON.stringify(s.list)} data-unit={s.unit} data-def={s.list.indexOf(s.val)} min="0" max={s.list.length - 1} step="1" value={s.list.indexOf(s.val)} />
+            : <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />}
+        </label>
+      ))}
+      <p class="grp">Real parts</p>
+      {parts.map((s) => (
+        <label class="ctl">
+          <span class="row"><span>{s.label}</span><output data-out={s.k}></output></span>
+          <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />
+        </label>
+      ))}
+      <label class="chk"><input type="checkbox" data-k="sync" /> Synchronous (MOSFET replaces diode)</label>
+      <div class="btns"><button type="button" class="tb" data-reset>Reset</button><button type="button" class="tb" data-share>Copy link</button><button type="button" class="tb" data-csv>Export CSV</button></div>
+    </div>
+    <div class="scopewrap">
+      <div class="chs">
+        <label style="--c:#A78BFA"><input type="checkbox" data-ch="vsw" checked /> V switch node</label>
+        <label style="--c:#22D3EE"><input type="checkbox" data-ch="iL" checked /> i inductor</label>
+        <label style="--c:#FBBF24"><input type="checkbox" data-ch="iD" checked /> i diode</label>
+        <label style="--c:#F472B6"><input type="checkbox" data-ch="vo" checked /> V out</label>
+      </div>
+      <canvas class="scope" aria-label="Oscilloscope view of the buck converter waveforms" role="img"></canvas>
+      <p class="hint" data-hint>Drag the orange cursors C1 and C2 to measure.</p>
+      <div class="reads" data-reads></div>
+    </div>
+  </div>
+  <div class="lower">
+    <div class="card2">
+      <p class="grp">Theory vs simulated · ideal parts test</p>
+      <div class="tblw"><table><thead><tr><th>Quantity</th><th>Theory</th><th>Simulated</th><th>Error</th><th>Test</th></tr></thead><tbody data-acc></tbody></table></div>
+    </div>
+    <div class="card2">
+      <p class="grp">Losses · real parts</p>
+      <div class="loss" data-loss></div>
+    </div>
+  </div>
+  <p class="note">Model: ideal switching with RDS(on), diode Vf, inductor DCR and capacitor ESR; switching loss estimated from tr + tf = 20 ns. Results follow textbook equations; real circuits also show ringing and parasitic effects.</p>
+</section>
+
+<script>
+  import { steadyState, startup, accuracy, theory } from '../../sim/buck.js';
+
+  const fmt = (v: number, unit = '') => {
+    if (!isFinite(v)) return 'n/a';
+    const a = Math.abs(v);
+    const pre = a === 0 ? ['', 1] : a >= 1e6 ? ['M', 1e-6] : a >= 1e3 ? ['k', 1e-3] : a >= 1 ? ['', 1] : a >= 1e-3 ? ['m', 1e3] : a >= 1e-6 ? ['µ', 1e6] : ['n', 1e9];
+    const x = v * (pre[1] as number);
+    return `${Math.abs(x) >= 100 ? x.toFixed(1) : Math.abs(x) >= 10 ? x.toFixed(2) : x.toFixed(3)} ${pre[0]}${unit}`.trim();
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-buck-sim]').forEach((root) => {
+    const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const $$ = <T extends Element>(s: string) => [...root.querySelectorAll<T>(s)];
+    const inputs = $$<HTMLInputElement>('input[data-k]');
+    const canvas = $<HTMLCanvasElement>('canvas');
+    const ctx = canvas.getContext('2d')!;
+    let tab: 'steady' | 'startup' = 'steady';
+    let cur = [0.25, 0.5];
+    let rec: any = null, res: any = null;
+
+    const valOf = (el: HTMLInputElement) => {
+      if (el.type === 'checkbox') return el.checked;
+      const v = +el.value;
+      if (el.dataset.scale === 'list') return JSON.parse(el.dataset.list!)[v];
+      return v;
+    };
+    const params = () => {
+      const p: any = { trf: 20e-9 };
+      inputs.forEach((el) => (p[el.dataset.k!] = valOf(el)));
+      return p;
+    };
+    const showVals = (p: any) => inputs.forEach((el) => {
+      const o = root.querySelector(`[data-out="${el.dataset.k}"]`);
+      if (o) o.textContent = el.dataset.k === 'd' ? p.d.toFixed(3) : fmt(p[el.dataset.k!], el.dataset.unit);
+    });
+
+    // URL hash keeps the setup so a link reproduces it.
+    const fromHash = () => {
+      const m = location.hash.match(/buck=([^&]+)/);
+      if (!m) return;
+      const q = new URLSearchParams(decodeURIComponent(m[1]));
+      inputs.forEach((el) => { const v = q.get(el.dataset.k!); if (v == null) return; if (el.type === 'checkbox') el.checked = v === '1'; else el.value = v; });
+    };
+
+    function draw() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#0E1828'; ctx.fillRect(0, 0, W, H);
+      if (!rec) return;
+      const chs = [['vsw', '#A78BFA', 'V'], ['iL', '#22D3EE', 'A'], ['iD', '#FBBF24', 'A'], ['vo', '#F472B6', 'V']].filter(([k]) => $<HTMLInputElement>(`[data-ch="${k}"]`).checked);
+      const left = 64, right = 12, top = tab === 'steady' ? 24 : 8, bottom = 22;
+      const pw = W - left - right, n = rec.t.length, t0 = rec.t[0], t1 = rec.t[n - 1];
+      const X = (i: number) => left + (rec.t[i] - t0) / (t1 - t0) * pw;
+      // On/off band for steady state
+      if (tab === 'steady') {
+        const p = params();
+        for (let k = 0; k < 2; k++) {
+          const a = left + k * pw / 2, w = pw / 2;
+          ctx.fillStyle = '#064E3B'; ctx.fillRect(a, 4, w * p.d, 14);
+          ctx.fillStyle = '#1E293B'; ctx.fillRect(a + w * p.d, 4, w * (1 - p.d), 14);
+        }
+        ctx.fillStyle = '#CBD5E1'; ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center';
+        ctx.fillText('Q1 ON', left + pw * params().d / 4, 15); ctx.fillText('Q1 OFF', left + pw / 4 + pw * params().d / 4, 15);
+      }
+      const bandH = (H - top - bottom) / Math.max(1, chs.length);
+      ctx.textAlign = 'left';
+      chs.forEach(([k, col, unit], ci) => {
+        const y0 = top + ci * bandH, data = rec[k];
+        let mn = Infinity, mx = -Infinity; for (const v of (rec[k + 'Min'] ?? data)) if (v < mn) mn = v; for (const v of (rec[k + 'Max'] ?? data)) if (v > mx) mx = v;
+        if (k === 'vo' && tab === 'steady') { const m = (mn + mx) / 2; const s = Math.max(mx - m, 1e-6); mn = m - s; mx = m + s; }
+        if (mx - mn < 1e-9) { mx += 1e-3; mn -= 1e-3; }
+        const pad = (mx - mn) * 0.12, lo = mn - pad, hi = mx + pad;
+        const Y = (v: number) => y0 + 6 + (1 - (v - lo) / (hi - lo)) * (bandH - 12);
+        ctx.strokeStyle = '#1E293B'; ctx.lineWidth = 1; ctx.beginPath();
+        for (let g = 0; g <= 8; g++) { const x = left + g * pw / 8; ctx.moveTo(x, y0); ctx.lineTo(x, y0 + bandH); }
+        ctx.moveTo(left, y0 + bandH); ctx.lineTo(left + pw, y0 + bandH); ctx.stroke();
+        ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+        const env = rec[k + 'Min'];
+        if (env) {
+          const hiA = rec[k + 'Max'];
+          ctx.fillStyle = col; ctx.globalAlpha = 0.35; ctx.beginPath();
+          for (let i = 0; i < n; i++) ctx.lineTo(X(i), Y(hiA[i]));
+          for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), Y(env[i]));
+          ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+          ctx.lineWidth = 1.5; ctx.beginPath();
+          for (let i = 0; i < n; i++) { const x = X(i), y = Y(data[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+          ctx.stroke();
+        } else {
+          const stepI = Math.max(1, Math.floor(n / (pw * 2)));
+          for (let i = 0; i < n; i += stepI) { const x = X(i), y = Y(data[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#94A3B8'; ctx.font = '11px "IBM Plex Mono", monospace';
+        const lab = k === 'vo' && tab === 'steady' ? [`${fmt(mx - (mx + mn) / 2, 'V')}`, `-${fmt(mx - (mx + mn) / 2, 'V')}`] : [fmt(mx, unit), fmt(mn, unit)];
+        ctx.fillText(lab[0], 4, Y(mx) + 4); ctx.fillText(lab[1], 4, Y(mn) + 4);
+      });
+      // time axis
+      ctx.fillStyle = '#64748B'; ctx.textAlign = 'center'; ctx.font = '11px "IBM Plex Mono", monospace';
+      for (let g = 0; g <= 4; g++) ctx.fillText(fmt((t1 - t0) * g / 4, 's'), left + g * pw / 4, H - 6);
+      // cursors
+      ctx.strokeStyle = '#FB923C'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      cur.forEach((c, i) => { const x = left + c * pw; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.fillStyle = '#FDBA74'; ctx.fillText(`C${i + 1}`, x + 10, top + 12); });
+      ctx.setLineDash([]);
+      reads();
+    }
+
+    function at(c: number, k: string) { const i = Math.min(rec.t.length - 1, Math.round(c * (rec.t.length - 1))); return [rec.t[i] - rec.t[0], rec[k][i]]; }
+    function reads() {
+      if (!rec) return;
+      const [ta, ia] = at(cur[0], 'iL'), [tb, ib] = at(cur[1], 'iL');
+      const [, va] = at(cur[0], 'vo'), [, vb] = at(cur[1], 'vo');
+      const items: [string, string, string?][] = [
+        ['C1 → C2 Δt', fmt(tb - ta, 's')], ['iL at C1', fmt(ia, 'A'), '#22D3EE'], ['iL at C2', fmt(ib, 'A'), '#22D3EE'], ['Vout at C1 / C2', `${fmt(va, 'V')} / ${fmt(vb, 'V')}`, '#F472B6'],
+      ];
+      if (tab === 'steady' && res) items.push(['Vout average', fmt(res.voAvg, 'V')], ['ΔIL', fmt(res.dIL, 'A')], ['Output ripple', fmt(res.ripple, 'V')], ['Efficiency', `${(res.eff * 100).toFixed(1)} %`, '#34D399']);
+      $('[data-reads]').innerHTML = items.map(([a, b, c]) => `<div><span>${a}</span><b style="color:${c ?? '#fff'}">${b}</b></div>`).join('');
+    }
+
+    function run() {
+      const p = params();
+      showVals(p);
+      const th = theory({ ...p, esr: 0, dcr: 0, rds: 0, vf: 0 });
+      if (tab === 'steady') { res = steadyState(p); rec = res.rec; } else { res = null; rec = startup(p).rec; }
+      const dcm = tab === 'steady' ? res.dcm : !th.ccm;
+      const b = $('[data-mode]'); b.textContent = dcm ? 'DCM' : 'CCM'; b.classList.toggle('dcm', dcm);
+      const acc = accuracy(p);
+      $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${fmt(r.theory, r.unit)}</td><td>${fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(2)}%</td><td class="${r.pass ? 'ok' : 'bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
+      const st = tab === 'steady' ? res : steadyState(p);
+      const L = st.loss;
+      $('[data-loss]').innerHTML = [[p.sync ? 'High side MOSFET conduction' : 'MOSFET conduction', L.switchCond], [p.sync ? 'Low side MOSFET conduction' : 'Diode conduction', L.lowSide], ['Inductor DCR', L.dcr], ['Switching (estimate)', L.switching]]
+        .map(([a, v]) => `<span>${a}</span><b>${fmt(v as number, 'W')}</b>`).join('') + `<span class="tot">Output power</span><b class="tot">${fmt(st.pOut, 'W')}</b><span class="tot">Efficiency</span><b class="tot ok">${(st.eff * 100).toFixed(1)} %</b>`;
+      $('[data-hint]').textContent = tab === 'steady' ? 'Two switching periods in steady state. Drag the orange cursors C1 and C2 to measure.' : 'Power-up from zero with no soft start. Shaded bands show the switching ripple. Drag C1 and C2 to measure.';
+      draw();
+      history.replaceState(null, '', `#buck=${encodeURIComponent(new URLSearchParams(Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value]))).toString())}`);
+    }
+
+    let pending = 0;
+    const schedule = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(run); };
+    inputs.forEach((el) => el.addEventListener('input', schedule));
+    $$<HTMLInputElement>('[data-ch]').forEach((el) => el.addEventListener('change', draw));
+    $$<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+      tab = b.dataset.tab as any;
+      $$<HTMLButtonElement>('[data-tab]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
+      cur = tab === 'steady' ? [0.25, 0.5] : [0.1, 0.6]; schedule();
+    }));
+    $('[data-reset]').addEventListener('click', () => {
+      inputs.forEach((el) => { if (el.type === 'checkbox') { el.checked = false; return; } el.value = el.dataset.def!; });
+      schedule();
+    });
+    $('[data-share]').addEventListener('click', async (e) => { const b = e.currentTarget as HTMLButtonElement; try { await navigator.clipboard.writeText(location.href); b.textContent = 'Link copied'; } catch { b.textContent = 'Copy failed'; } setTimeout(() => (b.textContent = 'Copy link'), 2000); });
+    $('[data-csv]').addEventListener('click', () => {
+      const rows = ['time_s,v_switch_V,i_inductor_A,i_diode_A,v_out_V', ...rec.t.map((t: number, i: number) => [t, rec.vsw[i], rec.iL[i], rec.iD[i], rec.vo[i]].map((x: number) => x.toPrecision(6)).join(','))];
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `buck-converter-${tab}.csv`; a.click();
+    });
+    $('[data-fs]').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.()));
+    root.addEventListener('fullscreenchange', () => setTimeout(draw, 50));
+
+    // Drag cursors
+    let drag = -1;
+    const posOf = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left - 64) / (r.width - 76))); };
+    canvas.addEventListener('pointerdown', (e) => { const p = posOf(e); drag = Math.abs(p - cur[0]) < Math.abs(p - cur[1]) ? 0 : 1; cur[drag] = p; canvas.setPointerCapture(e.pointerId); draw(); });
+    canvas.addEventListener('pointermove', (e) => { if (drag < 0) return; cur[drag] = posOf(e); draw(); });
+    canvas.addEventListener('pointerup', () => (drag = -1));
+
+    new ResizeObserver(() => draw()).observe(canvas);
+    fromHash();
+    // Run only when the simulator scrolls into view (keeps the page fast).
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); run(); } }, { rootMargin: '200px' });
+    io.observe(root);
+  });
+</script>
+
+<style>
+  .sim { background: var(--bench); color: #e2e8f0; border-radius: 20px; padding: 22px; margin: 24px 0 16px; font-size: 15px; line-height: 1.5; }
+  .sim:fullscreen { overflow-y: auto; border-radius: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kick { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #fda4af; }
+  .ttl { margin: 2px 0 0; font-size: 22px; font-weight: 600; color: #fff; }
+  .topr { display: flex; gap: 8px; align-items: center; }
+  .badge { background: #064e3b; color: #6ee7b7; padding: 6px 10px; border-radius: 999px; font-family: var(--mono); font-size: 12px; }
+  .badge.dcm { background: #78350f; color: #fcd34d; }
+  .tb { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: var(--bench-2); color: #e2e8f0; font: 500 13px var(--sans); cursor: pointer; }
+  .tb.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .body { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { flex: 1 1 240px; background: var(--bench-2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .grp { margin: 4px 0 0; font-family: var(--mono); font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+  .ctl { display: flex; flex-direction: column; gap: 2px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  output { font-family: var(--mono); color: #fff; }
+  input[type='range'] { width: 100%; accent-color: var(--red); height: 24px; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--red); }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scopewrap { flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chs { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; }
+  .chs label { color: var(--c); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .chs input { accent-color: var(--c); }
+  .scope { width: 100%; height: 440px; border-radius: 12px; touch-action: none; cursor: ew-resize; display: block; }
+  .hint { margin: 0; font-size: 12px; color: #64748b; }
+  .reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-family: var(--mono); font-size: 13px; }
+  .reads :global(div) { background: var(--bench-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+  .reads :global(span) { color: #94a3b8; font-size: 12px; }
+  .lower { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .card2 { flex: 1 1 300px; min-width: 0; background: var(--bench-2); border-radius: 12px; padding: 14px 16px; }
+  .tblw { overflow-x: auto; }
+  .sim :global(table) { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .sim :global(th) { text-align: left; color: #94a3b8; font-weight: 400; padding: 6px 8px; background: none; }
+  .sim :global(td) { padding: 6px 8px; border-top: 1px solid var(--bench-line); color: #e2e8f0; white-space: nowrap; }
+  :global(.ok) { color: #34d399 !important; }
+  :global(.bad) { color: #f87171 !important; }
+  .loss { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .loss :global(.tot) { border-top: 1px solid var(--bench-line); padding-top: 4px; color: #fff; }
+  .note { margin: 12px 0 0; font-size: 12px; color: #64748b; }
+  @media (max-width: 700px) { .scopewrap { order: -1; } .scope { height: 360px; } .sim { padding: 14px; margin-left: -8px; margin-right: -8px; } }
+</style>

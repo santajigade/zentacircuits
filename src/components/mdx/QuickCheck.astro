@@ -1,0 +1,32 @@
+---
+// Click-to-answer question with feedback and explanation.
+interface Props { q: string; options: string[]; answer: number; explain: string }
+const { q, options, answer, explain } = Astro.props;
+---
+<div class="qc" data-qc data-answer={answer}>
+  <p class="qq">{q}</p>
+  <div class="opts">{options.map((o, i) => <button type="button" data-i={i}>{o}</button>)}</div>
+  <p class="ex" hidden><b></b> {explain}</p>
+</div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-qc]').forEach((qc) => {
+    const ans = +qc.dataset.answer!, ex = qc.querySelector<HTMLElement>('.ex')!;
+    qc.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.addEventListener('click', () => {
+      qc.querySelectorAll('button').forEach((x) => x.classList.remove('right', 'wrong'));
+      const ok = +b.dataset.i! === ans;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) qc.querySelector(`button[data-i="${ans}"]`)!.classList.add('right');
+      ex.hidden = false; ex.querySelector('b')!.textContent = ok ? 'Correct.' : 'Not quite.';
+    }));
+  });
+</script>
+<style>
+  .qc { background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 18px; padding: 20px 22px; margin: 8px 0 22px; }
+  .qq { margin: 0 0 12px !important; font-weight: 600; color: var(--ink); }
+  .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  button { min-height: 48px; border-radius: 10px; border: 1px solid #C4B5FD; background: #fff; font: 16px var(--sans); cursor: pointer; color: var(--ink); }
+  button:hover { border-color: #7C3AED; }
+  button.right { background: #ECFDF5; border: 2px solid #059669; font-weight: 600; }
+  button.wrong { background: #FFF1F2; border: 2px solid #E11D48; }
+  .ex { margin: 12px 0 0 !important; font-size: 16px; }
+</style>

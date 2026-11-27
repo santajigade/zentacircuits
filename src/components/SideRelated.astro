@@ -1,0 +1,27 @@
+---
+// Sidebar: newest topics from the same category (numbered list).
+import { liveArticles, articleUrl, type Article } from '../lib/content';
+import { catBySlug } from '../data/categories';
+interface Props { a: Article }
+const { a } = Astro.props;
+const c = catBySlug(a.data.category);
+const items = (await liveArticles()).filter((x) => x.data.category === a.data.category && x.id !== a.id).slice(0, 5);
+---
+<section class="card rel">
+  <span class="lbl">More in {c.short}</span>
+  {items.length ? (
+    <ul>{items.map((x, i) => <li><a href={articleUrl(x)}><b style={`color:${c.color}`}>{String(i + 1).padStart(2, '0')}</b><span>{x.data.title}</span></a></li>)}</ul>
+  ) : <p>New {c.name.toLowerCase()} topics go live every week.</p>}
+  <a class="more" href={`/${c.slug}/`} style={`color:${c.color}`}>All {c.short} topics →</a>
+</section>
+<style>
+  .rel { padding: 18px 20px; }
+  .lbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  ul { list-style: none; margin: 10px 0 8px; padding: 0; }
+  li a { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--text); font-size: 14px; line-height: 1.4; }
+  li:first-child a { border-top: 0; }
+  li a:hover span { color: var(--red-dark); }
+  b { font-size: 12px; padding-top: 2px; }
+  p { margin: 10px 0; font-size: 14px; color: var(--muted); }
+  .more { font-size: 14px; font-weight: 600; text-decoration: none; }
+</style>

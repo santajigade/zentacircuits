@@ -1,0 +1,20 @@
+---
+// Light tinted callout. type: insight | tip | warning | example
+const { type = 'insight', title } = Astro.props;
+const T: Record<string, [string, string, string, string]> = {
+  insight: ['#EFF6FF', '#BFDBFE', '#1D4ED8', 'Key insight'],
+  tip: ['#ECFDF5', '#A7F3D0', '#047857', 'Design tip'],
+  warning: ['#FFF7ED', '#FED7AA', '#C2410C', 'Watch out'],
+  example: ['#FFFBEB', '#FDE68A', '#A16207', 'Worked example'],
+};
+const [bg, bd, fg, def] = T[type] ?? T.insight;
+---
+<div class="co" style={`--bg:${bg};--bd:${bd};--fg:${fg}`}>
+  <p class="co-t">{title ?? def}</p>
+  <div class="co-b"><slot /></div>
+</div>
+<style>
+  .co { background: var(--bg); border: 1px solid var(--bd); border-radius: 16px; padding: 20px 24px; margin: 18px 0 22px; }
+  .co-t { margin: 0 0 8px !important; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fg); }
+  .co-b :global(p:last-child), .co-b :global(ol:last-child), .co-b :global(ul:last-child) { margin-bottom: 0; }
+</style>

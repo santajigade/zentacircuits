@@ -9,5 +9,6 @@ export const liveArticles = async () =>
     .sort((a, b) => +b.data.pubDate - +a.data.pubDate);
 
 export const slugOf = (a: Article) => a.id.split('/').pop()!;
-export const articleUrl = (a: Article) => `/${a.data.category}/${a.data.subcategory}/${slugOf(a)}/`;
+// Short URLs: /<category>/<slug>/. The subcategory lives in breadcrumbs and hubs, not in the URL.
+export const articleUrl = (a: Article) => `/${a.data.category}/${slugOf(a)}/`;
 export const featuredSrc = (a: Article) => `/images/featured/${slugOf(a)}.webp`;

@@ -1,0 +1,18 @@
+---
+// One route for both article pages (/<category>/<slug>/) and subcategory hubs (/<category>/<subcategory>/).
+// The content check stops an article slug from matching a subcategory slug.
+import ArticleView from '../../views/ArticleView.astro';
+import SubView from '../../views/SubView.astro';
+import { liveArticles, slugOf } from '../../lib/content';
+export async function getStaticPaths() {
+  const all = await liveArticles();
+  const articles = all.map((a) => ({ params: { category: a.data.category, slug: slugOf(a) }, props: { kind: 'article', a, all } }));
+  const subs = [...new Set(all.map((a) => `${a.data.category}/${a.data.subcategory}`))].map((k) => {
+    const [category, sub] = k.split('/');
+    return { params: { category, slug: sub }, props: { kind: 'sub', category, sub } };
+  });
+  return [...articles, ...subs];
+}
+const p = Astro.props as any;
+---
+{p.kind === 'article' ? <ArticleView a={p.a} all={p.all} /> : <SubView category={p.category} sub={p.sub} />}

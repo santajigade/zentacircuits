@@ -1,0 +1,22 @@
+---
+// Common mistakes with the fix for each, on a light red background.
+interface Props { items: { m: string; fix: string }[] }
+const { items } = Astro.props;
+---
+<div class="mk">
+  {items.map((x) => (
+    <div class="row">
+      <div class="bad"><span class="ic" aria-hidden="true">✕</span><p>{x.m}</p></div>
+      <div class="good"><span class="ic" aria-hidden="true">✓</span><p set:html={x.fix} /></div>
+    </div>
+  ))}
+</div>
+<style>
+  .mk { background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin: 8px 0 22px; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .bad, .good { display: flex; gap: 10px; border-radius: 12px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); }
+  .ic { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .bad .ic { background: #E11D48; }
+  .good .ic { background: #059669; }
+  p { margin: 0 !important; font-size: 16px; line-height: 1.55; }
+</style>

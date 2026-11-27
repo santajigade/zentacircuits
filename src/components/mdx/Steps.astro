@@ -1,0 +1,17 @@
+---
+// Numbered step cards on a light background.
+interface Props { items: { t: string; d: string }[] }
+const { items } = Astro.props;
+---
+<div class="steps">
+  {items.map((s, i) => (
+    <div class="st"><span class="n">{i + 1}</span><div><p class="t">{s.t}</p><p class="d">{s.d}</p></div></div>
+  ))}
+</div>
+<style>
+  .steps { background: #F1F5F9; border-radius: 18px; padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin: 8px 0 22px; }
+  .st { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; gap: 14px; }
+  .n { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .t { margin: 0 0 4px !important; font-weight: 600; color: var(--ink); font-size: 17px; line-height: 1.35; }
+  .d { margin: 0 !important; font-size: 16px; line-height: 1.55; color: var(--muted); }
+</style>

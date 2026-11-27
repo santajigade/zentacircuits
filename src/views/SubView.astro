@@ -1,15 +1,10 @@
 ---
-import Base from '../../../layouts/Base.astro';
-import ArticleCard from '../../../components/ArticleCard.astro';
-import { catBySlug } from '../../../data/categories';
-import { SITE } from '../../../data/site';
-import { liveArticles } from '../../../lib/content';
-export async function getStaticPaths() {
-  const all = await liveArticles();
-  const seen = new Set(all.map((a) => `${a.data.category}/${a.data.subcategory}`));
-  return [...seen].map((k) => { const [category, sub] = k.split('/'); return { params: { category, sub } }; });
-}
-const { category, sub } = Astro.params as { category: string; sub: string };
+import Base from '../layouts/Base.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { catBySlug } from '../data/categories';
+import { SITE } from '../data/site';
+import { liveArticles } from '../lib/content';
+const { category, sub } = Astro.props as { category: string; sub: string };
 const c = catBySlug(category);
 const s = c.subs.find((x) => x.slug === sub)!;
 const list = (await liveArticles()).filter((a) => a.data.category === category && a.data.subcategory === sub);
