@@ -23,7 +23,7 @@ export const AUTHORS: Record<string, Author> = {
     name: 'Santaji Gadepatil',
     title: 'Founder of ZentaCircuits',
     role: 'B.E. Electronics and Telecommunication',
-    bio: 'Santaji is an electronics and telecommunication engineer who works with industrial process instrumentation. He writes about circuits, power electronics, sensors and industrial electronics, and shares practical, formula first explanations through ZentaCircuits, InstrumentationBlog and his LinkedIn newsletter, Innovations in Instrumentation.', // TODO: confirm with Santaji
+    bio: 'Santaji is an electronics and telecommunication engineer who works with industrial process instrumentation. He writes about circuits, power electronics, sensors and industrial electronics.',
     photo: '/images/authors/santaji-gadepatil.webp',
     topics: ['Electronics', 'Power Electronics', 'Instrumentation', 'Industrial Automation'],
     linkedin: 'https://www.linkedin.com/in/santaji-gadepatil6680/',

@@ -20,19 +20,19 @@ const li = 'M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v
 </section>
 <style>
   .ab { position: relative; display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 30px 30px 26px; margin: 40px 0 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, .06); overflow: hidden; }
-  .ab::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: linear-gradient(90deg, var(--red), #FB7185); }
-  .ph { flex: 0 0 120px; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--red); padding: 3px; background: #fff; box-shadow: 0 8px 20px rgba(225, 29, 72, .18); }
+  .ab::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ink); }
+  .ph { flex: 0 0 120px; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); padding: 4px; background: #fff; box-shadow: 0 6px 18px rgba(15, 23, 42, .10); }
   .tx { flex: 1 1 320px; min-width: 0; }
-  .k { margin: 0 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--red-dark); }
+  .k { margin: 0 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
   .nm { margin: 0; font-size: 26px; font-weight: 700; color: var(--ink); }
-  .ti { margin: 2px 0 10px; font-size: 15px; font-weight: 600; color: var(--red-dark); }
+  .ti { margin: 2px 0 10px; font-size: 15px; font-weight: 500; color: var(--muted); }
   .bio { margin: 0 0 14px; font-size: 16px; line-height: 1.65; color: var(--text); }
   .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-  .tags span { font-size: 13px; font-weight: 600; color: var(--red-deep); background: var(--red-tint); border: 1px solid #FECDD3; border-radius: 999px; padding: 5px 12px; }
+  .tags span { font-size: 13px; font-weight: 500; color: #334155; background: #F1F5F9; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
   .btns { display: flex; flex-wrap: wrap; gap: 10px; }
   .btns a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none; }
-  .b1 { background: var(--red); color: #fff; }
-  .b1:hover { background: var(--red-dark); color: #fff; }
+  .b1 { background: var(--ink); color: #fff; }
+  .b1:hover { background: #1E293B; color: #fff; }
   .b2 { background: #0A66C2; color: #fff; }
   .b2:hover { background: #084d93; color: #fff; }
   @media (max-width: 560px) { .ab { padding: 26px 20px 22px; } .ph { flex-basis: 96px; width: 96px; height: 96px; } }
