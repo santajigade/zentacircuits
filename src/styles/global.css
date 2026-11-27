@@ -16,7 +16,8 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; font-family: var(--sans); color: var(--ink); background: var(--paper); line-height: 1.6; }
+body { margin: 0; font-family: var(--sans); color: var(--ink); background: var(--paper); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; }
 a { color: var(--red-dark); }
 a:hover { color: var(--red-deep); }
 img, svg { max-width: 100%; }
