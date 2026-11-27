@@ -1,0 +1,10 @@
+---
+import Base from './Base.astro';
+const { frontmatter } = Astro.props;
+---
+<Base title={`${frontmatter.title} | ZentaCircuits`} description={frontmatter.description}>
+  <div class="wrap" style="max-width:820px;padding-top:40px">
+    <h1 style="font-size:40px;margin:0 0 20px">{frontmatter.title}</h1>
+    <div class="prose"><slot /></div>
+  </div>
+</Base>

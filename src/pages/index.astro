@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import WhyUs from '../components/WhyUs.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { CATEGORIES } from '../data/categories';
+import { SITE } from '../data/site';
+import { liveArticles } from '../lib/content';
+const all = await liveArticles();
+const count = (slug: string) => all.filter((a) => a.data.category === slug).length;
+const schema = [{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE.url }];
+---
+<Base title={`${SITE.name}: Learn Electronics with Live Simulators`} description={SITE.description} schema={schema}>
+  <section class="wrap hero">
+    <div class="copy">
+      <p class="eyebrow" style="color:var(--red-dark)">Free electronics learning with live simulators</p>
+      <h1>{SITE.tagline}</h1>
+      <p class="lead">Short lessons, worked examples and a live simulator on every topic. From Ohm's law to op-amps and power converters, made for students, hobbyists and young engineers.</p>
+      <form role="search" action="/search/" class="search">
+        <label for="hs" class="sr-only">Search topics</label>
+        <input id="hs" name="q" placeholder="Search a topic, for example buck converter" />
+        <button class="btn btn-dark">Search</button>
+      </form>
+      <div class="ctas"><a class="btn btn-red" href="/basics/">Start learning</a><a class="btn btn-ghost" href="/simulators/">Try simulators</a></div>
+    </div>
+    <div class="bench" aria-label="Live RC charging preview">
+      <div class="bh"><span>RC charging</span><span class="live">● LIVE</span></div>
+      <svg viewBox="0 0 440 220" role="img" aria-label="Scope showing capacitor voltage rising toward the supply">
+        <g stroke="#1E293B"><path d="M0 44H440M0 88H440M0 132H440M0 176H440M88 0V220M176 0V220M264 0V220M352 0V220" /></g>
+        <path d="M0 30H440" stroke="#FBBF24" stroke-width="1.5" stroke-dasharray="6 6" />
+        <path class="draw" d="M0 200 C40 120 80 80 130 62 S260 36 440 31" fill="none" stroke="#22D3EE" stroke-width="3" />
+        <path d="M88 0V220" stroke="#E11D48" stroke-width="1.5" />
+        <text x="94" y="16" fill="#FDA4AF" font-size="12" font-family="IBM Plex Mono, monospace">t = τ</text>
+      </svg>
+      <div class="chips"><span>R 10 kΩ</span><span>C 100 µF</span><span>τ 1.00 s</span><span style="color:#22D3EE">Vc(τ) 3.16 V</span></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="hd"><div><h2>All categories</h2><p class="muted">Twelve segments, from first principles to chip design.</p></div></div>
+      <div class="cats">
+        {CATEGORIES.map((c) => (
+          <a class="cat card" href={`/${c.slug}/`}>
+            <span class="ic" style={`background:${c.color}`}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={c.icon} /></svg></span>
+            <span class="cb"><span class="cn">{c.name}</span><span class="cd">{c.desc}</span><span class="cc" style={`color:${c.color}`}>{count(c.slug) ? `${count(c.slug)} topics` : 'Coming soon'}</span></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <WhyUs />
+
+  {all.length > 0 && (
+    <section class="wrap sec">
+      <div class="hd"><h2>Latest topics</h2></div>
+      <div class="grid3">{all.slice(0, 9).map((a) => <ArticleCard a={a} />)}</div>
+    </section>
+  )}
+  <div class="wrap"><Newsletter /></div>
+</Base>
+<style>
+  .hero { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 56px; }
+  .copy { flex: 1 1 480px; min-width: 0; }
+  h1 { margin: 0; font-weight: 700; font-size: clamp(36px, 5vw, 52px); line-height: 1.1; }
+  .lead { margin: 20px 0 28px; font-size: 19px; line-height: 1.6; color: #334155; }
+  .search { display: flex; gap: 10px; flex-wrap: wrap; max-width: 560px; }
+  .search input { flex: 1 1 260px; min-height: 52px; padding: 0 16px; border: 1px solid #cbd5e1; border-radius: 12px; font: 16px var(--sans); }
+  .ctas { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .bench { flex: 1 1 440px; min-width: 0; background: var(--bench); border-radius: 18px; padding: 20px; color: #e2e8f0; }
+  .bh { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; }
+  .live { font-family: var(--mono); font-size: 12px; color: var(--good); }
+  .bench svg { width: 100%; height: auto; display: block; background: #0e1828; border-radius: 10px; }
+  @keyframes draw { 0% { stroke-dashoffset: 620; } 70%, 100% { stroke-dashoffset: 0; } }
+  .draw { stroke-dasharray: 620; animation: draw 4s ease-out infinite; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; font-family: var(--mono); font-size: 13px; }
+  .chips span { background: var(--bench-line); padding: 8px 10px; border-radius: 8px; }
+  .band { background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 64px 0; }
+  .sec { padding-top: 64px; }
+  .hd { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+  .hd h2 { margin: 0 0 6px; font-size: 34px; font-weight: 700; }
+  .muted { color: var(--muted); margin: 0; font-size: 17px; }
+  .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+  .cat { padding: 20px; display: flex; gap: 18px; text-decoration: none; color: var(--ink); }
+  .ic { flex: 0 0 56px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .cb { display: flex; flex-direction: column; gap: 6px; }
+  .cn { font-weight: 600; font-size: 21px; }
+  .cd { color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .cc { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+</style>

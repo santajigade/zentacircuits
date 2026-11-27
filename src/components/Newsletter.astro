@@ -1,0 +1,27 @@
+---
+import { SITE } from '../data/site';
+const { compact = false } = Astro.props;
+const id = compact ? 'nl-side' : 'nl-end';
+---
+{SITE.newsletterAction ? (
+  <form class:list={['nl', { compact }]} action={SITE.newsletterAction} method="post">
+    <p class="t">One electronics email a week</p>
+    <p class="s">New topics, simulators and worked examples. Free, unsubscribe any time.</p>
+    <div class="row">
+      <label for={id} class="sr-only">Email</label>
+      <input id={id} name="email" type="email" required placeholder="Your email" />
+      <button class="btn btn-red" type="submit">Subscribe</button>
+    </div>
+  </form>
+) : SITE.showAdPlaceholders && <div class="ad">Newsletter box (shows once the form URL is set)</div>}
+<style>
+  .nl { background: var(--bench); color: #fff; border-radius: 20px; padding: 32px; margin: 32px 0; }
+  .t { margin: 0 0 6px; font-weight: 600; font-size: 24px; }
+  .s { margin: 0 0 18px; color: #cbd5e1; font-size: 16px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  input { flex: 1 1 220px; min-height: 52px; border: 0; border-radius: 12px; padding: 0 16px; font: 16px var(--sans); }
+  .compact { padding: 22px; margin: 0; border-radius: 16px; }
+  .compact .t { font-size: 19px; }
+  .compact .row { flex-direction: column; }
+  .compact input { flex: none; min-height: 48px; }
+</style>

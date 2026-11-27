@@ -1,0 +1,56 @@
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-sans/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+:root {
+  --red: #e11d48; --red-dark: #be123c; --red-deep: #9f1239; --red-tint: #ffe4e6; --red-light: #fb7185;
+  --ink: #0f172a; --text: #1e293b; --muted: #475569; --faint: #64748b;
+  --line: #e2e8f0; --paper: #f8fafc; --white: #fff;
+  --graphite: #18181b; --bench: #0b1320; --bench-2: #111c2e; --bench-line: #1e293b;
+  --cyan: #22d3ee; --amber: #fbbf24; --violet: #a78bfa; --pink: #f472b6; --good: #34d399;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --radius: 16px; --wrap: 1240px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--sans); color: var(--ink); background: var(--paper); line-height: 1.6; }
+a { color: var(--red-dark); }
+a:hover { color: var(--red-deep); }
+img, svg { max-width: 100%; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 12px; z-index: 50; }
+.skip:focus { left: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 10px; font-weight: 600; text-decoration: none; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; font-size: 16px; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { background: var(--red-dark); color: #fff; }
+.btn-ghost { border-color: var(--red); color: var(--red-dark); background: transparent; }
+.btn-dark { background: var(--ink); color: #fff; }
+.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 10px; }
+.card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
+.chip { display: inline-block; background: var(--white); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; font-size: 15px; }
+h1, h2, h3 { font-family: var(--sans); color: var(--ink); }
+
+/* Article body */
+.prose { font-size: 18px; line-height: 1.75; color: var(--text); }
+.prose p { margin: 0 0 14px; }
+.prose h2 { font-weight: 600; font-size: 30px; line-height: 1.25; margin: 44px 0 12px; scroll-margin-top: 80px; }
+.prose h3 { font-weight: 600; font-size: 21px; margin: 26px 0 8px; }
+.prose ul, .prose ol { padding-left: 22px; margin: 0 0 14px; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 18px; }
+.prose th { background: var(--ink); color: #fff; text-align: left; padding: 12px 16px; font-weight: 600; }
+.prose td { padding: 10px 16px; border-top: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; margin: 0 0 16px; }
+.prose figure { margin: 8px 0 20px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.prose figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
+.box { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; margin: 0 0 16px; }
+.formula { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 20px; margin: 0 0 14px; overflow-x: auto; }
+.ad { border: 1px dashed #cbd5e1; border-radius: 12px; min-height: 110px; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 14px; margin: 28px 0; }
+
+@keyframes flow { to { stroke-dashoffset: -40; } }
+.flow { animation: flow 1.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .flow, .pulse, .led, .draw { animation: none !important; } }

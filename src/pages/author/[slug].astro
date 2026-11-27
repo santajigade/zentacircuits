@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { AUTHORS, SITE, type Author } from '../../data/site';
+import { liveArticles } from '../../lib/content';
+export function getStaticPaths() { return Object.values(AUTHORS).map((a) => ({ params: { slug: a.slug }, props: { au: a } })); }
+const { au } = Astro.props as { au: Author };
+const list = (await liveArticles()).filter((a) => a.data.author === au.slug);
+const schema = [{ '@context': 'https://schema.org', '@type': 'ProfilePage', mainEntity: { '@type': 'Person', name: au.name, jobTitle: au.role, sameAs: [au.linkedin] } }];
+---
+<Base title={`${au.name}, Author | ${SITE.name}`} description={`${au.name}, ${au.role}. ${au.bio}`.slice(0, 158)} schema={schema}>
+  <div class="wrap" style="padding-top:40px">
+    <div class="card" style="padding:28px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:32px">
+      <span style="width:88px;height:88px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px">{au.initials}</span>
+      <div style="flex:1 1 300px"><h1 style="margin:0">{au.name}</h1><p style="margin:4px 0 10px;color:var(--muted)">{au.role}</p><p style="margin:0 0 8px">{au.bio}</p><a href={au.linkedin} rel="noopener" target="_blank">LinkedIn</a></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">{list.map((a) => <ArticleCard a={a} />)}</div>
+  </div>
+</Base>

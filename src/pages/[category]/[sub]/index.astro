@@ -1,0 +1,30 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ArticleCard from '../../../components/ArticleCard.astro';
+import { catBySlug } from '../../../data/categories';
+import { SITE } from '../../../data/site';
+import { liveArticles } from '../../../lib/content';
+export async function getStaticPaths() {
+  const all = await liveArticles();
+  const seen = new Set(all.map((a) => `${a.data.category}/${a.data.subcategory}`));
+  return [...seen].map((k) => { const [category, sub] = k.split('/'); return { params: { category, sub } }; });
+}
+const { category, sub } = Astro.params as { category: string; sub: string };
+const c = catBySlug(category);
+const s = c.subs.find((x) => x.slug === sub)!;
+const list = (await liveArticles()).filter((a) => a.data.category === category && a.data.subcategory === sub);
+---
+<Base title={`${s.name}: ${c.name} Lessons | ${SITE.name}`} description={`${s.name} lessons in ${c.name.toLowerCase()}, with worked examples and live simulators.`} noindex={list.length < SITE.categoryMinItems}>
+  <div class="wrap top">
+    <nav aria-label="Breadcrumb" class="crumbs"><a href="/">Home</a><span>›</span><a href={`/${c.slug}/`}>{c.name}</a><span>›</span><span>{s.name}</span></nav>
+    <p class="eyebrow" style={`color:${c.color};font-weight:600;margin-top:24px`}>{c.name}</p>
+    <h1>{s.name}</h1>
+    <div class="grid">{list.map((a) => <ArticleCard a={a} />)}</div>
+  </div>
+</Base>
+<style>
+  .top { padding-top: 24px; }
+  .crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 8px; }
+  h1 { margin: 0 0 28px; font-size: clamp(30px, 4vw, 42px); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+</style>

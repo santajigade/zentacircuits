@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { CATEGORIES, type Category } from '../../data/categories';
+import { SITE } from '../../data/site';
+import { liveArticles } from '../../lib/content';
+export function getStaticPaths() { return CATEGORIES.map((c) => ({ params: { category: c.slug }, props: { c } })); }
+const { c } = Astro.props as { c: Category };
+const list = (await liveArticles()).filter((a) => a.data.category === c.slug);
+const subsWith = c.subs.map((s) => ({ ...s, n: list.filter((a) => a.data.subcategory === s.slug).length }));
+---
+<Base title={`${c.name}: Lessons and Simulators | ${SITE.name}`} description={`${c.name} lessons with worked examples and live simulators. ${c.desc}`} noindex={list.length < SITE.categoryMinItems}>
+  <div class="wrap top">
+    <nav aria-label="Breadcrumb" class="crumbs"><a href="/">Home</a><span>›</span><span>{c.name}</span></nav>
+    <div class="head">
+      <span class="ic" style={`background:${c.color}`}><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={c.icon} /></svg></span>
+      <div><h1>{c.name}</h1><p class="d">{c.desc}</p></div>
+    </div>
+    <div class="subs">
+      {subsWith.map((s) => s.n > 0
+        ? <a class="sub card" href={`/${c.slug}/${s.slug}/`}><b>{s.name}</b><span style={`color:${c.color}`}>{s.n} topics</span></a>
+        : <div class="sub card off"><b>{s.name}</b><span>Coming soon</span></div>)}
+    </div>
+    {list.length > 0 ? <div class="grid">{list.map((a) => <ArticleCard a={a} />)}</div> : <p class="d">Lessons for this category are being written. New topics go live every day.</p>}
+  </div>
+</Base>
+<style>
+  .top { padding-top: 24px; }
+  .crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 8px; }
+  .head { display: flex; gap: 20px; align-items: center; margin: 24px 0 28px; }
+  .ic { flex: 0 0 72px; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  h1 { margin: 0 0 6px; font-size: clamp(30px, 4vw, 42px); }
+  .d { margin: 0; color: var(--muted); font-size: 18px; }
+  .subs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 40px; }
+  .sub { padding: 18px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: var(--ink); }
+  .sub span { font-family: var(--mono); font-size: 13px; }
+  .off { color: var(--faint); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+</style>

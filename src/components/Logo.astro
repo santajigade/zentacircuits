@@ -1,0 +1,19 @@
+---
+// IC Chip mark + wordmark. dark=true for dark backgrounds.
+const { size = 34, dark = false, wordmark = true } = Astro.props;
+const chip = dark ? '#FB7185' : '#E11D48';
+const hole = dark ? '#18181B' : '#FFFFFF';
+---
+<span class="logo">
+  <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+    {[20, 29, 38, 47].map((y) => <path d={`M6 ${y}H14M50 ${y}H58`} stroke={chip} stroke-width="4" stroke-linecap="round" />)}
+    <rect x="14" y="10" width="36" height="46" rx="5" fill={chip} />
+    <path d="M28 10a4 4 0 0 0 8 0" fill={hole} />
+    <path d="M24 24H40L24 44H40" fill="none" stroke={hole} stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+  {wordmark && <span class="word" style={`color:${dark ? '#fff' : 'var(--ink)'}`}>Zenta<span style={`color:${chip}`}>Circuits</span></span>}
+</span>
+<style>
+  .logo { display: inline-flex; align-items: center; gap: 8px; }
+  .word { font-weight: 700; font-size: 21px; letter-spacing: -0.2px; }
+</style>

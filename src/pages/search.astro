@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+<Base title={`Search | ${SITE.name}`} description="Search ZentaCircuits lessons." noindex>
+  <div class="wrap" style="padding-top:40px;max-width:820px">
+    <h1 style="font-size:40px;margin:0 0 20px">Search</h1>
+    <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
+    <div id="search"></div>
+    <script is:inline src="/pagefind/pagefind-ui.js"></script>
+    <script is:inline>
+      window.addEventListener('DOMContentLoaded', () => {
+        const ui = new PagefindUI({ element: '#search', showSubResults: true });
+        const q = new URLSearchParams(location.search).get('q');
+        if (q) ui.triggerSearch(q);
+      });
+    </script>
+  </div>
+</Base>

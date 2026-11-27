@@ -1,0 +1,209 @@
+---
+title: 'Buck Converter: Working, Formulas, Design and Simulator'
+seoTitle: 'Buck Converter: Working, Formulas and Design Example'
+description: 'How a buck converter steps DC voltage down: switch on and off phases, duty cycle, inductor and output ripple, CCM and DCM, losses and a worked example.'
+focusKeyword: 'buck converter'
+category: power-electronics
+subcategory: dc-dc-converters
+level: Intermediate
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+shortAnswer: 'A buck converter is a switching regulator that steps a DC voltage down. A MOSFET switches the input on and off at high frequency, and an inductor and capacitor smooth the pulses into steady DC. In continuous conduction the output is Vout = D × Vin, and far less power is lost as heat than in a linear regulator.'
+featured:
+  kicker: 'Power Electronics'
+  line1: 'Buck Converter'
+  line2: 'Working, formulas and design'
+  art: buck
+image:
+  alt: 'Buck converter featured image with the power stage circuit and switch node, inductor current and output ripple waveforms'
+learn:
+  - How the switch, diode, inductor and capacitor work together in each cycle
+  - Why Vout = D × Vin, using volt-second balance
+  - How to calculate inductor ripple, peak current and output ripple
+  - The difference between CCM and DCM, and how to stay in CCM
+  - Where the losses come from and how designers reduce them
+interview:
+  - Why is a buck converter more efficient than a linear regulator?
+  - Derive Vout = D × Vin using volt-second balance.
+  - Which parameters set the inductor ripple current?
+  - What happens to Vout when the converter enters DCM?
+  - Why do synchronous bucks replace the diode with a MOSFET?
+  - Which components decide the output voltage ripple?
+faq:
+  - q: 'Can a buck converter raise the voltage?'
+    a: 'No. Its output is always below the input. To step up, use a boost converter; to go above or below the input, use a buck-boost or SEPIC converter.'
+  - q: 'What switching frequency should I choose?'
+    a: 'Higher frequency allows a smaller inductor and capacitor but increases switching loss. Most designs trade these off between a few hundred kHz and a few MHz.'
+  - q: 'Why does my switch node ring?'
+    a: 'Stray inductance in the layout resonates with the MOSFET and diode capacitance. A tight input loop and, if needed, an RC snubber reduce it.'
+  - q: 'Is a bigger inductor always better?'
+    a: 'No. It lowers ripple, but it is larger, has more winding resistance and slows the response to load steps.'
+references:
+  - text: 'Erickson and Maksimović, Fundamentals of Power Electronics, Springer'
+  - text: 'Mohan, Undeland and Robbins, Power Electronics: Converters, Applications, and Design, Wiley'
+  - text: "Texas Instruments, SLVA477, Basic Calculation of a Buck Converter's Power Stage"
+next:
+  name: 'Boost converter'
+  href: '/power-electronics/dc-dc-converters/'
+---
+
+## What is a buck converter?
+
+A buck converter, also called a step-down converter, takes a DC input and delivers a lower, regulated DC output. You will find one in phone chargers, laptop motherboards and almost every board that powers a 3.3 V microcontroller from a 12 V or [24 V industrial rail](https://instrumentationblog.in/24-volts-in-plc-systems/).
+
+A linear regulator drops the extra voltage across a transistor and turns it into heat. Drop 24 V to 12 V at 2 A that way and you burn 24 W, as much as the load itself. A buck converter avoids most of that loss because its switch is either fully on or fully off.
+
+The power stage needs only four parts: a switch (usually a MOSFET), a diode or a second MOSFET, an inductor and an output capacitor. A controller sets how long the switch stays on in each cycle.
+
+<figure>
+  <img src="/images/figures/buck-converter-circuit-diagram.webp" alt="Buck converter circuit diagram with input source Vin, MOSFET switch Q1, freewheeling diode D, inductor L, output capacitor C and load" width="1360" height="480" loading="lazy" />
+  <figcaption>Figure 1. Buck converter circuit diagram. The dashed red path shows current from the input through Q1 and L to the load while the switch is on.</figcaption>
+</figure>
+
+## How a buck converter works
+
+### Switch on (0 to D × T)
+
+When the MOSFET turns on, the input connects to the inductor. The voltage across the inductor is Vin minus Vout, which is positive, so inductor current rises in a straight line.
+
+The diode is reverse biased and carries no current. The inductor stores energy in its magnetic field while it also feeds the load.
+
+### Switch off (D × T to T)
+
+When the MOSFET turns off, the inductor current cannot stop instantly. It pulls the switch node below ground until the diode starts to conduct.
+
+The inductor now sees minus Vout across it, so its current ramps down. Its stored energy flows through the diode into the capacitor and load.
+
+Repeat this 100,000 times a second or more and the inductor current becomes a triangle riding on the load current. The capacitor absorbs the AC part, and the load sees almost flat DC.
+
+<figure>
+  <img src="/images/figures/buck-converter-waveforms.webp" alt="Buck converter waveforms over two switching periods: switch node voltage, triangular inductor current, diode current and output voltage ripple" width="1440" height="940" loading="lazy" />
+  <figcaption>Figure 2. Buck converter waveforms at Vin = 24 V, D = 0.5, fs = 100 kHz, L = 47 µH, C = 100 µF and a 2 A load. From top: switch node voltage, inductor current, diode current and output ripple.</figcaption>
+</figure>
+
+## Duty cycle and output voltage
+
+In steady state, inductor current ends each cycle where it started. So the average voltage across the inductor must be zero. Engineers call this volt-second balance.
+
+$$
+(V_{in} - V_{out})\,D\,T = V_{out}\,(1 - D)\,T \quad\Rightarrow\quad V_{out} = D \, V_{in}
+$$
+
+A 24 V input at 50% [duty cycle](https://zentacalculator.com/electronics/pwm-duty-cycle/) therefore gives 12 V. In a real circuit, switch resistance and the diode drop pull the output slightly lower, and the feedback loop raises D a little to correct it.
+
+## Inductor current ripple
+
+During the on time, current rises by a fixed amount and falls by the same amount during the off time:
+
+$$
+\Delta I_L = \frac{(V_{in} - V_{out})\,D}{L\,f_s}
+$$
+
+A common starting point is ripple of 20% to 40% of full load current. More ripple allows a smaller inductor, but it raises peak current and output ripple.
+
+The MOSFET and inductor must carry the peak current, IL(peak) = Iout + ΔIL / 2. Choose an inductor whose saturation current sits comfortably above this value. For a quick first pass, the [buck converter calculator](https://zentacalculator.com/electronics/buck-converter/) gives L, ripple and peak current from your specs.
+
+## Output voltage ripple
+
+The capacitor carries the AC part of the inductor current. With an ideal capacitor, the peak to peak ripple is:
+
+$$
+\Delta V_{out} = \frac{\Delta I_L}{8\,f_s\,C}
+$$
+
+Real capacitors add ESR, which contributes roughly ΔIL × ESR. With electrolytic capacitors this term often dominates, which is why low ESR ceramic and polymer parts are common in modern designs.
+
+## CCM and DCM
+
+In continuous conduction mode (CCM), inductor current never falls to zero, and every formula above applies.
+
+At light load, the valley of the triangle can touch zero. The converter then enters discontinuous conduction mode (DCM), and the output rises above D × Vin unless the controller cuts D.
+
+The boundary inductance is:
+
+$$
+L_{crit} = \frac{(1 - D)\,R}{2\,f_s}
+$$
+
+If L is above Lcrit at your lightest load, the converter stays in CCM.
+
+## Losses and efficiency
+
+Four losses matter most. The MOSFET loses about Iout² × RDS(on) × D while on, plus a small switching loss at every edge; a [MOSFET power loss calculator](https://zentacalculator.com/electronics/mosfet-power-loss/) estimates both. The diode loses Vf × Iout × (1 − D). The inductor loses Iout² × DCR in its winding.
+
+At low output voltage the diode loss dominates, because Vf is a large fraction of Vout. A synchronous buck replaces the diode with a second MOSFET and removes most of that loss, which is why most modern low voltage regulators are synchronous.
+
+## Buck converter vs linear regulator
+
+Both parts turn a higher DC voltage into a lower one, but they do it in very different ways.
+
+| Feature | Linear regulator | Buck converter |
+| --- | --- | --- |
+| How it drops voltage | Burns the difference as heat | Switches and filters the input |
+| Efficiency at 24 V to 12 V | About 50% | Often above 90% |
+| Output noise | Very low | Switching ripple, needs filtering |
+| Parts count | Very low | Inductor, capacitor, switch, controller |
+| Best use | Small currents, noise sensitive circuits | Larger currents, battery and rail conversion |
+
+A linear regulator's best case efficiency is simply Vout / Vin, so 12 V from 24 V can never exceed 50%. That is why designers pick a buck converter whenever the current is more than a few hundred milliamps or the voltage drop is large.
+
+## Where buck converters are used
+
+Buck converters power processors and memory on computer motherboards, charge phone batteries from USB, and feed 5 V and 3.3 V logic from 12 V or 24 V supplies in industrial panels. Solar charge controllers use them to step a high panel voltage down to battery voltage. LED drivers use them in current mode, regulating the inductor current instead of the output voltage.
+
+## Key formulas
+
+| Quantity | Formula (CCM) | Unit |
+| --- | --- | --- |
+| Output voltage | Vout = D × Vin | V |
+| Inductor ripple | ΔIL = (Vin − Vout) × D / (L × fs) | A |
+| Peak current | IL(peak) = Iout + ΔIL / 2 | A |
+| Output ripple | ΔVout = ΔIL / (8 × fs × C) | V |
+| CCM boundary | Lcrit = (1 − D) × R / (2 × fs) | H |
+| Switch average current | IQ = D × Iout | A |
+| Diode average current | ID = (1 − D) × Iout | A |
+
+## Worked example
+
+<div class="box">
+
+**Given:** Vin = 24 V, Vout = 12 V, Iout = 2 A, fs = 100 kHz, L = 47 µH, C = 100 µF
+
+**Find:** D, ΔIL, peak current, output ripple, and whether the converter is in CCM
+
+**Solution:**
+
+1. D = 12 / 24 = 0.50
+2. ΔIL = (24 − 12) × 0.5 / (47 µH × 100 kHz) = 6 / 4.7 = 1.28 A
+3. IL(peak) = 2 + 0.64 = 2.64 A, valley = 1.36 A
+4. ΔVout = 1.28 / (8 × 100 kHz × 100 µF) = 16 mV
+5. R = 12 / 2 = 6 Ω, Lcrit = 0.5 × 6 / (2 × 100 kHz) = 15 µH
+
+**Answer:** D = 0.50, ΔIL = 1.28 A (64% of Iout), peak 2.64 A, ripple 16 mV. L = 47 µH is above 15 µH, so the converter runs in CCM.
+
+Note: 64% ripple is above the usual 20% to 40% target. A 100 µH inductor would bring it near 30%.
+
+</div>
+
+## Quick check
+
+An ideal buck converter has Vin = 20 V and D = 0.25. What is Vout? The answer is 5 V, because Vout = D × Vin = 0.25 × 20 V.
+
+If you double the switching frequency while keeping L the same, the inductor ripple halves, because fs sits in the denominator of the ripple formula. The output ripple drops to a quarter, since it depends on both ΔIL and fs.
+
+## Choosing parts step by step
+
+1. **Set the duty cycle** from the input and output voltages, using the lowest and highest input you expect.
+2. **Pick the inductor** for 20% to 40% ripple at the highest input voltage, where ripple is largest.
+3. **Check the peak current** and choose an inductor and MOSFET rated above it with margin.
+4. **Pick the output capacitor** for the ripple you can accept, including its ESR.
+5. **Check light load** against Lcrit if your controller must stay in CCM.
+6. **Estimate losses** and confirm the MOSFET and diode stay within their temperature limits.
+
+## Common design mistakes
+
+- Picking an inductor by inductance alone and ignoring its saturation current.
+- Long switch node traces that ring and radiate [electromagnetic interference](https://instrumentationblog.in/what-is-electromagnetic-interference-emi/).
+- Leaving ESR out of the ripple calculation.
+- Placing the input capacitor far from the MOSFET. The input loop carries sharp pulsed current and must stay small.

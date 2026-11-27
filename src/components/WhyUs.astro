@@ -1,0 +1,55 @@
+---
+// Animated circuit board strip: three chips on a copper trace with a moving pulse.
+---
+<section class="why">
+  <div class="wrap">
+    <p class="eyebrow" style="color:#FDA4AF">How ZentaCircuits teaches</p>
+    <h2>Every topic is a working circuit</h2>
+    <p class="sub">Three stages wired in series. The signal only passes when you understand the stage before.</p>
+    <svg viewBox="0 0 1200 230" role="img" aria-label="Three chips labelled Learn, Simulate and Prove, joined by a copper trace carrying a pulse">
+      <g stroke="#1E293B"><path d="M0 40H1200M0 115H1200M0 190H1200" /></g>
+      <path d="M20 115H80M300 115H490M710 115H900M1120 115H1180" stroke="#B45309" stroke-width="6" stroke-linecap="round" />
+      <path class="pulse" d="M20 115H1180" stroke="#FB7185" stroke-width="6" stroke-linecap="round" fill="none" />
+      <circle cx="20" cy="115" r="9" fill="#0B1320" stroke="#B45309" stroke-width="4" /><circle cx="1180" cy="115" r="9" fill="#0B1320" stroke="#B45309" stroke-width="4" />
+      {[80, 490, 900].map((x) => (
+        <g>
+          <g stroke="#64748B" stroke-width="4">{[30, 70, 110, 150, 190].map((p) => <path d={`M${x + p} 50V60M${x + p} 170V180`} />)}</g>
+          <rect x={x} y="60" width="220" height="110" rx="10" fill="#111C2E" stroke={x === 900 ? '#E11D48' : '#334155'} stroke-width="2" />
+          <circle class="led" cx={x + 202} cy="78" r="5" fill={x === 900 ? '#FB7185' : '#34D399'} />
+        </g>
+      ))}
+      <g font-family="IBM Plex Mono, monospace" font-size="13" fill="#94A3B8"><text x="100" y="84">U1</text><text x="510" y="84">U2</text><text x="920" y="84">U3</text></g>
+      <text x="190" y="128" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#fff">τ = R × C</text>
+      <path d="M515 140 C545 92 575 92 600 115 S655 138 685 92" fill="none" stroke="#22D3EE" stroke-width="3" />
+      <text x="1010" y="128" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#fff">12 / 12 ✓</text>
+    </svg>
+    <div class="steps">
+      <div><p class="k">U1 · Learn</p><h3>Understand the theory</h3><p>Physics first, then formulas, derivations and a worked example in real units.</p></div>
+      <div><p class="k">U2 · Simulate</p><h3>Run the real circuit</h3><p>Change parts, read multi channel waveforms, place cursors and compare theory with simulation.</p></div>
+      <div><p class="k" style="color:#FB7185">U3 · Prove</p><h3>Test what you know</h3><p>Numericals, viva and interview questions matched to diploma, BE and GATE level.</p></div>
+    </div>
+    <div class="spec">
+      <div><span>Accuracy</span>Every simulator passes textbook test cases</div>
+      <div><span>Review</span>Written by a named engineer</div>
+      <div><span>Platform</span>Runs in any browser, phone included</div>
+      <div><span>Price</span>Free, no sign-up, no paywall</div>
+    </div>
+  </div>
+</section>
+<style>
+  .why { background: var(--bench); color: #e2e8f0; padding: 72px 0; }
+  h2 { color: #fff; font-size: clamp(30px, 4vw, 40px); font-weight: 700; margin: 0; }
+  .sub { color: #94a3b8; font-size: 18px; max-width: 640px; margin: 12px 0 36px; }
+  svg { width: 100%; height: auto; display: block; }
+  @keyframes pulse { to { stroke-dashoffset: -1240; } }
+  .pulse { stroke-dasharray: 60 1180; animation: pulse 3.2s linear infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .led { animation: blink 1.6s ease-in-out infinite; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; margin-top: 20px; }
+  .k { margin: 0 0 4px; font-family: var(--mono); font-size: 13px; color: #fda4af; text-transform: uppercase; }
+  h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; color: #fff; }
+  .steps p:last-child { margin: 0; color: #94a3b8; line-height: 1.6; }
+  .spec { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+  .spec div { padding: 16px 18px; border-right: 1px solid #1e293b; color: #fff; }
+  .spec span { display: block; font-family: var(--mono); font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+</style>
