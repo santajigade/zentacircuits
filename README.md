@@ -22,4 +22,4 @@ Set `LAUNCHED = true` in `src/data/site.ts` to open robots.txt, the sitemap and 
 ## Deploy secrets
 FTP_SERVER, FTP_USERNAME, FTP_PASSWORD (or SSH_HOST, SSH_PORT, SSH_USER, SSH_KEY, SSH_PATH). Optional preview: PREVIEW_FTP_*.
 
-Brand assets: `brand/` (logo kit). Fonts for image generation: `scripts/fonts/` (IBM Plex Sans, SIL Open Font License).
+Brand assets: `brand/` (logo kit). Fonts for image generation: `scripts/fonts/` (Open Sans, SIL Open Font License).

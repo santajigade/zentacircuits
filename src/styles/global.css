@@ -1,7 +1,7 @@
-@import '@fontsource/ibm-plex-sans/400.css';
-@import '@fontsource/ibm-plex-sans/500.css';
-@import '@fontsource/ibm-plex-sans/600.css';
-@import '@fontsource/ibm-plex-sans/700.css';
+@import '@fontsource/open-sans/400.css';
+@import '@fontsource/open-sans/500.css';
+@import '@fontsource/open-sans/600.css';
+@import '@fontsource/open-sans/700.css';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 
@@ -11,7 +11,7 @@
   --line: #e2e8f0; --paper: #f8fafc; --white: #fff;
   --graphite: #18181b; --bench: #0b1320; --bench-2: #111c2e; --bench-line: #1e293b;
   --cyan: #22d3ee; --amber: #fbbf24; --violet: #a78bfa; --pink: #f472b6; --good: #34d399;
-  --sans: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --sans: 'Open Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
   --radius: 16px; --wrap: 1240px;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,7 +31,7 @@ img { height: auto; }
 .btn-red:hover { background: var(--red-dark); color: #fff; }
 .btn-ghost { border-color: var(--red); color: var(--red-dark); background: transparent; }
 .btn-dark { background: var(--ink); color: #fff; }
-.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 10px; }
+.eyebrow { font-family: var(--sans); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 10px; }
 .card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
 .chip { display: inline-block; background: var(--white); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; font-size: 15px; }
 h1, h2, h3 { font-family: var(--sans); color: var(--ink); }

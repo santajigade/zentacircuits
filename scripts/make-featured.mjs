@@ -8,7 +8,7 @@ import sharp from 'sharp';
 
 const root = new URL('..', import.meta.url).pathname;
 const fontDir = join(root, 'scripts/fonts');
-const load = (w) => { const b = readFileSync(join(fontDir, `IBMPlexSans-${w}.ttf`)); return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); };
+const load = (w) => { const b = readFileSync(join(fontDir, `OpenSans-${w}.ttf`)); return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); };
 const F = { bold: load('Bold'), semi: load('SemiBold'), med: load('Medium') };
 
 const cats = readFileSync(join(root, 'src/data/categories.ts'), 'utf8');
