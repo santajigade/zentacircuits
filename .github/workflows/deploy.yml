@@ -42,8 +42,11 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
           rsync -az --delete --exclude '.well-known' -e "ssh -i ~/.ssh/id_deploy -p ${{ secrets.SSH_PORT }}" dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/"
-      - name: Upload live site over FTP
+      # Hostinger FTP sometimes drops the data connection (ECONNRESET); the upload resumes from where it stopped, so retry up to 3 times.
+      - name: Upload live site over FTP (1)
+        id: ftp1
         if: env.HAS_SSH != 'true'
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -51,6 +54,30 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: ./
+          timeout: 600000
+      - name: Upload live site over FTP (2)
+        id: ftp2
+        if: env.HAS_SSH != 'true' && steps.ftp1.outcome == 'failure'
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./
+          timeout: 600000
+      - name: Upload live site over FTP (3)
+        id: ftp3
+        if: env.HAS_SSH != 'true' && steps.ftp1.outcome == 'failure' && steps.ftp2.outcome == 'failure'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./
+          timeout: 600000
       - name: IndexNow ping (changed pages only)
         continue-on-error: true
         timeout-minutes: 3
