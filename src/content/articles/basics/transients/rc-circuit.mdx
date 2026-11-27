@@ -1,0 +1,219 @@
+---
+title: 'RC Circuit: Time Constant, Charging and Filters'
+seoTitle: 'RC Circuit: Time Constant, Charging Curve and RC Filter'
+description: 'How an RC circuit works: the time constant τ = RC, charging and discharging equations, square wave response and the RC low pass and high pass filter.'
+focusKeyword: 'rc circuit'
+category: basics
+subcategory: transients
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: rc-circuit-simulator
+shortAnswer: 'An RC circuit is a resistor and a capacitor connected together. When the voltage changes, the capacitor charges or discharges exponentially with a time constant τ = RC: it reaches 63.2% of the change after one τ and about 99% after five. In AC circuits the same pair forms a filter with a cutoff frequency fc = 1 / (2πRC).'
+featured:
+  kicker: 'Basics'
+  line1: 'RC Circuit'
+  line2: 'Time constant, charging and filters'
+  art: rc
+image:
+  alt: 'RC circuit featured image with a resistor and capacitor and exponential charging curves'
+prerequisites:
+  - name: 'Ohm’s law'
+    href: '/basics/'
+  - name: 'Capacitors'
+    href: '/components/'
+learn:
+  - What the time constant τ = RC means and how to use it
+  - The exact charging and discharging equations
+  - How an RC circuit shapes a square wave
+  - How the same circuit works as a low pass or high pass filter
+  - How to measure τ and fc on a real circuit
+interview:
+  - q: 'What is the time constant of an RC circuit?'
+    a: 'τ = R × C, in seconds when R is in ohms and C in farads. It is the time the capacitor takes to complete 63.2% of a voltage change.'
+  - q: 'How long does a capacitor take to fully charge?'
+    a: 'In theory forever, because the curve is exponential. In practice engineers take 5τ, when the capacitor is within 0.7% of the final voltage.'
+  - q: 'What is the cutoff frequency of an RC filter?'
+    a: 'fc = 1 / (2πRC). At this frequency the output is 3 dB down, about 70.7% of the input, and the phase shift is 45°.'
+  - q: 'Why does current in an RC circuit jump at switch on?'
+    a: 'A capacitor voltage cannot change instantly, so at t = 0 the uncharged capacitor acts like a short. The full source voltage appears across R and the current starts at V / R, then decays with the same time constant.'
+  - q: 'What is the difference between an RC integrator and differentiator?'
+    a: 'Taking the output across C with τ much longer than the input period gives an integrator, which turns a square wave into a triangle. Taking it across R with τ much shorter gives a differentiator, which turns edges into spikes.'
+faq:
+  - q: 'What is 1 time constant in percent?'
+    a: '63.2% of the full change. After 2τ it is 86.5%, after 3τ 95.0%, after 4τ 98.2% and after 5τ 99.3%.'
+  - q: 'Does a bigger resistor make a capacitor charge faster?'
+    a: 'No, slower. A bigger resistor limits the current, so τ = RC grows and the capacitor charges more slowly.'
+  - q: 'Is an RC circuit a low pass or high pass filter?'
+    a: 'Both, depending on where you take the output. Across the capacitor it is low pass; across the resistor it is high pass.'
+  - q: 'Where are RC circuits used?'
+    a: 'Timers, switch debouncing, power on reset, filters, snubbers, decoupling, oscillators and the delay of logic signals.'
+references:
+  - text: 'OpenStax, University Physics Volume 2, Section 10.5 RC Circuits'
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/10-5-rc-circuits'
+  - text: 'All About Circuits, Voltage and Current Calculations, Lessons in Electric Circuits Volume I'
+    url: 'https://www.allaboutcircuits.com/textbook/direct-current/chpt-16/voltage-current-calculations/'
+  - text: 'Horowitz and Hill, The Art of Electronics, 3rd edition, Cambridge University Press, Chapter 1'
+    url: 'https://artofelectronics.net/'
+next:
+  name: 'RLC circuit'
+  href: '/basics/rlc-circuit/'
+---
+
+import RLCSim from '../../../../components/sims/RLCSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is an RC circuit?
+
+An RC circuit is a resistor (R) and a capacitor (C) connected to a voltage source. It is one of the most useful circuits in electronics because it introduces time. A resistor responds to a voltage instantly; a capacitor stores charge, so its voltage can only change gradually. Put the two together and you get a predictable delay that sets the timing of timers, filters, reset circuits and oscillators.
+
+In this guide we look at the series RC circuit in both of its roles: as a transient circuit that charges and discharges after a voltage step, and as a filter that passes some frequencies and blocks others.
+
+<figure>
+  <img src="/images/figures/rc-circuit-diagram.webp" alt="Series RC circuit with DC source V, switch S, resistor R, capacitor C and charging current i" width="1120" height="540" loading="lazy" />
+  <figcaption>Figure 1. Series RC circuit. When the switch closes, the capacitor charges through the resistor.</figcaption>
+</figure>
+
+## The time constant τ = RC
+
+The product of resistance and capacitance has the unit of seconds and is called the time constant:
+
+$$
+\tau = R \times C
+$$
+
+A 1 kΩ resistor with a 1 µF capacitor gives τ = 1 ms. A 10 kΩ resistor with 100 µF gives 1 s. The time constant tells you everything about the speed of the circuit: after each τ, the capacitor has covered 63.2% of whatever change was still left. To work out τ for any pair of values, the [RC time constant calculator](https://zentacalculator.com/physics/rc-time-constant/) gives it in one step.
+
+| Time | Charging, % of V | Discharging, % of V0 left |
+| --- | --- | --- |
+| 1τ | 63.2% | 36.8% |
+| 2τ | 86.5% | 13.5% |
+| 3τ | 95.0% | 5.0% |
+| 4τ | 98.2% | 1.8% |
+| 5τ | 99.3% | 0.7% |
+
+## Charging an RC circuit
+
+When the switch closes at t = 0 on an empty capacitor, the capacitor voltage cannot jump. It starts at zero, so the full source voltage V appears across the resistor and the starting current is V / R. As the capacitor charges, its voltage rises, the voltage across R falls and the current falls with it. That self slowing is what makes the curve exponential:
+
+$$
+v_C(t) = V\left(1 - e^{-t/RC}\right) \qquad i(t) = \frac{V}{R}\,e^{-t/RC}
+$$
+
+<figure>
+  <img src="/images/figures/rc-circuit-charging-curve.webp" alt="RC charging curve from the simulator: capacitor voltage rising to 63.2% at one time constant while the resistor voltage and current decay" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 2. Simulated charging of 1 µF through 1 kΩ from 10 V. The capacitor reaches 6.32 V at 1 ms (1τ) while the current decays with the same time constant.</figcaption>
+</figure>
+
+## Discharging an RC circuit
+
+If a capacitor charged to V0 is connected across a resistor, it discharges along the mirror image curve:
+
+$$
+v_C(t) = V_0\,e^{-t/RC}
+$$
+
+To find the time to reach a certain voltage, rearrange the equation with a natural log. For charging, t = −RC × ln(1 − vC / V). For discharging, t = RC × ln(V0 / vC). These two equations are the basis of every RC timer, including the 555 timer, which compares the capacitor voltage with thresholds at one third and two thirds of the supply.
+
+<Callout type="insight">
+The energy needed to charge a capacitor through a resistor is split exactly in half: half is stored in the capacitor as ½CV² and half is lost as heat in the resistor, whatever the value of R. You can check the stored part with the [capacitor energy calculator](https://zentacalculator.com/electronics/capacitor-energy/).
+</Callout>
+
+## Square wave response
+
+Feed an RC circuit with a square wave and the result depends on how τ compares with the square wave's half period.
+
+- **τ much shorter than the half period:** the capacitor fully charges and discharges on every edge. The capacitor voltage is a square wave with rounded corners, and the resistor voltage shows sharp spikes on each edge. Taken across R, this is a differentiator.
+- **τ about equal to the half period:** the capacitor never fully charges, giving the familiar shark fin shape.
+- **τ much longer than the half period:** the capacitor voltage barely moves and becomes a small triangle wave around the average. Taken across C, this is an integrator.
+
+Try all three in the simulator by changing the source frequency with Square selected.
+
+## RC filter: low pass and high pass
+
+In AC terms a capacitor has a reactance XC = 1 / (2πfC) that falls as frequency rises. In a series RC circuit, the input voltage divides between R and XC:
+
+- **Output across C (low pass).** At low frequency XC is large, so most of the voltage appears across C. At high frequency C acts like a short and the output falls.
+- **Output across R (high pass).** The opposite: low frequencies are blocked by C and high frequencies pass.
+
+Both filters have the same cutoff frequency, where XC equals R:
+
+$$
+f_c = \frac{1}{2\pi RC}
+$$
+
+<figure>
+  <img src="/images/figures/rc-low-pass-filter-bode-plot.webp" alt="Bode plot of an RC low pass filter from the simulator, showing a flat response, minus 3 dB at the 159 Hz cutoff and a minus 20 dB per decade roll off" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 3. RC low pass filter with R = 1 kΩ and C = 1 µF. The gain is −3 dB at 159 Hz and then falls by 20 dB for every tenfold rise in frequency.</figcaption>
+</figure>
+
+At fc the output is 70.7% of the input and shifted by 45°. Above fc a first order RC filter rolls off at 20 dB per decade, which is 6 dB per octave. For quick filter sizing, the [RC filter calculator](https://zentacalculator.com/electronics/rc-filter/) works out fc or the component values, and the [reactance calculator](https://zentacalculator.com/electronics/reactance/) shows XC at any frequency.
+
+## RC circuit simulator
+
+Start with a Step source and read the τ markers on the scope: the capacitor reaches 63.2% at 1τ. The theory table checks τ, the cutoff frequency and the phase at fc. Then switch to Square to see integrator and differentiator behaviour, and open the Frequency response tab for the Bode plot. Choose V R as the output to see the high pass version.
+
+<RLCSim circ="rc" R={1000} C={1e-6} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a 12 V supply charges a 100 µF capacitor through 10 kΩ from zero
+
+**Find:** the time constant, the starting current and the time to reach 9 V
+
+**Solution:**
+
+1. τ = 10,000 × 100 × 10⁻⁶ = 1 s
+2. Starting current: 12 / 10,000 = 1.2 mA
+3. 9 V is 75% of 12 V, so t = −1 × ln(1 − 0.75) = ln 4 ≈ 1.39 s
+4. Nearly full charge: 5τ = 5 s
+
+**Answer:** τ = 1 s, the current starts at 1.2 mA, and the capacitor reaches 9 V after about 1.39 s.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="An RC low pass filter uses R = 10 kΩ and C = 10 nF. What is its cutoff frequency?" options={['159 Hz', '1.59 kHz', '15.9 kHz', '159 kHz']} answer={1} explain="fc = 1 / (2π × 10,000 × 10 × 10⁻⁹) = 1 / (6.28 × 10⁻⁴) ≈ 1.59 kHz." />
+
+## Where RC circuits are used
+
+- **Timing and delay.** Power on reset circuits, 555 timers and delayed relay drivers.
+- **Switch debouncing.** An RC filter smooths the bounces of a mechanical contact before a logic input.
+- **Filtering.** Anti aliasing before an ADC, removing noise from sensor signals and smoothing PWM into an analog voltage.
+- **Coupling and decoupling.** A series capacitor blocks DC between amplifier stages; a capacitor from supply to ground removes high frequency noise.
+- **Snubbers.** An RC network across a switch or relay contact absorbs voltage spikes.
+
+## Measuring τ on a real circuit
+
+Drive the circuit with a square wave from a function generator, slow enough that the capacitor fully charges on each half cycle. On the oscilloscope, measure from the rising edge to the point where the capacitor voltage reaches 63.2% of its full swing. That interval is τ. Most scopes can place cursors at these levels; the simulator above does the same with C1 and C2.
+
+To measure fc, use a sine wave and sweep its frequency until the output amplitude is 70.7% of the input. Remember that the scope probe and the source resistance both load the circuit, so for small capacitors and large resistors the measured values can differ from theory.
+
+## RC circuit vs RL circuit
+
+An inductor with a resistor behaves in a similar way, but with the roles of voltage and current swapped. In an RL circuit the current cannot change instantly, so it rises exponentially with a time constant τ = L / R, while the inductor voltage starts at the full supply and decays. RL circuits appear in relay coils, motor windings and current limiting in power converters. When the current through an inductor is suddenly interrupted, it produces a large voltage spike, which is why relay coils need a flyback diode. RC circuits are more common for timing because capacitors are cheaper, smaller and closer to ideal than inductors at low frequencies. The [RL time constant calculator](https://zentacalculator.com/electronics/rl-time-constant/) covers the inductor version.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Decide the function', d: 'Delay, filter, debounce or coupling.' },
+  { t: 'Set τ or fc', d: 'Pick the timing or cutoff frequency the application needs.' },
+  { t: 'Choose C first', d: 'Pick a practical capacitor value and type, then calculate R = τ / C.' },
+  { t: 'Check loading', d: 'Keep R small compared with the load and large compared with the source resistance.' },
+  { t: 'Verify', d: 'Run the values in the simulator, then measure τ or fc on the bench.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Expecting a capacitor to be fully charged after 1τ.', fix: 'Use 5τ for practically full charge; 1τ is only 63.2%.' },
+  { m: 'Ignoring capacitor tolerance in timing circuits.', fix: 'Electrolytics can be ±20% or worse; use film or C0G parts for accurate timing.' },
+  { m: 'Loading the filter output with a low impedance input.', fix: 'Buffer the output or make the load at least ten times R.' },
+  { m: 'Forgetting the source resistance.', fix: 'Add the driver output resistance to R when you calculate τ and fc.' },
+]} />

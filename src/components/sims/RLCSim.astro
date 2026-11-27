@@ -1,0 +1,313 @@
+---
+// Live series RC and RLC lab: time response and Bode plot. Runs in the browser (src/sim/rlc.js), no server.
+const { circ = 'rlc', R = 100, L = 10e-3, C = 1e-6, src = 'step' } = Astro.props as { circ?: 'rc' | 'rlc'; R?: number; L?: number; C?: number; src?: 'step' | 'square' | 'sine' };
+const Rs = [1.0, 2.2, 4.7, 10.0, 22.0, 47.0, 50, 100.0, 200, 220.0, 470.0, 500, 1000.0, 2200.0, 4700.0, 10000.0, 22000.0, 47000.0, 100000.0, 220000.0, 470000.0, 1000000.0], Ls = [1e-06, 2.2e-06, 4.7e-06, 1e-05, 2.2e-05, 4.7e-05, 0.0001, 0.00022, 0.00047, 0.001, 0.0022, 0.0047, 0.01, 0.022, 0.047, 0.1, 0.22, 0.47, 1.0], Cs = [1e-09, 2.2e-09, 4.7e-09, 1e-08, 2.2e-08, 4.7e-08, 1e-07, 2.2e-07, 4.7e-07, 1e-06, 2.2e-06, 4.7e-06, 1e-05, 2.2e-05, 4.7e-05, 0.0001, 0.00022, 0.00047, 0.001];
+const fsrcs = [10, 20, 50, 100, 200, 500, 1000, 1591.549, 2000, 5000, 10000, 20000, 50000, 100000];
+const near = (list: number[], v: number) => list.reduce((b, x, i) => (Math.abs(Math.log(x / v)) < Math.abs(Math.log(list[b] / v)) ? i : b), 0);
+const sl = [
+  { k: 'V', label: 'Source amplitude V', min: 1, max: 20, step: 0.5, val: 10, unit: 'V' },
+  { k: 'fsrc', label: 'Source frequency', list: fsrcs, val: 1000, unit: 'Hz' },
+  { k: 'R', label: 'Resistance R', list: Rs, val: R, unit: 'Ω' },
+  { k: 'L', label: 'Inductance L', list: Ls, val: L, unit: 'H', rlc: true },
+  { k: 'C', label: 'Capacitance C', list: Cs, val: C, unit: 'F' },
+];
+const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
+---
+<section class="sim" data-rlc-sim data-circ={circ} data-src={src} data-pagefind-ignore aria-label={`${name} simulator`}>
+  <div class="top">
+    <div><p class="kick">Simulator</p><p class="ttl">{name}</p></div>
+    <div class="topr"><span class="badge" data-mode>First order</span><button type="button" class="tb" data-fs>Full screen</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tb on" data-tab="time" aria-selected="true">Time response</button>
+    <button type="button" role="tab" class="tb" data-tab="freq" aria-selected="false">Frequency response</button>
+  </div>
+  <div class="body">
+    <div class="panel">
+      <p class="grp">Circuit</p>
+      <div class="seg"><button type="button" class="tb" data-circ="rc">Series RC</button><button type="button" class="tb" data-circ="rlc">Series RLC</button></div>
+      <p class="grp">Source</p>
+      <div class="seg"><button type="button" class="tb" data-src="step">Step</button><button type="button" class="tb" data-src="square">Square</button><button type="button" class="tb" data-src="sine">Sine</button></div>
+      <p class="grp">Output for Bode plot</p>
+      <div class="seg"><button type="button" class="tb" data-out="vC">V C</button><button type="button" class="tb" data-out="vR">V R</button><button type="button" class="tb" data-out="vL" data-rlc>V L</button><button type="button" class="tb" data-out="i">Current</button></div>
+      {sl.map((s) => (
+        <label class="ctl" data-rlc={s.rlc ? '' : undefined}>
+          <span class="row"><span>{s.label}</span><output data-out-v={s.k}></output></span>
+          {s.list
+            ? <input type="range" data-k={s.k} data-scale="list" data-list={JSON.stringify(s.list)} data-unit={s.unit} data-def={near(s.list, s.val)} min="0" max={s.list.length - 1} step="1" value={near(s.list, s.val)} />
+            : <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />}
+        </label>
+      ))}
+      <label class="chk"><input type="checkbox" data-k="rest" data-def="0" /> Start square or sine from rest</label>
+      <div class="btns"><button type="button" class="tb" data-reset>Reset</button><button type="button" class="tb" data-share>Copy link</button><button type="button" class="tb" data-csv>Export CSV</button></div>
+    </div>
+    <div class="scopewrap">
+      <div class="chs" data-tchs>
+        <label style="--c:#A78BFA"><input type="checkbox" data-ch="vs" checked /> V source</label>
+        <label style="--c:#F472B6"><input type="checkbox" data-ch="vC" checked /> V C</label>
+        <label style="--c:#34D399"><input type="checkbox" data-ch="vR" /> V R</label>
+        <label style="--c:#FBBF24" data-rlc><input type="checkbox" data-ch="vL" /> V L</label>
+        <label style="--c:#22D3EE"><input type="checkbox" data-ch="i" checked /> Current</label>
+      </div>
+      <div class="chs" data-fchs hidden><span style="color:#F472B6">Gain</span><span style="color:#22D3EE">Phase</span><span style="color:#94A3B8">Dashed: −3 dB and fc or f0</span></div>
+      <canvas class="scope" aria-label="Oscilloscope and Bode plot view of the RC or RLC circuit" role="img"></canvas>
+      <p class="hint" data-hint></p>
+      <div class="reads" data-reads></div>
+    </div>
+  </div>
+  <div class="lower">
+    <div class="card2">
+      <p class="grp">Theory vs simulated</p>
+      <div class="tblw"><table><thead><tr><th>Quantity</th><th>Theory</th><th>Simulated</th><th>Error</th><th>Test</th></tr></thead><tbody data-acc></tbody></table></div>
+    </div>
+    <div class="card2">
+      <p class="grp">Circuit values</p>
+      <div class="loss" data-loss></div>
+    </div>
+  </div>
+  <p class="note">Model: ideal R, L and C in series with an ideal voltage source. Time response by RK4 integration, 4,000 steps per window, with the exact periodic steady state for square and sine sources. Frequency response from complex impedance; −3 dB points and resonance are found numerically.</p>
+</section>
+
+<script>
+  import { timeResponse, sweep, accuracy, params, H, mag, phase } from '../../sim/rlc.js';
+
+  const fmt = (v: number, unit = '') => {
+    if (!isFinite(v)) return 'n/a';
+    if (Math.abs(v) < 1e-12) v = 0;
+    const a = Math.abs(v);
+    const pre = a === 0 ? ['', 1] : a >= 1e6 ? ['M', 1e-6] : a >= 1e3 ? ['k', 1e-3] : a >= 1 ? ['', 1] : a >= 1e-3 ? ['m', 1e3] : a >= 1e-6 ? ['µ', 1e6] : ['n', 1e9];
+    const x = v * (pre[1] as number);
+    return `${Math.abs(x) >= 100 ? x.toFixed(1) : Math.abs(x) >= 10 ? x.toFixed(2) : x.toFixed(3)} ${pre[0]}${unit}`.trim();
+  };
+  const COL: Record<string, string> = { vs: '#A78BFA', vC: '#F472B6', vR: '#34D399', vL: '#FBBF24', i: '#22D3EE' };
+
+  document.querySelectorAll<HTMLElement>('[data-rlc-sim]').forEach((root) => {
+    const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const $$ = <T extends Element>(s: string) => [...root.querySelectorAll<T>(s)];
+    const inputs = $$<HTMLInputElement>('input[data-k]');
+    const canvas = $<HTMLCanvasElement>('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const def = { circ: root.dataset.circ!, src: root.dataset.src!, out: 'vC' };
+    const st = { ...def };
+    let tab: 'time' | 'freq' = 'time';
+    let cur = [0.2, 0.45];
+    let rec: any = null, bode: any = null;
+
+    const valOf = (el: HTMLInputElement) => (el.type === 'checkbox' ? el.checked : el.dataset.scale === 'list' ? JSON.parse(el.dataset.list!)[+el.value] : +el.value);
+    const P = () => { const p: any = { ...st }; inputs.forEach((el) => (p[el.dataset.k!] = valOf(el))); return p; };
+    const fromHash = () => {
+      const m = location.hash.match(/rlc=([^&]+)/);
+      if (!m) return;
+      const q = new URLSearchParams(decodeURIComponent(m[1]));
+      (['circ', 'src', 'out'] as const).forEach((k) => { if (q.get(k)) st[k] = q.get(k)!; });
+      inputs.forEach((el) => { const v = q.get(el.dataset.k!); if (v == null) return; if (el.type === 'checkbox') el.checked = v === '1'; else el.value = v; });
+    };
+
+    function grid(x0: number, y0: number, w: number, h: number, nx = 8) {
+      ctx.strokeStyle = '#1E293B'; ctx.lineWidth = 1; ctx.beginPath();
+      for (let g = 0; g <= nx; g++) { const x = x0 + (g * w) / nx; ctx.moveTo(x, y0); ctx.lineTo(x, y0 + h); }
+      ctx.moveTo(x0, y0 + h); ctx.lineTo(x0 + w, y0 + h); ctx.stroke();
+    }
+    const left = 64, right = 12, top = 8, bottom = 22;
+
+    function drawTime(W: number, H: number) {
+      const p = P();
+      const on = (k: string) => !!root.querySelector<HTMLInputElement>(`[data-ch="${k}"]`)?.checked && !(k === 'vL' && p.circ === 'rc');
+      const volt = ['vs', 'vC', 'vR', 'vL'].filter(on);
+      const bands: { keys: string[]; unit: string; w: number }[] = [];
+      if (volt.length) bands.push({ keys: volt, unit: 'V', w: 2 });
+      if (on('i')) bands.push({ keys: ['i'], unit: 'A', w: 1 });
+      const pw = W - left - right, n = rec.t.length, t0 = rec.t[0], t1 = rec.t[n - 1];
+      const X = (i: number) => left + ((rec.t[i] - t0) / (t1 - t0)) * pw;
+      const tw = bands.reduce((a, b) => a + b.w, 0) || 1;
+      let y0 = top;
+      bands.forEach((b) => {
+        const bh = ((H - top - bottom) * b.w) / tw;
+        let mn = 0, mx = 0;
+        b.keys.forEach((k) => { for (const v of rec[k]) { if (v < mn) mn = v; if (v > mx) mx = v; } });
+        if (mx - mn < 1e-12) { mx += 1e-3; mn -= 1e-3; }
+        const pad = (mx - mn) * 0.08, lo = mn - pad, hi = mx + pad, Y = (v: number) => y0 + 6 + (1 - (v - lo) / (hi - lo)) * (bh - 12);
+        grid(left, y0, pw, bh);
+        ctx.strokeStyle = '#334155'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(left, Y(0)); ctx.lineTo(left + pw, Y(0)); ctx.stroke(); ctx.setLineDash([]);
+        const stepI = Math.max(1, Math.floor(n / (pw * 2)));
+        b.keys.forEach((k) => { ctx.strokeStyle = COL[k]; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i < n; i += stepI) { const x = X(i), y = Y(rec[k][i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); });
+        ctx.fillStyle = '#94A3B8'; ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+        ctx.fillText(fmt(mx, b.unit), 4, Y(mx) + 4); ctx.fillText(mn < -1e-9 ? fmt(mn, b.unit) : '0', 4, Y(mn < -1e-9 ? mn : 0) + 4);
+        y0 += bh;
+      });
+      // Time constant markers for an RC step response.
+      if (p.circ === 'rc' && p.src === 'step') {
+        const tau = params(p).tau; ctx.fillStyle = '#64748B'; ctx.textAlign = 'center';
+        for (let k = 1; k <= 5; k++) { const x = left + ((k * tau - t0) / (t1 - t0)) * pw; if (x > left + pw) break; ctx.strokeStyle = '#475569'; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`${k}τ`, x, top + 24); }
+      }
+      ctx.fillStyle = '#64748B'; ctx.textAlign = 'center'; ctx.font = '11px "IBM Plex Mono", monospace';
+      for (let g = 0; g <= 4; g++) ctx.fillText(fmt(((t1 - t0) * g) / 4, 's'), left + (g * pw) / 4, H - 6);
+      ctx.strokeStyle = '#FB923C'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      cur.forEach((c, i) => { const x = left + c * pw; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.fillStyle = '#FDBA74'; ctx.fillText(`C${i + 1}`, x + 10, top + 12); });
+      ctx.setLineDash([]);
+    }
+
+    function drawFreq(W: number, H: number) {
+      const p = P(), c = params(p), fk = p.circ === 'rc' ? c.fc : c.f0;
+      const pw = W - left - right, n = bode.f.length, lf0 = Math.log10(bode.f[0]), lf1 = Math.log10(bode.f[n - 1]);
+      const X = (f: number) => left + ((Math.log10(f) - lf0) / (lf1 - lf0)) * pw;
+      const bh = (H - top - bottom) / 2;
+      [[bode.db, '#F472B6', 'dB'], [bode.ph, '#22D3EE', '°']].forEach(([data, col, unit]: any, bi) => {
+        const y0 = top + bi * bh;
+        let mn = Math.min(...data), mx = Math.max(...data);
+        if (unit === 'dB') { mx = Math.max(mx, 0) + 3; mn = Math.max(mn, mx - 100); } else { mn = Math.min(mn, -90) - 5; mx = Math.max(mx, 90) + 5; }
+        const Y = (v: number) => y0 + 6 + (1 - (Math.max(mn, Math.min(mx, v)) - mn) / (mx - mn)) * (bh - 12);
+        grid(left, y0, pw, bh, 6);
+        ctx.strokeStyle = '#475569'; ctx.setLineDash([4, 4]); ctx.beginPath();
+        if (unit === 'dB') { const ref = Math.max(...data) - 3.0103; ctx.moveTo(left, Y(ref)); ctx.lineTo(left + pw, Y(ref)); }
+        ctx.moveTo(X(fk), y0); ctx.lineTo(X(fk), y0 + bh); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+        for (let i = 0; i < n; i++) { const x = X(bode.f[i]), y = Y(data[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.stroke();
+        ctx.fillStyle = '#94A3B8'; ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+        const tk = unit === 'dB' ? [Math.round(mx / 10) * 10, Math.round((mx + mn) / 20) * 10, Math.round(mn / 10) * 10] : [90, 0, -90];
+        tk.forEach((v) => ctx.fillText(`${v}${unit === 'dB' ? ' dB' : '°'}`, 4, Y(v) + 4));
+      });
+      ctx.fillStyle = '#64748B'; ctx.textAlign = 'center';
+      for (let d = Math.ceil(lf0); d <= Math.floor(lf1); d++) ctx.fillText(fmt(10 ** d, 'Hz'), X(10 ** d), H - 6);
+      ctx.strokeStyle = '#FB923C'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      const x = left + cur[0] * pw; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#FDBA74'; ctx.fillText('C1', x + 10, top + 12);
+    }
+
+    function draw() {
+      const dpr = Math.min(2, devicePixelRatio || 1), W = canvas.clientWidth, H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#0E1828'; ctx.fillRect(0, 0, W, H);
+      if (tab === 'time' && rec) drawTime(W, H); else if (tab === 'freq' && bode) drawFreq(W, H);
+      reads();
+    }
+
+    function reads() {
+      const p = P(), c = params(p);
+      const items: [string, string, string?][] = [];
+      if (tab === 'time' && rec) {
+        const at = (u: number, k: string) => { const i = Math.min(rec.t.length - 1, Math.round(u * (rec.t.length - 1))); return [rec.t[i] - rec.t[0], rec[k][i]]; };
+        const [ta, va] = at(cur[0], 'vC'), [tb, vb] = at(cur[1], 'vC'), [, ia] = at(cur[0], 'i'), [, ib] = at(cur[1], 'i');
+        items.push(['C1 → C2 Δt', fmt(tb - ta, 's')], ['V C at C1 / C2', `${fmt(va, 'V')} / ${fmt(vb, 'V')}`, '#F472B6'], ['Current C1 / C2', `${fmt(ia, 'A')} / ${fmt(ib, 'A')}`, '#22D3EE']);
+        if (p.circ === 'rc') items.push(['Elapsed in τ', `${((tb - ta) / c.tau).toFixed(2)} τ`]);
+      }
+      if (tab === 'freq' && bode) {
+        const f = bode.f[0] * (bode.f[bode.f.length - 1] / bode.f[0]) ** cur[0], z = H(p, f);
+        items.push(['Frequency at C1', fmt(f, 'Hz')], ['Gain at C1', `${(20 * Math.log10(mag(z)) - (p.out === 'i' ? 20 * Math.log10(1 / p.R) : 0)).toFixed(2)} dB`, '#F472B6'], ['Phase at C1', `${phase(z).toFixed(1)}°`, '#22D3EE']);
+      }
+      if (p.circ === 'rc') items.push(['Time constant τ', fmt(c.tau, 's'), '#FBBF24'], ['Cutoff fc', fmt(c.fc, 'Hz'), '#FBBF24']);
+      else { items.push(['Resonance f0', fmt(c.f0, 'Hz'), '#FBBF24'], ['Q factor', c.Q.toFixed(3)], ['Damping ratio ζ', c.zeta.toFixed(3)], ['Bandwidth', fmt(c.bw, 'Hz')]); if (c.fd) items.push(['Ringing fd', fmt(c.fd, 'Hz')]); }
+      $('[data-reads]').innerHTML = items.map(([a, b, col]) => `<div><span>${a}</span><b style="color:${col ?? '#fff'}">${b}</b></div>`).join('');
+    }
+
+    function run() {
+      const p = P(), c = params(p);
+      inputs.forEach((el) => { const o = root.querySelector(`[data-out-v="${el.dataset.k}"]`); if (o) o.textContent = el.dataset.k === 'fsrc' ? fmt(p.fsrc, 'Hz') : fmt(p[el.dataset.k!], el.dataset.unit); });
+      ([['circ', st.circ], ['src', st.src], ['out', st.out]] as const).forEach(([k, v]) => $$<HTMLButtonElement>(`[data-${k}]`).forEach((b) => b.tagName === 'BUTTON' && b.classList.toggle('on', b.getAttribute(`data-${k}`) === v)));
+      $$<HTMLElement>('[data-rlc]').forEach((e) => (e.style.display = p.circ === 'rc' ? 'none' : ''));
+      if (p.circ === 'rc' && st.out === 'vL') { st.out = 'vC'; return run(); }
+      $('[data-mode]').textContent = c.type;
+      if (tab === 'time') rec = timeResponse(p).rec; else bode = sweep(p);
+      const acc = accuracy(p);
+      $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${r.unit === '°' ? r.theory.toFixed(2) + '°' : r.unit === '%' ? r.theory.toFixed(2) + ' %' : fmt(r.theory, r.unit)}</td><td>${r.unit === '°' ? r.sim.toFixed(2) + '°' : r.unit === '%' ? r.sim.toFixed(2) + ' %' : fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(3)}%</td><td class="${r.pass ? 'sim-ok' : 'sim-bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
+      const w = 2 * Math.PI * p.fsrc, xl = w * p.L, xc = 1 / (w * p.C), z = Math.hypot(p.R, (p.circ === 'rc' ? 0 : xl) - xc);
+      const rows: [string, string][] = [['Reactance XC at source f', fmt(xc, 'Ω')]];
+      if (p.circ === 'rlc') rows.push(['Reactance XL at source f', fmt(xl, 'Ω')]);
+      rows.push(['Impedance |Z| at source f', fmt(z, 'Ω')], ['Phase of Z', `${((Math.atan2((p.circ === 'rc' ? 0 : xl) - xc, p.R) * 180) / Math.PI).toFixed(1)}°`]);
+      if (p.circ === 'rlc') rows.push(['Characteristic impedance √(L/C)', fmt(Math.sqrt(p.L / p.C), 'Ω')], ['Critical resistance 2√(L/C)', fmt(2 * Math.sqrt(p.L / p.C), 'Ω')], ['Peak energy in C (step)', fmt(0.5 * p.C * (p.V * (1 + (c.fd ? Math.exp((-Math.PI * c.zeta) / Math.sqrt(1 - c.zeta ** 2)) : 0))) ** 2, 'J')]);
+      else rows.push(['Energy in C when charged', fmt(0.5 * p.C * p.V * p.V, 'J')]);
+      $('[data-loss]').innerHTML = rows.map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('');
+      $('[data-tchs]').hidden = tab !== 'time'; $('[data-fchs]').hidden = tab !== 'freq';
+      $('[data-hint]').textContent = tab === 'time'
+        ? (p.src === 'step' ? 'Response to a step from 0 to V at t = 0. Drag C1 and C2 to measure.' : p.rest ? 'Source switched on at t = 0 with the circuit at rest.' : 'Two periods of the steady state response.')
+        : 'Bode plot over six decades. Drag the cursor to read gain and phase. Pick the output with the buttons on the left.';
+      draw();
+      const q = new URLSearchParams({ ...st, ...Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value])) });
+      history.replaceState(null, '', `#rlc=${encodeURIComponent(q.toString())}`);
+    }
+
+    let pending = 0;
+    const schedule = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(run); };
+    inputs.forEach((el) => el.addEventListener('input', schedule));
+    (['circ', 'src', 'out'] as const).forEach((k) => $$<HTMLButtonElement>(`button[data-${k}]`).forEach((b) => b.addEventListener('click', () => { st[k] = b.getAttribute(`data-${k}`)!; schedule(); })));
+    $$<HTMLInputElement>('[data-ch]').forEach((el) => el.addEventListener('change', draw));
+    $$<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+      tab = b.dataset.tab as any;
+      $$<HTMLButtonElement>('[data-tab]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
+      cur = tab === 'time' ? [0.2, 0.45] : [0.5, 0.5]; schedule();
+    }));
+    $('[data-reset]').addEventListener('click', () => { Object.assign(st, def); inputs.forEach((el) => { if (el.type === 'checkbox') el.checked = el.dataset.def === '1'; else el.value = el.dataset.def!; }); schedule(); });
+    $('[data-share]').addEventListener('click', async (e) => { const b = e.currentTarget as HTMLButtonElement; try { await navigator.clipboard.writeText(location.href); b.textContent = 'Link copied'; } catch { b.textContent = 'Copy failed'; } setTimeout(() => (b.textContent = 'Copy link'), 2000); });
+    $('[data-csv]').addEventListener('click', () => {
+      const rows = tab === 'time'
+        ? ['time_s,v_source_V,v_C_V,v_R_V,v_L_V,current_A', ...rec.t.map((t: number, i: number) => [t, rec.vs[i], rec.vC[i], rec.vR[i], rec.vL[i], rec.i[i]].map((x: number) => x.toPrecision(6)).join(','))]
+        : ['frequency_Hz,gain_dB,phase_deg', ...bode.f.map((f: number, i: number) => [f, bode.db[i], bode.ph[i]].map((x: number) => x.toPrecision(6)).join(','))];
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `${st.circ}-${tab}.csv`; a.click();
+    });
+    $('[data-fs]').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.()));
+    root.addEventListener('fullscreenchange', () => setTimeout(draw, 50));
+
+    let drag = -1;
+    const posOf = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left - 64) / (r.width - 76))); };
+    canvas.addEventListener('pointerdown', (e) => { const p = posOf(e); drag = tab === 'freq' ? 0 : Math.abs(p - cur[0]) < Math.abs(p - cur[1]) ? 0 : 1; cur[drag] = p; canvas.setPointerCapture(e.pointerId); draw(); });
+    canvas.addEventListener('pointermove', (e) => { if (drag < 0) return; cur[drag] = posOf(e); draw(); });
+    canvas.addEventListener('pointerup', () => (drag = -1));
+
+    new ResizeObserver(() => draw()).observe(canvas);
+    fromHash();
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); run(); } }, { rootMargin: '200px' });
+    io.observe(root);
+  });
+</script>
+
+<style>
+  .sim { background: var(--bench); color: #e2e8f0; border-radius: 20px; padding: 22px; margin: 24px 0 16px; font-size: 15px; line-height: 1.5; }
+  .sim:fullscreen { overflow-y: auto; border-radius: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kick { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #fda4af; }
+  .ttl { margin: 2px 0 0; font-size: 22px; font-weight: 600; color: #fff; }
+  .topr { display: flex; gap: 8px; align-items: center; }
+  .badge { background: #064e3b; color: #6ee7b7; padding: 6px 10px; border-radius: 999px; font-family: var(--mono); font-size: 12px; }
+  .badge.warn { background: #78350f; color: #fcd34d; }
+  .tb { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: var(--bench-2); color: #e2e8f0; font: 500 13px var(--sans); cursor: pointer; }
+  .tb.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .body { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { flex: 1 1 240px; background: var(--bench-2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .grp { margin: 4px 0 0; font-family: var(--mono); font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+  .ctl { display: flex; flex-direction: column; gap: 2px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  output { font-family: var(--mono); color: #fff; }
+  input[type='range'] { width: 100%; accent-color: var(--red); height: 24px; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg .tb { flex: 1 1 auto; }
+  .zen[hidden] { display: none; }
+  .zen { display: flex; flex-direction: column; gap: 10px; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--red); }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scopewrap { flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chs { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; }
+  .chs[hidden] { display: none; }
+  .chs label { color: var(--c); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .chs input { accent-color: var(--c); }
+  .scope { width: 100%; height: 440px; border-radius: 12px; touch-action: none; cursor: ew-resize; display: block; }
+  .hint { margin: 0; font-size: 12px; color: #64748b; }
+  .reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-family: var(--mono); font-size: 13px; }
+  .reads :global(div) { background: var(--bench-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+  .reads :global(span) { color: #94a3b8; font-size: 12px; }
+  .lower { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .card2 { flex: 1 1 300px; min-width: 0; background: var(--bench-2); border-radius: 12px; padding: 14px 16px; }
+  .tblw { overflow-x: auto; }
+  .sim :global(table) { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .sim :global(th) { text-align: left; color: #94a3b8; font-weight: 400; padding: 6px 8px; background: none; }
+  .sim :global(td) { padding: 6px 8px; border-top: 1px solid var(--bench-line); color: #e2e8f0; white-space: nowrap; }
+  .sim :global(.sim-ok) { color: #34d399; }
+  .sim :global(.sim-bad) { color: #f87171; }
+  .sim :global(.sim-warn) { color: #fbbf24; }
+  .loss { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .loss :global(.tot) { border-top: 1px solid var(--bench-line); padding-top: 4px; color: #fff; }
+  .note { margin: 12px 0 0; font-size: 12px; color: #64748b; }
+  @media (max-width: 700px) { .scopewrap { order: -1; } .scope { height: 360px; } .sim { padding: 14px; margin-left: -8px; margin-right: -8px; } }
+</style>

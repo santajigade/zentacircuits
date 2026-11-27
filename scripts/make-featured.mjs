@@ -42,6 +42,13 @@ const ART = {
 <g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
 <path d="M720 420C760 370 800 370 840 420S920 470 960 420S1040 370 1110 420" fill="none" stroke="#F472B6" stroke-width="4"/>
 <path d="M720 500H1110" fill="none" stroke="#34D399" stroke-width="6"/>`,
+  rc: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M740 190H830M910 190H1000V215M1000 245V290H740V190"/><rect x="830" y="176" width="80" height="28" rx="4"/><path d="M975 215h50M975 245h50"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
+<path d="M720 540C760 420 800 390 860 375S980 362 1110 360" fill="none" stroke="#F472B6" stroke-width="5"/>
+<path d="M720 360C760 480 800 510 860 525S980 538 1110 540" fill="none" stroke="#34D399" stroke-width="4"/>`,
+  rlc: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M730 190H770M830 190H860M940 190H1040V215M1040 245V290H730V190"/><rect x="770" y="178" width="60" height="24" rx="4"/><path d="M860 190q10-22 20 0q10-22 20 0q10-22 20 0q10-22 20 0"/><path d="M1015 215h50M1015 245h50"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
+<path d="M720 540C740 330 760 330 780 450S820 560 840 470S880 420 900 465S940 490 960 462S1010 455 1110 460" fill="none" stroke="#F472B6" stroke-width="5"/>`,
   generic: `<g stroke="#1E293B" stroke-width="2"><path d="M720 200H1110M720 300H1110M720 400H1110M720 500H1110M817 150V540M915 150V540M1012 150V540"/></g>
 <path d="M720 340C760 200 800 200 840 340S920 480 960 340S1040 200 1080 340L1110 380" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 470H790V420H880V470H960V420H1040V470H1110" fill="none" stroke="#FBBF24" stroke-width="4"/>`,

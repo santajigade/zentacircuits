@@ -27,6 +27,24 @@ for (const c of rcases) {
     if (!r.pass) fail++;
   }
 }
+import * as rlc from '../src/sim/rlc.js';
+const L0 = rlc.DEFAULTS;
+const lcases = [
+  { name: 'RC 1 kΩ, 1 µF', p: { ...L0, circ: 'rc', R: 1000, C: 1e-6 } },
+  { name: 'RC low pass, 1 kHz sine', p: { ...L0, circ: 'rc', R: 1000, C: 1e-6, src: 'sine' } },
+  { name: 'RLC Q = 10', p: { ...L0, R: 10 } },
+  { name: 'RLC Q = 1', p: { ...L0, R: 100 } },
+  { name: 'RLC critically damped', p: { ...L0, R: 200 } },
+  { name: 'RLC overdamped', p: { ...L0, R: 500 } },
+  { name: 'RLC at resonance, sine, current', p: { ...L0, R: 10, src: 'sine', fsrc: 1591.549, out: 'i' } },
+  { name: 'RLC, sine, inductor voltage', p: { ...L0, R: 50, src: 'sine', fsrc: 2000, out: 'vL' } },
+];
+for (const c of lcases) {
+  for (const r of rlc.accuracy(c.p).rows) {
+    console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${c.name}  ${r.name}: theory ${r.theory.toPrecision(6)} ${r.unit}, sim ${r.sim.toPrecision(6)} ${r.unit}, error ${r.err.toFixed(4)}% (limit ${r.tol}%)`);
+    if (!r.pass) fail++;
+  }
+}
 for (const topo of ['half', 'ct', 'bridge']) {
   const p = { ...R0, topo, C: 0 }, s = rect.steadyState(p), e = rect.exactNoCap(p);
   const err = (Math.abs(s.vdc - e.vdc) / e.vdc) * 100, ok = err < 0.1;

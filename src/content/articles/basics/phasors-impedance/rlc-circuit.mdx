@@ -1,0 +1,222 @@
+---
+title: 'RLC Circuit: Resonance, Q Factor and Damping'
+seoTitle: 'RLC Circuit: Resonant Frequency, Q Factor, Bandwidth, Damping'
+description: 'How a series RLC circuit works: resonant frequency, Q factor, bandwidth, damping ratio and step response, with formulas, a worked example and a live simulator.'
+focusKeyword: 'rlc circuit'
+category: basics
+subcategory: phasors-impedance
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 13
+simulator: rlc-circuit-simulator
+shortAnswer: 'A series RLC circuit connects a resistor, inductor and capacitor in one loop. At the resonant frequency f0 = 1 / (2π√(LC)) the inductor and capacitor reactances cancel, so the impedance falls to R and the current peaks. The Q factor sets how sharp the peak is, and the damping ratio decides whether a step response rings, settles smoothly or creeps.'
+featured:
+  kicker: 'Basics'
+  line1: 'RLC Circuit'
+  line2: 'Resonance, Q factor and damping'
+  art: rlc
+image:
+  alt: 'RLC circuit featured image with a resistor, inductor and capacitor and a ringing step response'
+prerequisites:
+  - name: 'RC circuit'
+    href: '/basics/rc-circuit/'
+learn:
+  - Why XL and XC cancel at the resonant frequency
+  - The formulas for f0, Q factor, bandwidth and damping ratio
+  - How the step response changes from ringing to overdamped
+  - Why voltages across L and C can exceed the source voltage
+  - Where series resonance is used and where it causes trouble
+interview:
+  - q: 'What is the resonant frequency of a series RLC circuit?'
+    a: 'f0 = 1 / (2π√(LC)). At this frequency XL = XC, the reactances cancel and the impedance is purely resistive and at its minimum, equal to R.'
+  - q: 'What is the Q factor of a series RLC circuit?'
+    a: 'Q = (1/R)√(L/C), or equivalently XL / R at resonance. It is also f0 divided by the bandwidth, so a high Q means a narrow, sharp resonance.'
+  - q: 'What is voltage magnification in a series resonant circuit?'
+    a: 'At resonance the voltage across L and across C is Q times the source voltage. With Q = 100, a 1 V source produces 100 V across each reactive part, though they cancel each other in the loop.'
+  - q: 'What decides whether an RLC step response rings?'
+    a: 'The damping ratio ζ = (R/2)√(C/L). Below 1 the circuit is underdamped and rings; at exactly 1 it is critically damped; above 1 it is overdamped and rises slowly without overshoot.'
+  - q: 'How is series resonance different from parallel resonance?'
+    a: 'Series resonance gives minimum impedance and maximum current. Parallel resonance gives maximum impedance and minimum line current, with a large current circulating between L and C.'
+  - q: 'Below resonance, is a series RLC circuit inductive or capacitive?'
+    a: 'Capacitive, because XC is larger than XL below f0. Above f0 it becomes inductive.'
+faq:
+  - q: 'What happens at resonance in an RLC circuit?'
+    a: 'The inductor and capacitor reactances are equal and opposite, so they cancel. The circuit behaves like R alone, current is at its maximum and in phase with the voltage.'
+  - q: 'Does R change the resonant frequency?'
+    a: 'No, f0 depends only on L and C. R sets the height and width of the peak and the damping.'
+  - q: 'What is the bandwidth of an RLC circuit?'
+    a: 'The range between the two frequencies where the current falls to 70.7% of its peak. For a series circuit, BW = R / (2πL) = f0 / Q.'
+  - q: 'Where are RLC circuits used?'
+    a: 'Radio tuning, filters, oscillators, wireless charging, induction heating, resonant converters and power factor correction.'
+references:
+  - text: 'OpenStax, University Physics Volume 2, Section 15.3 RLC Series Circuits with AC'
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/15-3-rlc-series-circuits-with-ac'
+  - text: 'OpenStax, University Physics Volume 2, Section 15.5 Resonance in an AC Circuit'
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/15-5-resonance-in-an-ac-circuit'
+  - text: 'All About Circuits, Simple Series Resonance, Lessons in Electric Circuits Volume II'
+    url: 'https://www.allaboutcircuits.com/textbook/alternating-current/chpt-6/simple-series-resonance/'
+prev:
+  name: 'RC circuit'
+  href: '/basics/rc-circuit/'
+---
+
+import RLCSim from '../../../../components/sims/RLCSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is an RLC circuit?
+
+An RLC circuit contains a resistor, an inductor and a capacitor. In the series form they share one loop and one current. The inductor stores energy in its magnetic field and the capacitor stores it in its electric field, and energy can swing back and forth between them. That exchange gives the circuit a natural frequency, and the resistor decides how quickly the swing dies away.
+
+This makes the RLC circuit the electrical version of a mass on a spring with friction. It explains radio tuning, filters, oscillators and the ringing you see on fast switching edges. If you have not met time constants yet, read the [RC circuit](/basics/rc-circuit/) guide first, because the RLC circuit builds on it.
+
+<figure>
+  <img src="/images/figures/rlc-circuit-diagram.webp" alt="Series RLC circuit with AC source vs, resistor R, inductor L, capacitor C and a single loop current i" width="1240" height="540" loading="lazy" />
+  <figcaption>Figure 1. Series RLC circuit. The same current flows through all three parts.</figcaption>
+</figure>
+
+## Impedance of a series RLC circuit
+
+With a sine wave source, the inductor's reactance XL = 2πfL rises with frequency and the capacitor's reactance XC = 1 / (2πfC) falls. They act in opposite directions, so the net reactance is their difference:
+
+$$
+Z = \sqrt{R^2 + (X_L - X_C)^2} \qquad \phi = \tan^{-1}\frac{X_L - X_C}{R}
+$$
+
+Below resonance XC wins and the circuit is capacitive, with current leading the voltage. Above resonance XL wins and the circuit is inductive, with current lagging. The [reactance calculator](https://zentacalculator.com/electronics/reactance/) gives XL and XC at any frequency.
+
+## Resonant frequency
+
+At one frequency the two reactances are equal and cancel completely. The impedance falls to R alone, the current is at its maximum and in phase with the source:
+
+$$
+f_0 = \frac{1}{2\pi\sqrt{LC}}
+$$
+
+With L = 10 mH and C = 1 µF, f0 = 1 / (2π × 10⁻⁴) ≈ 1.59 kHz. Note that R does not appear: the resistance changes the height and width of the peak, never its position. For quick values, the [resonant frequency calculator](https://zentacalculator.com/electronics/resonant-frequency/) solves the formula for any L and C.
+
+## Q factor and bandwidth
+
+The quality factor Q describes how sharp the resonance is:
+
+$$
+Q = \frac{1}{R}\sqrt{\frac{L}{C}} = \frac{X_L}{R}\Big|_{f_0} = \frac{f_0}{BW}
+$$
+
+The bandwidth BW is the gap between the two half power frequencies, where the current has fallen to 70.7% of its peak. For a series circuit BW = R / (2πL). A high Q gives a narrow band that picks out one frequency, which is what a radio tuner needs. A low Q gives a broad, gentle response.
+
+<figure>
+  <img src="/images/figures/rlc-resonance-curve.webp" alt="Series RLC resonance curves from the simulator: current against frequency for Q of 10, about 3.2 and 1, all peaking at 1.59 kHz" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 2. Current against frequency for three resistances with L = 10 mH and C = 1 µF. All curves peak at the same f0; a smaller R gives a taller, narrower peak.</figcaption>
+</figure>
+
+<Callout type="warning">
+At resonance the voltage across L and across C is Q times the source voltage. A 10 V source with Q = 10 puts 100 V across the capacitor. Rate the capacitor for this, not for the source voltage.
+</Callout>
+
+## Damping and step response
+
+Apply a sudden DC step instead of a sine wave and the circuit answers with its own natural behaviour. The damping ratio decides what that looks like:
+
+$$
+\zeta = \frac{R}{2}\sqrt{\frac{C}{L}} = \frac{1}{2Q}
+$$
+
+| Damping ratio | Name | Step response |
+| --- | --- | --- |
+| ζ < 1 | Underdamped | Overshoots and rings at fd = f0√(1 − ζ²) while decaying |
+| ζ = 1 | Critically damped | Fastest rise with no overshoot |
+| ζ > 1 | Overdamped | Slow rise with no overshoot |
+
+The resistance that gives critical damping is R = 2√(L/C). For an underdamped circuit the first overshoot of the capacitor voltage is e^(−πζ / √(1 − ζ²)) of the step, which is 16.3% when ζ = 0.5 and 85% when ζ = 0.05.
+
+<figure>
+  <img src="/images/figures/rlc-circuit-step-response.webp" alt="Series RLC step response from the simulator for underdamped, critically damped and overdamped resistances" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 3. Capacitor voltage after a 10 V step for four resistances. With R = 10 Ω the circuit rings for many cycles; 200 Ω is critically damped; 600 Ω is overdamped.</figcaption>
+</figure>
+
+## RLC circuit simulator
+
+The lab opens with Q = 10. On the Step source, measure the ringing period with the cursors and compare the overshoot with the theory table. Raise R past 200 Ω to watch the badge change to Critically damped and then Overdamped. Open the Frequency response tab and pick Current to see the resonance peak, or V C to see the voltage magnification. Select Sine and set the source to 1.59 kHz to drive the circuit at resonance.
+
+<RLCSim circ="rlc" R={10} L={10e-3} C={1e-6} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a radio tuning circuit with L = 100 µH, C = 100 pF and R = 10 Ω, driven by a 1 V signal
+
+**Find:** f0, Q, bandwidth and the voltage across C at resonance
+
+**Solution:**
+
+1. √(LC) = √(10⁻⁴ × 10⁻¹⁰) = 10⁻⁷, so f0 = 1 / (2π × 10⁻⁷) ≈ 1.59 MHz
+2. Q = (1 / 10) × √(10⁻⁴ / 10⁻¹⁰) = (1 / 10) × 1,000 = 100
+3. BW = f0 / Q ≈ 15.9 kHz
+4. Current at resonance: 1 / 10 = 0.1 A
+5. Voltage across C: Q × 1 V = 100 V
+
+**Answer:** the circuit tunes to about 1.59 MHz, in the AM broadcast band, with a 15.9 kHz bandwidth and 100 V across the capacitor at resonance.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="A series RLC circuit has L = 1 mH and C = 1 µF. What resistance makes it critically damped?" options={['10 Ω', '31.6 Ω', '63.2 Ω', '1 kΩ']} answer={2} explain="R = 2√(L/C) = 2√(10⁻³ / 10⁻⁶) = 2√1000 ≈ 63.2 Ω." />
+
+## How energy moves inside an RLC circuit
+
+Picture a charged capacitor connected to an inductor through a small resistor. The capacitor pushes current into the inductor, and its voltage falls as its electric field empties. By the time the capacitor voltage reaches zero, all the energy sits in the inductor's magnetic field and the current is at its peak. The inductor now keeps the current flowing and charges the capacitor in the opposite direction. The energy swings back and forth at the natural frequency, just like a pendulum moving between potential and kinetic energy.
+
+Every pass through the resistor turns a little of that energy into heat. With a small R the swing lasts for many cycles, which is the high Q, underdamped case. With a large R the energy is used up before a single swing completes, which is the overdamped case. Q is in fact defined by this: it is 2π times the energy stored divided by the energy lost per cycle.
+
+## Phase across resonance
+
+The phase of the current tells you which side of resonance you are on. Well below f0 the capacitor dominates and the current leads the source voltage by almost 90°. At f0 the phase is exactly zero, so the circuit draws power like a plain resistor. Well above f0 the inductor dominates and the current lags by almost 90°. The phase passes through ±45° at the two half power frequencies. You can see this on the Frequency response tab by choosing V R as the output, since the resistor voltage is in phase with the current.
+
+## Measuring resonance on the bench
+
+Connect a function generator through the series circuit and put an oscilloscope across the resistor, because the resistor voltage is proportional to the current. Sweep the sine frequency and find where the resistor voltage peaks; that is f0. Then find the two frequencies on either side where the voltage drops to 70.7% of the peak, subtract them to get the bandwidth, and divide f0 by it for Q. Expect the measured Q to be lower than the calculated one, because the generator's 50 Ω output resistance and the inductor's winding resistance add to R.
+
+## Series vs parallel resonance
+
+| Feature | Series RLC | Parallel RLC |
+| --- | --- | --- |
+| Impedance at f0 | Minimum, equal to R | Maximum |
+| Current from source at f0 | Maximum | Minimum |
+| Magnified quantity | Voltage across L and C | Current circulating in L and C |
+| Typical use | Selecting a frequency, series filters | Tank circuits in oscillators, notch filters |
+
+## Where RLC circuits are used
+
+- **Radio tuning.** A variable capacitor moves f0 to select one station.
+- **Filters.** Band pass and band stop filters and LC output filters in power converters. The [LC filter calculator](https://zentacalculator.com/electronics/lc-filter/) helps size them.
+- **Oscillators.** LC oscillators such as Colpitts and Hartley use the resonance to set the frequency.
+- **Wireless power and induction heating.** Both run at resonance to transfer large currents efficiently.
+- **Resonant converters.** LLC power supplies use series resonance to switch with very low losses.
+
+## Unwanted resonance
+
+Every real circuit has some stray inductance and capacitance, so RLC behaviour appears where nobody designed it. The ringing on a MOSFET drain, overshoot on long cable runs and noise on a power rail all come from parasitic resonance. Engineers tame it with damping: an RC snubber, a series gate resistor or a lossy ferrite bead adds the R that lowers Q. The same damping ratio formula tells you how much resistance is enough.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Set f0', d: 'Choose L and C so that 1 / (2π√(LC)) lands on the target frequency.' },
+  { t: 'Set Q or bandwidth', d: 'Pick R from Q = (1/R)√(L/C), including the inductor winding resistance.' },
+  { t: 'Check component stress', d: 'Voltage across L and C is Q times the source at resonance.' },
+  { t: 'Check the step response', d: 'If the circuit sees steps or switching edges, confirm the overshoot is acceptable.' },
+  { t: 'Verify in the simulator', d: 'Compare the Bode plot and step response with the requirement.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Ignoring the inductor’s own resistance.', fix: 'Add the coil DCR to R; it often sets the real Q.' },
+  { m: 'Rating the capacitor for the source voltage only.', fix: 'At resonance it sees Q times the source voltage.' },
+  { m: 'Assuming R shifts the resonant frequency.', fix: 'f0 depends on L and C only; R changes height, width and damping.' },
+  { m: 'Using the parallel formulas for a series circuit.', fix: 'Series resonance minimises impedance; parallel resonance maximises it.' },
+]} />
