@@ -32,6 +32,8 @@ const org = { '@context': 'https://schema.org', '@type': 'Organization', name: S
   <meta property="og:image:alt" content={imageAlt} />
   <meta name="twitter:card" content="summary_large_image" />
   <script type="application/ld+json" set:html={JSON.stringify([org, ...schema])} />
+  {SITE.ga4 && <script async src={`https://www.googletagmanager.com/gtag/js?id=${SITE.ga4}`}></script>}
+  {SITE.ga4 && <script is:inline define:vars={{ id: SITE.ga4 }}>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', id);</script>}
   {SITE.adsenseClient && <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.adsenseClient}`} crossorigin="anonymous"></script>}
 </head>
 <body>

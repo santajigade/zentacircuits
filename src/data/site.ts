@@ -10,6 +10,7 @@ export const SITE = {
   email: 'contact@zentacircuits.com', // TODO: confirm contact email
   launched: LAUNCHED && !IS_PREVIEW,
   categoryMinItems: 3, // a category hub is indexable from this many live articles
+  ga4: IS_PREVIEW ? '' : 'G-TVXCKNHN81', // Google Analytics 4 measurement ID (live site only)
   adsenseClient: '', // fill after AdSense approval
   showAdPlaceholders: false,
   newsletterAction: '', // MailerLite or Brevo form URL; signup boxes hide while empty

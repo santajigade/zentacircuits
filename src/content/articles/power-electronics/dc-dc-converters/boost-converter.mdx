@@ -1,0 +1,246 @@
+---
+title: 'Boost Converter: Working, Formulas, Design and Simulator'
+seoTitle: 'Boost Converter: Working, Formulas and Design Example'
+description: 'How a boost converter steps DC voltage up: switch on and off phases, duty cycle, input current, ripple, CCM and DCM, limits and a worked design example.'
+focusKeyword: 'boost converter'
+category: power-electronics
+subcategory: dc-dc-converters
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: boost-converter-simulator
+shortAnswer: 'A boost converter is a switching regulator that steps a DC voltage up. A MOSFET shorts the inductor to ground to store energy, then releases it through a diode on top of the input voltage. In continuous conduction the output is Vout = Vin / (1 − D), so a 50% duty cycle doubles the input.'
+featured:
+  kicker: 'Power Electronics'
+  line1: 'Boost Converter'
+  line2: 'Working, formulas and design'
+  art: boost
+image:
+  alt: 'Boost converter featured image with the power stage circuit, switch voltage, inductor current and output ripple waveforms'
+prerequisites:
+  - name: 'Buck converter'
+    href: '/power-electronics/buck-converter/'
+learn:
+  - How the inductor, switch and diode work together to raise the voltage
+  - Why Vout = Vin / (1 − D), using volt-second balance
+  - How to find input current, inductor ripple and output ripple
+  - Why a real boost converter cannot reach very high gain
+  - How to pick the inductor, capacitor, MOSFET and diode
+interview:
+  - q: 'Why can the output of a boost converter be higher than its input?'
+    a: 'When the switch opens, the inductor current cannot stop, so the inductor voltage reverses and adds to the input voltage. That sum pushes current through the diode into the output capacitor, which holds a voltage above Vin.'
+  - q: 'Derive Vout = Vin / (1 − D).'
+    a: 'During the on time the inductor sees Vin for D × T. During the off time it sees Vin − Vout for (1 − D) × T. Zero average inductor voltage gives Vin D T + (Vin − Vout)(1 − D) T = 0, so Vout = Vin / (1 − D).'
+  - q: 'Why is the input current of a boost converter larger than its output current?'
+    a: 'Power in equals power out in an ideal converter. If the voltage rises by 1 / (1 − D), the current must fall by the same factor, so Iin = Iout / (1 − D). The inductor carries this full input current.'
+  - q: 'Why is output ripple higher in a boost than in a buck converter?'
+    a: 'In a boost the diode feeds the output only during the off time. While the switch is on, the capacitor alone supplies the load, so it sees pulsed current and the ripple is about Iout × D / (fs × C).'
+  - q: 'Why can a boost converter not protect against an output short circuit?'
+    a: 'Even with the switch off, current flows from the input through the inductor and diode to the output. The switch cannot interrupt this path, so a short at the output draws uncontrolled current unless a fuse or extra switch is added.'
+  - q: 'What limits the maximum practical gain of a boost converter?'
+    a: 'Inductor winding resistance, switch resistance and diode drop. As D approaches 1 the inductor current becomes very large, these losses grow, and the real output voltage peaks and then falls.'
+faq:
+  - q: 'Can a boost converter reduce the voltage?'
+    a: 'No. Its output is always at least the input voltage minus the diode drop. For step down use a buck converter; for both directions use a buck-boost or SEPIC.'
+  - q: 'What happens at 0% duty cycle?'
+    a: 'The switch never turns on, so the input passes straight through the inductor and diode. The output sits at about Vin minus the diode drop.'
+  - q: 'What is a typical maximum duty cycle?'
+    a: 'Most designs keep D below about 0.8 to 0.85, which gives a gain of about 5 to 6. Higher gains are usually done with a transformer or coupled inductor topology instead.'
+  - q: 'Where are boost converters used?'
+    a: 'Power banks raising a 3.7 V Li-ion cell to 5 V, LED backlight drivers, solar charge controllers, power factor correction stages and electric vehicle traction supplies.'
+references:
+  - text: 'Erickson and Maksimović, Fundamentals of Power Electronics, 3rd edition, Springer, 2020'
+    url: 'https://link.springer.com/book/10.1007/978-3-030-43881-4'
+  - text: "Texas Instruments, SLVA372, Basic Calculation of a Boost Converter's Power Stage"
+    url: 'https://www.ti.com/lit/pdf/slva372'
+  - text: 'Mohan, Undeland and Robbins, Power Electronics: Converters, Applications, and Design, 3rd edition, Wiley'
+    url: 'https://www.wiley-vch.de/en/areas-interest/engineering/power-electronics-978-0-471-22693-2'
+prev:
+  name: 'Buck converter'
+  href: '/power-electronics/buck-converter/'
+---
+
+import BuckSim from '../../../../components/sims/BuckSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a boost converter?
+
+A boost converter, also called a step-up converter, takes a DC input and delivers a higher, regulated DC output. It is the reason a phone power bank can supply 5 V from a single 3.7 V lithium cell, and why an LED driver can light a long string of LEDs from a 12 V battery.
+
+It uses the same four parts as a [buck converter](/power-electronics/buck-converter/): an inductor, a switch, a diode and an output capacitor. They are simply arranged differently. In a boost, the inductor sits in series with the input and the switch connects the inductor to ground.
+
+Because the switch is either fully on or fully off, a boost converter wastes little power. Well designed ones commonly run above 90% efficiency.
+
+<figure>
+  <img src="/images/figures/boost-converter-circuit-diagram.webp" alt="Boost converter circuit diagram with input source Vin, inductor L, MOSFET switch Q1 to ground, diode D, output capacitor C and load" width="1360" height="480" loading="lazy" />
+  <figcaption>Figure 1. Boost converter circuit diagram. The dashed red path shows current from the input through L and Q1 to ground while the switch is on.</figcaption>
+</figure>
+
+## How a boost converter works
+
+### Switch on (0 to D × T)
+
+When the MOSFET turns on, the inductor is connected straight across the input. The full input voltage appears across it, so its current rises in a straight line and energy builds up in its magnetic field.
+
+The diode is reverse biased because its anode is near ground and its cathode sits at the output voltage. During this time the output capacitor alone supplies the load.
+
+### Switch off (D × T to T)
+
+When the MOSFET turns off, the inductor current cannot stop. The inductor voltage reverses and adds to the input voltage, lifting the switch node above the output until the diode conducts.
+
+Current now flows from the input, through the inductor and diode, into the capacitor and load. The inductor sees Vin − Vout, which is negative, so its current ramps down while it hands its stored energy to the output.
+
+<figure>
+  <img src="/images/figures/boost-converter-waveforms.webp" alt="Boost converter waveforms over two switching periods: switch voltage, triangular inductor current, diode current and output voltage ripple" width="1440" height="940" loading="lazy" />
+  <figcaption>Figure 2. Boost converter waveforms at Vin = 12 V, D = 0.5, fs = 100 kHz, L = 47 µH, C = 100 µF and a 24 Ω load. From top: switch voltage, inductor current, diode current and output ripple.</figcaption>
+</figure>
+
+## Duty cycle and output voltage
+
+In steady state the average voltage across the inductor over one period is zero. During the on time it sees Vin for D × T, and during the off time it sees Vin − Vout for (1 − D) × T:
+
+$$
+V_{in}\,D\,T + (V_{in} - V_{out})(1 - D)\,T = 0 \quad\Rightarrow\quad V_{out} = \frac{V_{in}}{1 - D}
+$$
+
+At D = 0.5 the output is twice the input. At D = 0.75 it is four times the input. For a quick check of other values, the [boost converter calculator](https://zentacalculator.com/electronics/boost-converter/) solves the same equations.
+
+<Callout type="insight">
+The boost gain rises steeply as D approaches 1. Small changes in duty cycle at high gain cause large changes in output, which is why high step-up ratios are hard to control with a simple boost.
+</Callout>
+
+## Input current and inductor ripple
+
+An ideal converter keeps power constant. If the voltage rises by 1 / (1 − D), the current must fall by the same factor. So the input current, which is also the average inductor current, is:
+
+$$
+I_{in} = I_L = \frac{I_{out}}{1 - D}
+$$
+
+During the on time the inductor current rises by:
+
+$$
+\Delta I_L = \frac{V_{in}\,D}{L\,f_s}
+$$
+
+The MOSFET and inductor must carry the peak, IL(peak) = Iin + ΔIL / 2. As in the buck, 20% to 40% ripple of the average inductor current is a common design target.
+
+## Output voltage ripple
+
+The diode only feeds the output while the switch is off. While the switch is on, the capacitor alone supplies the full load current for D × T. With an ideal capacitor the peak to peak ripple is:
+
+$$
+\Delta V_{out} = \frac{I_{out}\,D}{f_s\,C}
+$$
+
+This pulsed capacitor current makes boost converters noisier at the output than buck converters of the same size. ESR adds roughly IL(peak) × ESR on top, so low ESR ceramic or polymer capacitors are common.
+
+## CCM, DCM and the critical inductance
+
+In continuous conduction mode (CCM) the inductor current never reaches zero and every formula above holds. At light load the current can fall to zero before the next cycle, and the converter enters discontinuous conduction mode (DCM). In DCM the output rises above Vin / (1 − D) unless the controller reduces D.
+
+The boundary between the two is:
+
+$$
+L_{crit} = \frac{D\,(1 - D)^2\,R}{2\,f_s}
+$$
+
+<Callout type="tip">
+Raise the load resistance in the simulator until the badge changes to DCM. Without a controller, the output then climbs well above Vin / (1 − D), which is why boost converters need light load protection.
+</Callout>
+
+## Why real gain is limited
+
+The ideal formula says the output goes to infinity as D approaches 1. A real converter cannot do that. The inductor winding resistance, the switch resistance and the diode drop all carry the large input current, and their loss grows quickly at high duty cycle.
+
+Including only the inductor resistance RL, the gain becomes Vout / Vin = 1 / (1 − D) × 1 / (1 + RL / (R (1 − D)²)). The output rises, peaks and then falls as D keeps increasing. This is why practical designs rarely go beyond a gain of about 5 to 6 with a single boost stage.
+
+## Losses and efficiency
+
+The main losses follow the same pattern as in a buck converter, but they act on the larger input current. The MOSFET loses about Iin² × RDS(on) × D, the diode loses Vf × Iout, and the inductor loses Iin² × DCR. Switching loss grows with the output voltage, since the switch swings between ground and Vout every cycle.
+
+A synchronous boost replaces the diode with a second MOSFET. This removes most of the diode loss, which matters most at low output voltage, such as in a 5 V power bank stage. The trade off is a more complex driver and the need to stop reverse current at light load.
+
+## Boost converter simulator
+
+Change any value and the waveforms update instantly. The table under the scope runs the same circuit with ideal parts and checks it against the formulas on this page.
+
+<BuckSim topo="boost" />
+
+## Boost vs buck converter
+
+| Feature | Buck converter | Boost converter |
+| --- | --- | --- |
+| Output vs input | Lower | Higher |
+| Ideal gain | D | 1 / (1 − D) |
+| Inductor position | In series with the output | In series with the input |
+| Input current | Pulsed | Continuous (smooth) |
+| Output current to capacitor | Continuous | Pulsed, so more output ripple |
+| Short circuit protection by switch | Yes | No, current flows through L and D |
+
+The boost's smooth input current is an advantage. It is why boost stages are used for power factor correction, where the input current must follow the mains waveform closely.
+
+## Where boost converters are used
+
+Boost converters raise a single Li-ion cell to 5 V in power banks and to higher voltages in LED backlight drivers. Solar charge controllers and [solar systems](https://www.kleevusa.com/solar/) use them for maximum power point tracking from low voltage panels. Most active power factor correction circuits in computer and LED power supplies are boost converters, and electric vehicles use large boost stages to raise battery voltage for the motor inverter.
+
+## Key formulas
+
+| Quantity | Formula (CCM) | Unit |
+| --- | --- | --- |
+| Output voltage | Vout = Vin / (1 − D) | V |
+| Duty cycle | D = 1 − Vin / Vout | |
+| Input (inductor) current | Iin = Iout / (1 − D) | A |
+| Inductor ripple | ΔIL = Vin × D / (L × fs) | A |
+| Peak current | IL(peak) = Iin + ΔIL / 2 | A |
+| Output ripple | ΔVout = Iout × D / (fs × C) | V |
+| CCM boundary | Lcrit = D (1 − D)² R / (2 × fs) | H |
+| Switch voltage stress | about Vout + Vf | V |
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** Vin = 12 V, Vout = 24 V, Iout = 1 A, fs = 100 kHz, L = 47 µH, C = 100 µF
+
+**Find:** D, input current, ripple, peak current, output ripple and whether the converter is in CCM
+
+**Solution:**
+
+1. D = 1 − 12 / 24 = 0.50
+2. Iin = 1 / (1 − 0.5) = 2.0 A
+3. ΔIL = 12 × 0.5 / (47 µH × 100 kHz) = 6 / 4.7 = 1.28 A
+4. IL(peak) = 2.0 + 0.64 = 2.64 A
+5. ΔVout = 1 × 0.5 / (100 kHz × 100 µF) = 50 mV
+6. R = 24 / 1 = 24 Ω, Lcrit = 0.5 × 0.25 × 24 / (2 × 100 kHz) = 15 µH
+
+**Answer:** D = 0.50, Iin = 2.0 A, ΔIL = 1.28 A, peak 2.64 A, ripple 50 mV. L = 47 µH is above 15 µH, so the converter runs in CCM. The switch and diode must handle about 24 V plus margin.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="An ideal boost converter has Vin = 5 V and D = 0.6. What is Vout?" options={['3 V', '8.3 V', '12.5 V', '15 V']} answer={2} explain="Vout = Vin / (1 − D) = 5 / 0.4 = 12.5 V." />
+
+## Choosing parts step by step
+
+<Steps items={[
+  { t: 'Find the duty cycle', d: 'Use D = 1 − Vin / Vout at the lowest input voltage, where D is largest.' },
+  { t: 'Find the input current', d: 'Iin = Iout / (1 − D); add the expected loss so the estimate is not too low.' },
+  { t: 'Pick the inductor', d: 'Aim for 20% to 40% ripple of Iin and a saturation current above IL(peak).' },
+  { t: 'Pick the diode', d: 'Use a Schottky diode rated above Vout and above Iout average, with low Vf.' },
+  { t: 'Pick the MOSFET', d: 'Voltage rating above Vout with margin, low RDS(on) for the large input current.' },
+  { t: 'Pick the output capacitor', d: 'Size it for ΔVout = Iout × D / (fs × C) plus ESR ripple from the peak current.' },
+]} />
+
+## Common design mistakes
+
+<Mistakes items={[
+  { m: 'Sizing the inductor for the output current.', fix: 'Size it for the input current Iout / (1 − D), which is larger.' },
+  { m: 'Ignoring the pulsed capacitor current.', fix: 'Check the capacitor ripple current rating against the peak inductor current.' },
+  { m: 'Pushing duty cycle too high for a large gain.', fix: 'Stay below about D = 0.8 to 0.85 or use a coupled inductor or transformer stage.' },
+  { m: 'Assuming the switch can cut a short circuit.', fix: 'Add a fuse, load switch or current limit on the input side.' },
+]} />

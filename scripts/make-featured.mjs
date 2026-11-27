@@ -27,6 +27,11 @@ const ART = {
 <path d="M720 350L720 335L817 335L817 375L915 375L915 335L1012 335L1012 375L1110 375" fill="none" stroke="#A78BFA" stroke-width="4"/>
 <path d="M720 470L817 410L915 470L1012 410L1110 470" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 520C760 540 790 540 817 525S880 495 915 505S980 540 1012 530S1080 498 1110 510" fill="none" stroke="#F472B6" stroke-width="4"/>`,
+  boost: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M730 190H760M860 190H930M960 190H1080V215M1080 255V290H730V255M730 215V190M915 190V215M915 255V290M1030 190V215M1030 255V290"/><path d="M760 190h14q8-15 16 0q8-15 16 0q8-15 16 0q8-15 16 0h22"/><path d="M930 178v24l20-12z"/><path d="M950 176v28"/><rect x="903" y="215" width="24" height="40" rx="3"/><path d="M1014 217h32M1014 229h32"/><rect x="1068" y="215" width="24" height="40" rx="3"/><path d="M718 217h24M723 229h14"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 360H1110M720 430H1110M720 500H1110M817 330V540M915 330V540M1012 330V540"/></g>
+<path d="M720 375L720 335L817 335L817 375L915 375L915 335L1012 335L1012 375L1110 375" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 470L817 410L915 470L1012 410L1110 470" fill="none" stroke="#22D3EE" stroke-width="5"/>
+<path d="M720 505L817 535L915 505L1012 535L1110 505" fill="none" stroke="#F472B6" stroke-width="4"/>`,
   generic: `<g stroke="#1E293B" stroke-width="2"><path d="M720 200H1110M720 300H1110M720 400H1110M720 500H1110M817 150V540M915 150V540M1012 150V540"/></g>
 <path d="M720 340C760 200 800 200 840 340S920 480 960 340S1040 200 1080 340L1110 380" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 470H790V420H880V470H960V420H1040V470H1110" fill="none" stroke="#FBBF24" stroke-width="4"/>`,

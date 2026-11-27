@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 240" width="1360" height="480"><rect width="680" height="240" fill="#FFFFFF"/>
+<path d="M60 60H110M230 60H330M380 60H520V100M520 140V190H60V140M60 100V60M300 60V110M300 160V190M600 60V100M600 140V190M520 60H600" fill="none" stroke="#0F172A" stroke-width="2.5"/>
+<path d="M60 60H110M230 60H300V110" fill="none" stroke="#E11D48" stroke-width="3" stroke-dasharray="4 16"/>
+<path d="M110 60h20q10-18 20 0q10-18 20 0q10-18 20 0q10-18 20 0h20" fill="none" stroke="#0F172A" stroke-width="2.5"/>
+<path d="M330 46v28l26-14z" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.5"/><path d="M356 44v32M356 60H380" stroke="#0F172A" stroke-width="2.5"/>
+<rect x="284" y="110" width="32" height="50" rx="4" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.5"/>
+<path d="M500 102H540M500 118H540" stroke="#0F172A" stroke-width="3"/>
+<rect x="585" y="100" width="30" height="40" rx="3" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.5"/>
+<path d="M46 102H74M52 118H68" stroke="#0F172A" stroke-width="3"/>
+<g font-family="Open Sans, DejaVu Sans, sans-serif" font-size="15" fill="#0F172A"><text x="170" y="34" text-anchor="middle">L</text><text x="345" y="34" text-anchor="middle">D</text><text x="250" y="140">Q1</text><text x="550" y="114">C</text><text x="624" y="124">Load</text><text x="10" y="114">Vin</text></g>
+<text x="300" y="222" text-anchor="middle" font-family="Open Sans, DejaVu Sans, sans-serif" font-size="13" fill="#BE123C">switch node</text>
+</svg>

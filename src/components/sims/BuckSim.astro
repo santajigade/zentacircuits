@@ -1,14 +1,17 @@
 ---
-// Live buck converter lab. Runs entirely in the browser (src/sim/buck.js), no server.
+// Live DC-DC converter lab (buck or boost). Runs entirely in the browser (src/sim/buck.js), no server.
+const { topo = 'buck' } = Astro.props as { topo?: 'buck' | 'boost' };
+const boost = topo === 'boost';
+const name = boost ? 'Boost converter lab' : 'Buck converter lab';
 const E6 = [1, 1.5, 2.2, 3.3, 4.7, 6.8];
 const dec = (from: number, to: number) => { const o: number[] = []; for (let d = from; d <= to * 1.0001; d *= 10) E6.forEach((m) => { const v = +(m * d).toPrecision(3); if (v <= to * 1.0001) o.push(v); }); return o; };
 const sliders = [
-  { k: 'vin', label: 'Input voltage Vin', min: 3, max: 60, step: 0.5, val: 24, unit: 'V' },
-  { k: 'd', label: 'Duty cycle D', min: 0.05, max: 0.95, step: 0.005, val: 0.5, unit: '' },
+  { k: 'vin', label: 'Input voltage Vin', min: boost ? 1 : 3, max: boost ? 48 : 60, step: 0.5, val: boost ? 12 : 24, unit: 'V' },
+  { k: 'd', label: 'Duty cycle D', min: 0.05, max: boost ? 0.85 : 0.95, step: 0.005, val: 0.5, unit: '' },
   { k: 'fs', label: 'Switching frequency fs', list: [10e3, 20e3, 50e3, 100e3, 150e3, 200e3, 250e3, 300e3, 400e3, 500e3, 750e3, 1e6, 1.5e6, 2e6], val: 100e3, unit: 'Hz' },
   { k: 'L', label: 'Inductor L', list: [...dec(1e-6, 1e-4), 1e-3], val: 47e-6, unit: 'H' },
   { k: 'C', label: 'Output capacitor C', list: [...dec(1e-6, 1e-3).filter((v) => v <= 2.2e-3)], val: 100e-6, unit: 'F' },
-  { k: 'R', label: 'Load resistance R', list: [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200, 300, 500], val: 6, unit: 'Ω' },
+  { k: 'R', label: 'Load resistance R', list: [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 25, 30, 40, 50, 60, 80, 100, 150, 200, 300, 500], val: boost ? 24 : 6, unit: 'Ω' },
 ];
 const parts = [
   { k: 'rds', label: 'MOSFET RDS(on)', min: 0, max: 0.2, step: 0.005, val: 0.025, unit: 'Ω' },
@@ -17,9 +20,9 @@ const parts = [
   { k: 'esr', label: 'Capacitor ESR', min: 0, max: 0.2, step: 0.005, val: 0, unit: 'Ω' },
 ];
 ---
-<section class="sim" data-buck-sim data-pagefind-ignore aria-label="Buck converter simulator">
+<section class="sim" data-buck-sim data-topo={topo} data-pagefind-ignore aria-label={`${name} simulator`}>
   <div class="top">
-    <div><p class="kick">Simulator</p><p class="ttl">Buck converter lab</p></div>
+    <div><p class="kick">Simulator</p><p class="ttl">{name}</p></div>
     <div class="topr"><span class="badge" data-mode>CCM</span><button type="button" class="tb" data-fs>Full screen</button></div>
   </div>
   <div class="tabs" role="tablist">
@@ -49,7 +52,7 @@ const parts = [
     </div>
     <div class="scopewrap">
       <div class="chs">
-        <label style="--c:#A78BFA"><input type="checkbox" data-ch="vsw" checked /> V switch node</label>
+        <label style="--c:#A78BFA"><input type="checkbox" data-ch="vsw" checked /> {boost ? 'V switch (drain)' : 'V switch node'}</label>
         <label style="--c:#22D3EE"><input type="checkbox" data-ch="iL" checked /> i inductor</label>
         <label style="--c:#FBBF24"><input type="checkbox" data-ch="iD" checked /> i diode</label>
         <label style="--c:#F472B6"><input type="checkbox" data-ch="vo" checked /> V out</label>
@@ -69,7 +72,7 @@ const parts = [
       <div class="loss" data-loss></div>
     </div>
   </div>
-  <p class="note">Model: ideal switching with RDS(on), diode Vf, inductor DCR and capacitor ESR; switching loss estimated from tr + tf = 20 ns. Results follow textbook equations; real circuits also show ringing and parasitic effects.</p>
+  <p class="note">{boost ? 'Boost model' : 'Model'}: ideal switching with RDS(on), diode Vf, inductor DCR and capacitor ESR; switching loss estimated from tr + tf = 20 ns. Results follow textbook equations; real circuits also show ringing and parasitic effects.</p>
 </section>
 
 <script>
@@ -100,7 +103,7 @@ const parts = [
       return v;
     };
     const params = () => {
-      const p: any = { trf: 20e-9 };
+      const p: any = { trf: 20e-9, topo: root.dataset.topo };
       inputs.forEach((el) => (p[el.dataset.k!] = valOf(el)));
       return p;
     };
@@ -111,7 +114,7 @@ const parts = [
 
     // URL hash keeps the setup so a link reproduces it.
     const fromHash = () => {
-      const m = location.hash.match(/buck=([^&]+)/);
+      const m = location.hash.match(new RegExp(`${root.dataset.topo}=([^&]+)`));
       if (!m) return;
       const q = new URLSearchParams(decodeURIComponent(m[1]));
       inputs.forEach((el) => { const v = q.get(el.dataset.k!); if (v == null) return; if (el.type === 'checkbox') el.checked = v === '1'; else el.value = v; });
@@ -207,7 +210,7 @@ const parts = [
         .map(([a, v]) => `<span>${a}</span><b>${fmt(v as number, 'W')}</b>`).join('') + `<span class="tot">Output power</span><b class="tot">${fmt(st.pOut, 'W')}</b><span class="tot">Efficiency</span><b class="tot sim-ok">${(st.eff * 100).toFixed(1)} %</b>`;
       $('[data-hint]').textContent = tab === 'steady' ? 'Two switching periods in steady state. Drag the orange cursors C1 and C2 to measure.' : 'Power-up from zero with no soft start. Shaded bands show the switching ripple. Drag C1 and C2 to measure.';
       draw();
-      history.replaceState(null, '', `#buck=${encodeURIComponent(new URLSearchParams(Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value]))).toString())}`);
+      history.replaceState(null, '', `#${root.dataset.topo}=${encodeURIComponent(new URLSearchParams(Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value]))).toString())}`);
     }
 
     let pending = 0;
@@ -226,7 +229,7 @@ const parts = [
     $('[data-share]').addEventListener('click', async (e) => { const b = e.currentTarget as HTMLButtonElement; try { await navigator.clipboard.writeText(location.href); b.textContent = 'Link copied'; } catch { b.textContent = 'Copy failed'; } setTimeout(() => (b.textContent = 'Copy link'), 2000); });
     $('[data-csv]').addEventListener('click', () => {
       const rows = ['time_s,v_switch_V,i_inductor_A,i_diode_A,v_out_V', ...rec.t.map((t: number, i: number) => [t, rec.vsw[i], rec.iL[i], rec.iD[i], rec.vo[i]].map((x: number) => x.toPrecision(6)).join(','))];
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `buck-converter-${tab}.csv`; a.click();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `${root.dataset.topo}-converter-${tab}.csv`; a.click();
     });
     $('[data-fs]').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.()));
     root.addEventListener('fullscreenchange', () => setTimeout(draw, 50));
