@@ -7,7 +7,7 @@ interface Props { title: string; description: string; image?: string; imageAlt?:
 const { title, description, image = '/og-default.png', imageAlt = 'ZentaCircuits', type = 'website', schema = [], noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const img = new URL(image, SITE.url).href;
-const robots = !SITE.launched || noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1';
+const robots = !SITE.launched ? 'noindex, nofollow' : noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1';
 const org = { '@context': 'https://schema.org', '@type': 'Organization', name: SITE.name, url: SITE.url, logo: `${SITE.url}/icon-512.png` };
 ---
 <!doctype html>
