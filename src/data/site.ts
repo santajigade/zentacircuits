@@ -5,7 +5,7 @@ const LAUNCHED = false; // set true on launch day: opens robots.txt, sitemap and
 export const SITE = {
   name: 'ZentaCircuits',
   url: IS_PREVIEW ? 'https://preview.zentacircuits.com' : 'https://zentacircuits.com',
-  tagline: 'Learn electronics by watching circuits work',
+  tagline: 'Learn electronics. Run the circuit. See it work.',
   description: 'Free electronics lessons with worked examples and a live simulator on every topic, for students, hobbyists and young engineers.',
   email: 'contact@zentacircuits.com', // TODO: confirm contact email
   launched: LAUNCHED && !IS_PREVIEW,
