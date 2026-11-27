@@ -45,6 +45,17 @@ for (const c of lcases) {
     if (!r.pass) fail++;
   }
 }
+import * as logic from '../src/sim/logic.js';
+for (const g of Object.keys(logic.GATES)) for (const n of logic.GATES[g].n) for (const fam of ['74HC', 'CD4000B']) {
+  for (const r of logic.accuracy({ type: g, n, tpd: logic.FAMILIES[fam].tpd }).rows) {
+    console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${g} ${n} input, ${fam}  ${r.name}: theory ${r.theory}, sim ${r.sim}`);
+    if (!r.pass) fail++;
+  }
+}
+for (const g of Object.keys(logic.NAND_NETS)) for (const r of logic.accuracy({ mode: 'nand', type: g, tpd: 8e-9 }).rows) {
+  console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${g} from NAND  ${r.name}: theory ${r.theory}, sim ${r.sim}`);
+  if (!r.pass) fail++;
+}
 for (const topo of ['half', 'ct', 'bridge']) {
   const p = { ...R0, topo, C: 0 }, s = rect.steadyState(p), e = rect.exactNoCap(p);
   const err = (Math.abs(s.vdc - e.vdc) / e.vdc) * 100, ok = err < 0.1;

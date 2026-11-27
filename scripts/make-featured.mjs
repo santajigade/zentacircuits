@@ -49,6 +49,16 @@ const ART = {
   rlc: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M730 190H770M830 190H860M940 190H1040V215M1040 245V290H730V190"/><rect x="770" y="178" width="60" height="24" rx="4"/><path d="M860 190q10-22 20 0q10-22 20 0q10-22 20 0q10-22 20 0"/><path d="M1015 215h50M1015 245h50"/></g>
 <g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
 <path d="M720 540C740 330 760 330 780 450S820 560 840 470S880 420 900 465S940 490 960 462S1010 455 1110 460" fill="none" stroke="#F472B6" stroke-width="5"/>`,
+  logic: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M740 175H800M740 215H800M870 195H930"/><path d="M800 165H835A30 30 0 0 1 835 225H800Z"/><path d="M930 175H950M930 215H950"/><path d="M950 165H985A30 30 0 0 1 985 225H950Z"/><circle cx="1021" cy="195" r="6"/><path d="M1027 195H1080"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 330V550M817 330V550M915 330V550M1012 330V550M1110 330V550"/></g>
+<path d="M720 380H817V340H915V380H1012V340H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 450H768V410H817V450H866V410H915V450H963V410H1012V450H1060V410H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 520H866V480H915V520H1060V480H1110" fill="none" stroke="#FBBF24" stroke-width="5"/>`,
+  nand: `<g fill="none" stroke="#FFFFFF" stroke-width="4"><path d="M745 170H810M745 230H810M915 200H990"/><path d="M810 150H860A50 50 0 0 1 860 250H810Z"/><circle cx="920" cy="200" r="9"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 330V550M817 330V550M915 330V550M1012 330V550M1110 330V550"/></g>
+<path d="M720 380H817V340H915V380H1012V340H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 450H768V410H817V450H866V410H915V450H963V410H1012V450H1060V410H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 480H866V520H915V480H1060V520H1110" fill="none" stroke="#FBBF24" stroke-width="5"/>`,
   generic: `<g stroke="#1E293B" stroke-width="2"><path d="M720 200H1110M720 300H1110M720 400H1110M720 500H1110M817 150V540M915 150V540M1012 150V540"/></g>
 <path d="M720 340C760 200 800 200 840 340S920 480 960 340S1040 200 1080 340L1110 380" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 470H790V420H880V470H960V420H1040V470H1110" fill="none" stroke="#FBBF24" stroke-width="4"/>`,

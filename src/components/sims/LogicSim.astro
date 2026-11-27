@@ -1,0 +1,317 @@
+---
+// Logic gate playground: single gates and NAND only builds, live schematic, truth table and timing with propagation delay.
+// Runs in the browser (src/sim/logic.js), no server.
+const { gate = 'AND', mode = 'gate', target = 'XOR' } = Astro.props as { gate?: string; mode?: 'gate' | 'nand'; target?: string };
+const gates = ['BUF', 'NOT', 'AND', 'NAND', 'OR', 'NOR', 'XOR', 'XNOR'];
+const targets = ['NOT', 'AND', 'OR', 'NOR', 'XOR', 'XNOR'];
+const fams = ['74HC', '74HCT', '74LS', '74LVC', 'CD4000B'];
+const name = mode === 'nand' ? 'NAND gate lab' : 'Logic gate lab';
+---
+<section class="sim" data-logic-sim data-gate={gate} data-mode={mode} data-target={target} data-pagefind-ignore aria-label={`${name} simulator`}>
+  <div class="top">
+    <div><p class="kick">Simulator</p><p class="ttl">{name}</p></div>
+    <div class="topr"><span class="badge" data-badge>Output 0</span><button type="button" class="tb" data-fs>Full screen</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tb" data-tab="gate">Single gate</button>
+    <button type="button" role="tab" class="tb" data-tab="nand">Build from NAND</button>
+  </div>
+  <div class="body">
+    <div class="panel">
+      <div data-show="gate"><p class="grp">Gate</p><div class="seg">{gates.map((g) => <button type="button" class="tb" data-gate={g}>{g}</button>)}</div></div>
+      <div data-show="nand"><p class="grp">Build this gate with NAND only</p><div class="seg">{targets.map((g) => <button type="button" class="tb" data-target={g}>{g}</button>)}</div></div>
+      <div data-show="gate"><p class="grp">Number of inputs</p><div class="seg">{[1, 2, 3, 4].map((n) => <button type="button" class="tb" data-n={n}>{n}</button>)}</div></div>
+      <p class="grp">Inputs (click to toggle)</p>
+      <div class="sw">{['A', 'B', 'C', 'D'].map((k, i) => <button type="button" data-in={i}><span>{k}</span><b>0</b></button>)}</div>
+      <p class="grp">Logic family</p>
+      <div class="seg">{fams.map((f) => <button type="button" class="tb" data-fam={f}>{f}</button>)}</div>
+      <label class="ctl">
+        <span class="row"><span>Input skew (B, C, D arrive late)</span><output data-skew-v></output></span>
+        <input type="range" data-skew min="0" max="2" step="0.1" value="0" />
+      </label>
+      <div class="btns"><button type="button" class="tb" data-reset>Reset</button><button type="button" class="tb" data-share>Copy link</button><button type="button" class="tb" data-csv>Export CSV</button></div>
+    </div>
+    <div class="scopewrap">
+      <svg class="schem" data-schem viewBox="0 0 640 250" role="img" aria-label="Live schematic of the logic circuit"></svg>
+      <p class="expr" data-expr></p>
+      <canvas class="scope" aria-label="Timing diagram with propagation delay" role="img"></canvas>
+      <p class="hint" data-hint>Inputs count through every combination. Drag C1 and C2 to measure delays.</p>
+      <div class="reads" data-reads></div>
+    </div>
+  </div>
+  <div class="lower">
+    <div class="card2">
+      <p class="grp">Truth table · click a row</p>
+      <div class="tblw"><table><thead data-tth></thead><tbody data-ttb></tbody></table></div>
+    </div>
+    <div class="card2">
+      <p class="grp">Theory vs simulated</p>
+      <div class="tblw"><table><thead><tr><th>Quantity</th><th>Theory</th><th>Simulated</th><th>Test</th></tr></thead><tbody data-acc></tbody></table></div>
+    </div>
+    <div class="card2">
+      <p class="grp">Logic levels · <span data-famname></span></p>
+      <svg class="lv" data-lv viewBox="-46 0 412 192" role="img" aria-label="Input and output voltage levels and noise margins"></svg>
+    </div>
+  </div>
+  <p class="note">Model: ideal logic with a fixed transport delay per gate taken from typical datasheet values. Logic levels are worst case datasheet limits at the stated supply. Real gates also differ between rising and falling delay and slow down with load capacitance.</p>
+</section>
+
+<script>
+  import { GATES, NAMES, FAMILIES, NAND_NETS, MIN_NANDS, margins, evalGate, evalNet, truthTable, timing, depth, accuracy } from '../../sim/logic.js';
+
+  const fmt = (v: number, unit = '') => {
+    if (!isFinite(v)) return 'n/a';
+    if (Math.abs(v) < 1e-15) v = 0;
+    const a = Math.abs(v);
+    const pre = a === 0 ? ['', 1] : a >= 1e6 ? ['M', 1e-6] : a >= 1e3 ? ['k', 1e-3] : a >= 1 ? ['', 1] : a >= 1e-3 ? ['m', 1e3] : a >= 1e-6 ? ['µ', 1e6] : ['n', 1e9];
+    const x = v * (pre[1] as number);
+    return `${Math.abs(x) >= 100 ? x.toFixed(1) : Math.abs(x) >= 10 ? x.toFixed(2) : x.toFixed(3)} ${pre[0]}${unit}`.trim();
+  };
+  const HI = '#FB7185', LO = '#475569', W = '#E2E8F0';
+
+  // Gate symbol path centred on (x, y), body width 70, height h, output at x + 70 (+10 with bubble).
+  function symbol(sym: string, bubble: boolean, x: number, y: number, h: number, fill: string) {
+    const t = h / 2;
+    let d = '';
+    if (sym === 'and') d = `M${x} ${y - t}H${x + 70 - t}A${t} ${t} 0 0 1 ${x + 70 - t} ${y + t}H${x}Z`;
+    else if (sym === 'buf') d = `M${x} ${y - t}L${x + 70} ${y}L${x} ${y + t}Z`;
+    else d = `M${x} ${y - t}Q${x + 45} ${y - t} ${x + 70} ${y}Q${x + 45} ${y + t} ${x} ${y + t}Q${x + 14} ${y} ${x} ${y - t}Z`;
+    let s = `<path d="${d}" fill="${fill}" stroke="${W}" stroke-width="2.5"/>`;
+    if (sym === 'xor') s += `<path d="M${x - 10} ${y - t}Q${x + 4} ${y} ${x - 10} ${y + t}" fill="none" stroke="${W}" stroke-width="2.5"/>`;
+    if (bubble) s += `<circle cx="${x + 75}" cy="${y}" r="5" fill="#0E1828" stroke="${W}" stroke-width="2.5"/>`;
+    return s;
+  }
+  const inX = (sym: string, x: number) => (sym === 'or' || sym === 'xor' ? x + 6 : x);
+  const wire = (pts: number[][], v: number) => `<path d="M${pts.map((p) => p.join(' ')).join('L')}" fill="none" stroke="${v ? HI : LO}" stroke-width="${v ? 3.5 : 2.5}" stroke-linejoin="round"/>`;
+  const label = (x: number, y: number, s: string, c = '#CBD5E1', a = 'middle', sz = 14) => `<text x="${x}" y="${y}" fill="${c}" font-family="IBM Plex Mono, monospace" font-size="${sz}" text-anchor="${a}">${s}</text>`;
+  const led = (x: number, y: number, v: number) => `<circle cx="${x}" cy="${y}" r="16" fill="${v ? '#E11D48' : '#1E293B'}" stroke="${v ? '#FDA4AF' : '#475569'}" stroke-width="2.5"/>${v ? `<circle cx="${x}" cy="${y}" r="26" fill="#E11D48" opacity="0.25"/>` : ''}`;
+
+  document.querySelectorAll<HTMLElement>('[data-logic-sim]').forEach((root) => {
+    const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const $$ = <T extends Element>(s: string) => [...root.querySelectorAll<T>(s)];
+    const canvas = $<HTMLCanvasElement>('canvas'), ctx = canvas.getContext('2d')!;
+    const def = { mode: root.dataset.mode!, gate: root.dataset.gate!, target: root.dataset.target!, n: GATES[root.dataset.gate!].n.includes(2) ? 2 : 1, fam: '74HC', x: [0, 0, 0, 0], skew: 0 };
+    const st: any = JSON.parse(JSON.stringify(def));
+    let tim: any = null, cur = [0.1, 0.3];
+
+    const nIn = () => (st.mode === 'nand' ? NAND_NETS[st.target].n : st.n);
+    const tpd = () => FAMILIES[st.fam].tpd;
+
+    const fromHash = () => {
+      const m = location.hash.match(/logic=([^&]+)/); if (!m) return;
+      const q = new URLSearchParams(decodeURIComponent(m[1]));
+      ['mode', 'gate', 'target', 'fam'].forEach((k) => q.get(k) && (st[k] = q.get(k)));
+      if (q.get('n')) st.n = +q.get('n')!; if (q.get('x')) st.x = q.get('x')!.split('').map(Number); if (q.get('skew')) st.skew = +q.get('skew')!;
+      ($<HTMLInputElement>('[data-skew]')).value = String(st.skew);
+    };
+
+    function schematic() {
+      const n = nIn(), x = st.x.slice(0, n);
+      let s = '';
+      if (st.mode === 'gate') {
+        const g = GATES[st.gate], h = Math.max(70, n * 26), gx = 250, gy = 125, y = evalGate(st.gate, x);
+        const ys = n === 1 ? [gy] : x.map((_, i) => gy - h / 2 + ((i + 0.5) * h) / n);
+        ys.forEach((yy, i) => { s += wire([[90, yy], [inX(g.sym, gx), yy]], x[i]) + label(60, yy + 5, `${NAMES[i]}=${x[i]}`, x[i] ? HI : '#94A3B8'); });
+        const ox = gx + 70 + (g.bubble ? 10 : 0);
+        s += wire([[ox, gy], [500, gy]], y) + symbol(g.sym, !!g.bubble, gx, gy, h, '#1E293B') + label(gx + 30, gy + 5, st.gate, '#CBD5E1', 'middle', 13) + led(530, gy, y) + label(530, gy + 50, `Y=${y}`, y ? HI : '#94A3B8');
+        return s;
+      }
+      const net = NAND_NETS[st.target], v = evalNet(net, x), cols = Math.max(...net.gates.map((g) => g[3])) + 1;
+      const colX = (c: number) => 150 + c * (cols > 3 ? 100 : cols > 2 ? 120 : 150), rowY = (r: number) => 125 + r * 62;
+      const pos: Record<string, number[]> = {};
+      NAMES.slice(0, n).forEach((k, i) => (pos[k] = [40, n === 1 ? 125 : 70 + i * 110]));
+      net.gates.forEach(([id, , , c, r]: any) => (pos[id] = [colX(c) + 60, rowY(r)]));
+      net.gates.forEach(([id, a, b, c, r]: any) => {
+        const gx = colX(c), gy = rowY(r);
+        [[a, gy - 12], [b, gy + 12]].forEach(([src, yy]: any, k) => {
+          const [sx, sy] = pos[src], mx = gx - 18 - (k ? 0 : 8) - (src.length === 1 ? 6 * NAMES.indexOf(src) : 0);
+          s += wire([[sx + (src.length === 1 ? 20 : 10), sy], [mx, sy], [mx, yy], [gx, yy]], v[src]);
+          s += `<circle cx="${mx}" cy="${sy}" r="3" fill="${v[src] ? HI : LO}"/>`;
+        });
+      });
+      net.gates.forEach(([id, , , c, r]: any) => { const gx = colX(c), gy = rowY(r); s += symbol('and', true, gx, gy, 44, '#1E293B') + label(gx + 26, gy + 4, id, '#94A3B8', 'middle', 11); });
+      const last = net.gates[net.gates.length - 1][0], [lx, ly] = pos[last], y = v[last];
+      s += wire([[lx + 10, ly], [580, ly]], y) + led(600, ly, y);
+      NAMES.slice(0, n).forEach((k, i) => (s += label(22, pos[k][1] + 5, `${k}=${x[i]}`, x[i] ? HI : '#94A3B8', 'middle', 13)));
+      return s;
+    }
+
+    function drawTiming() {
+      const dpr = Math.min(2, devicePixelRatio || 1), Wd = canvas.clientWidth, Hd = canvas.clientHeight;
+      canvas.width = Wd * dpr; canvas.height = Hd * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#0E1828'; ctx.fillRect(0, 0, Wd, Hd);
+      if (!tim) return;
+      const rows = [...tim.ins, ...(st.mode === 'nand' ? tim.nodes : [tim.out])];
+      const left = 56, right = 12, top = 10, bottom = 22, pw = Wd - left - right, rh = (Hd - top - bottom) / rows.length, n = tim.t.length, T = tim.t[n - 1];
+      ctx.strokeStyle = '#1E293B'; ctx.lineWidth = 1; ctx.beginPath();
+      const states = Math.round(T / tim.hold);
+      for (let k = 0; k <= states; k++) { const x = left + (k * tim.hold / T) * pw; ctx.moveTo(x, top); ctx.lineTo(x, Hd - bottom); }
+      ctx.stroke();
+      rows.forEach((k, ri) => {
+        const y0 = top + ri * rh, yh = y0 + rh * 0.2, yl = y0 + rh * 0.8, isOut = k === tim.out, data = tim.sig[k];
+        ctx.strokeStyle = isOut ? '#FBBF24' : ri < tim.ins.length ? '#A78BFA' : '#22D3EE'; ctx.lineWidth = isOut ? 2.5 : 2; ctx.beginPath();
+        let prev = data[0]; ctx.moveTo(left, prev ? yh : yl);
+        for (let i = 1; i < n; i++) if (data[i] !== prev) { const x = left + (i / (n - 1)) * pw; ctx.lineTo(x, prev ? yh : yl); ctx.lineTo(x, data[i] ? yh : yl); prev = data[i]; }
+        ctx.lineTo(left + pw, prev ? yh : yl); ctx.stroke();
+        ctx.fillStyle = isOut ? '#FBBF24' : '#94A3B8'; ctx.font = '12px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+        ctx.fillText(isOut ? 'Y' : k, 8, (yh + yl) / 2 + 4);
+      });
+      ctx.fillStyle = '#64748B'; ctx.textAlign = 'center'; ctx.font = '11px "IBM Plex Mono", monospace';
+      for (let g = 0; g <= 4; g++) ctx.fillText(fmt((T * g) / 4, 's'), left + (g * pw) / 4, Hd - 6);
+      ctx.strokeStyle = '#FB923C'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      cur.forEach((c, i) => { const x = left + c * pw; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, Hd - bottom); ctx.stroke(); ctx.fillStyle = '#FDBA74'; ctx.fillText(`C${i + 1}`, x + 12, top + 10); });
+      ctx.setLineDash([]);
+    }
+
+    function levels() {
+      const f = FAMILIES[st.fam], m = margins(f), H = 160, Y = (v: number) => 170 - (v / f.vcc) * H;
+      let s = `<rect x="40" y="${Y(f.vcc)}" width="90" height="${H}" fill="#111c2e" stroke="#334155"/><rect x="200" y="${Y(f.vcc)}" width="90" height="${H}" fill="#111c2e" stroke="#334155"/>`;
+      s += `<rect x="40" y="${Y(f.vcc)}" width="90" height="${Y(f.voh) - Y(f.vcc)}" fill="#4c0519"/><rect x="40" y="${Y(f.vol)}" width="90" height="${Y(0) - Y(f.vol)}" fill="#1e3a5f"/>`;
+      s += `<rect x="200" y="${Y(f.vcc)}" width="90" height="${Y(f.vih) - Y(f.vcc)}" fill="#4c0519"/><rect x="200" y="${Y(f.vil)}" width="90" height="${Y(0) - Y(f.vil)}" fill="#1e3a5f"/>`;
+      s += `<rect x="200" y="${Y(f.vih)}" width="90" height="${Y(f.vil) - Y(f.vih)}" fill="#3f2d0a"/>${label(245, (Y(f.vih) + Y(f.vil)) / 2 + 4, 'undefined', '#FBBF24', 'middle', 10)}`;
+      s += `<path d="M130 ${Y(f.voh)}H200M130 ${Y(f.vol)}H200" stroke="#64748B" stroke-dasharray="3 3"/>`;
+      s += label(85, 12, 'Output', '#94A3B8', 'middle', 11) + label(245, 12, 'Input', '#94A3B8', 'middle', 11);
+      s += label(36, Y(f.voh) + 4, `VOH ${f.voh}`, '#FDA4AF', 'end', 10) + label(36, Y(f.vol) + 4, `VOL ${f.vol}`, '#93C5FD', 'end', 10);
+      s += label(294, Y(f.vih) + 4, `VIH ${f.vih}`, '#FDA4AF', 'start', 10) + label(294, Y(f.vil) + 4, `VIL ${f.vil}`, '#93C5FD', 'start', 10);
+      s += label(165, (Y(f.voh) + Y(f.vih)) / 2 + 4, `NMH ${m.nmh.toFixed(2)} V`, '#E2E8F0', 'middle', 10) + label(165, (Y(f.vol) + Y(f.vil)) / 2 + 4, `NML ${m.nml.toFixed(2)} V`, '#E2E8F0', 'middle', 10);
+      s += label(165, 186, `Vcc ${f.vcc} V · ${f.note}`, '#64748B', 'middle', 10);
+      $('[data-lv]').innerHTML = s; $('[data-famname]').textContent = st.fam;
+    }
+
+    function run() {
+      const n = nIn(), x = st.x.slice(0, n);
+      // Controls state
+      $$<HTMLElement>('[data-show]').forEach((e) => (e.style.display = e.dataset.show === st.mode ? '' : 'none'));
+      $$<HTMLButtonElement>('[data-tab]').forEach((b) => { const on = b.dataset.tab === st.mode; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+      $$<HTMLButtonElement>('[data-gate]').forEach((b) => b.classList.toggle('on', b.dataset.gate === st.gate));
+      $$<HTMLButtonElement>('[data-target]').forEach((b) => b.classList.toggle('on', b.dataset.target === st.target));
+      $$<HTMLButtonElement>('[data-fam]').forEach((b) => b.classList.toggle('on', b.dataset.fam === st.fam));
+      $$<HTMLButtonElement>('[data-n]').forEach((b) => { b.classList.toggle('on', +b.dataset.n! === st.n); b.disabled = !GATES[st.gate].n.includes(+b.dataset.n!); b.style.opacity = b.disabled ? '0.35' : ''; });
+      $$<HTMLButtonElement>('[data-in]').forEach((b, i) => { b.hidden = i >= n; b.classList.toggle('hi', !!st.x[i]); b.querySelector('b')!.textContent = String(st.x[i]); });
+      $('[data-skew-v]').textContent = `${st.skew.toFixed(1)} × tpd = ${fmt(st.skew * tpd(), 's')}`;
+      // Output, schematic, expression
+      const y = st.mode === 'gate' ? evalGate(st.gate, x) : (() => { const net = NAND_NETS[st.target]; return evalNet(net, x)[net.gates[net.gates.length - 1][0]]; })();
+      $('[data-schem]').innerHTML = schematic();
+      const g = GATES[st.mode === 'gate' ? st.gate : st.target];
+      $('[data-expr]').innerHTML = `Y = <b>${g.expr(NAMES.slice(0, n))}</b> = ${y}${st.mode === 'nand' ? ` · built with ${NAND_NETS[st.target].gates.length} NAND gate${NAND_NETS[st.target].gates.length > 1 ? 's' : ''}` : ''}`;
+      // Truth table
+      const tt = truthTable(st.mode === 'gate' ? st.gate : st.target, n), row = parseInt(x.join(''), 2);
+      $('[data-tth]').innerHTML = `<tr>${NAMES.slice(0, n).map((k) => `<th>${k}</th>`).join('')}<th>Y</th></tr>`;
+      $('[data-ttb]').innerHTML = tt.map((r, k) => `<tr class="tt ${k === row ? 'cur' : ''}" data-row="${k}">${r.x.map((b) => `<td class="${b ? 'one' : ''}">${b}</td>`).join('')}<td class="${r.y ? 'one' : ''}"><b>${r.y}</b></td></tr>`).join('');
+      $$<HTMLElement>('[data-row]').forEach((tr) => tr.addEventListener('click', () => { const k = +tr.dataset.row!; for (let i = 0; i < n; i++) st.x[i] = (k >> (n - 1 - i)) & 1; schedule(); }));
+      // Timing
+      const opts = { mode: st.mode, type: st.mode === 'gate' ? st.gate : st.target, n, tpd: tpd(), skew: st.skew * tpd() };
+      tim = timing(opts);
+      const glitch = Math.round(tim.glitches);
+      const badge = $('[data-badge]'); badge.textContent = glitch ? `${glitch} glitch${glitch > 1 ? 'es' : ''}` : `Output ${y}`; badge.classList.toggle('warn', !!glitch);
+      const acc = accuracy(opts);
+      $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${r.unit ? fmt(r.theory, r.unit) : r.theory}</td><td>${r.unit ? fmt(r.sim, r.unit) : r.sim}</td><td class="${r.pass ? 'sim-ok' : 'sim-bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
+      levels();
+      drawTiming(); reads();
+      const q = new URLSearchParams({ mode: st.mode, gate: st.gate, target: st.target, n: String(st.n), fam: st.fam, x: st.x.join(''), skew: String(st.skew) });
+      history.replaceState(null, '', `#logic=${encodeURIComponent(q.toString())}`);
+    }
+
+    function reads() {
+      if (!tim) return;
+      const T = tim.t[tim.t.length - 1], d = (cur[1] - cur[0]) * T, dep = tim.depth;
+      const items: [string, string, string?][] = [['C1 → C2 Δt', fmt(d, 's')], ['Delay per gate tpd', fmt(tpd(), 's'), '#FBBF24'], ['Gate levels in path', String(dep)], ['Worst case delay', fmt(tim.maxDelay, 's'), '#FBBF24'], ['Max useful rate (≈ 1 / 2t)', fmt(1 / (2 * tim.maxDelay), 'Hz')], ['Glitches in this run', String(Math.round(tim.glitches)), tim.glitches ? '#F87171' : '#34D399']];
+      if (st.mode === 'nand') items.splice(2, 0, ['NAND gates used', `${NAND_NETS[st.target].gates.length} (minimum ${MIN_NANDS[st.target]})`]);
+      $('[data-reads]').innerHTML = items.map(([a, b, c]) => `<div><span>${a}</span><b style="color:${c ?? '#fff'}">${b}</b></div>`).join('');
+    }
+
+    let pending = 0;
+    const schedule = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(run); };
+    $$<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => { st.mode = b.dataset.tab; schedule(); }));
+    $$<HTMLButtonElement>('[data-gate]').forEach((b) => b.addEventListener('click', () => { st.gate = b.dataset.gate; const ns = GATES[st.gate].n; if (!ns.includes(st.n)) st.n = ns[0] === 1 ? 1 : 2; schedule(); }));
+    $$<HTMLButtonElement>('[data-target]').forEach((b) => b.addEventListener('click', () => { st.target = b.dataset.target; schedule(); }));
+    $$<HTMLButtonElement>('[data-n]').forEach((b) => b.addEventListener('click', () => { st.n = +b.dataset.n!; schedule(); }));
+    $$<HTMLButtonElement>('[data-fam]').forEach((b) => b.addEventListener('click', () => { st.fam = b.dataset.fam; schedule(); }));
+    $$<HTMLButtonElement>('[data-in]').forEach((b, i) => b.addEventListener('click', () => { st.x[i] = 1 - st.x[i]; schedule(); }));
+    $<HTMLInputElement>('[data-skew]').addEventListener('input', (e) => { st.skew = +(e.target as HTMLInputElement).value; schedule(); });
+    $('[data-reset]').addEventListener('click', () => { Object.assign(st, JSON.parse(JSON.stringify(def))); $<HTMLInputElement>('[data-skew]').value = '0'; schedule(); });
+    $('[data-share]').addEventListener('click', async (e) => { const b = e.currentTarget as HTMLButtonElement; try { await navigator.clipboard.writeText(location.href); b.textContent = 'Link copied'; } catch { b.textContent = 'Copy failed'; } setTimeout(() => (b.textContent = 'Copy link'), 2000); });
+    $('[data-csv]').addEventListener('click', () => {
+      const keys = [...tim.ins, ...(st.mode === 'nand' ? tim.nodes : [tim.out])];
+      const rows = [['time_s', ...keys].join(','), ...Array.from(tim.t, (t: number, i: number) => [t.toPrecision(6), ...keys.map((k: string) => tim.sig[k][i])].join(','))];
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `logic-${st.mode === 'gate' ? st.gate : 'nand-' + st.target}.csv`; a.click();
+    });
+    $('[data-fs]').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.()));
+    root.addEventListener('fullscreenchange', () => setTimeout(drawTiming, 50));
+
+    let drag = -1;
+    const posOf = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left - 56) / (r.width - 68))); };
+    canvas.addEventListener('pointerdown', (e) => { const p = posOf(e); drag = Math.abs(p - cur[0]) < Math.abs(p - cur[1]) ? 0 : 1; cur[drag] = p; canvas.setPointerCapture(e.pointerId); drawTiming(); reads(); });
+    canvas.addEventListener('pointermove', (e) => { if (drag < 0) return; cur[drag] = posOf(e); drawTiming(); reads(); });
+    canvas.addEventListener('pointerup', () => (drag = -1));
+
+    new ResizeObserver(() => drawTiming()).observe(canvas);
+    fromHash();
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); run(); } }, { rootMargin: '200px' });
+    io.observe(root);
+  });
+</script>
+
+<style>
+  .sim { background: var(--bench); color: #e2e8f0; border-radius: 20px; padding: 22px; margin: 24px 0 16px; font-size: 15px; line-height: 1.5; }
+  .sim:fullscreen { overflow-y: auto; border-radius: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kick { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #fda4af; }
+  .ttl { margin: 2px 0 0; font-size: 22px; font-weight: 600; color: #fff; }
+  .topr { display: flex; gap: 8px; align-items: center; }
+  .badge { background: #064e3b; color: #6ee7b7; padding: 6px 10px; border-radius: 999px; font-family: var(--mono); font-size: 12px; }
+  .badge.warn { background: #78350f; color: #fcd34d; }
+  .tb { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: var(--bench-2); color: #e2e8f0; font: 500 13px var(--sans); cursor: pointer; }
+  .tb.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .body { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { flex: 1 1 240px; background: var(--bench-2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .grp { margin: 4px 0 0; font-family: var(--mono); font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+  .ctl { display: flex; flex-direction: column; gap: 2px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  output { font-family: var(--mono); color: #fff; }
+  input[type='range'] { width: 100%; accent-color: var(--red); height: 24px; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg .tb { flex: 1 1 auto; }
+  .zen[hidden] { display: none; }
+  .zen { display: flex; flex-direction: column; gap: 10px; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--red); }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scopewrap { flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chs { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; }
+  .chs[hidden] { display: none; }
+  .sw { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sw button { width: 58px; height: 58px; border-radius: 12px; border: 1px solid #334155; background: var(--bench); color: #94a3b8; font: 600 15px var(--mono); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .sw button[hidden] { display: none; }
+  .sw button.hi { background: #4c0519; border-color: var(--red); color: #fff; }
+  .sw button b { font-size: 20px; }
+  .schem { width: 100%; height: 250px; background: #0E1828; border-radius: 12px; display: block; }
+  .expr { font-family: var(--mono); font-size: 15px; color: #e2e8f0; margin: 0; }
+  .expr b { color: #fda4af; font-weight: 600; }
+  .sim :global(tr.cur td) { background: #3f0d1c; color: #fff; }
+  .sim :global(tr.tt) { cursor: pointer; }
+  .sim :global(td.one) { color: #fb7185; font-weight: 600; }
+  .lv { width: 100%; max-width: 420px; height: auto; display: block; margin: 8px auto 0; }
+  .scopewrap .scope { height: 300px; }
+  .chs label { color: var(--c); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .chs input { accent-color: var(--c); }
+  .scope { width: 100%; height: 440px; border-radius: 12px; touch-action: none; cursor: ew-resize; display: block; }
+  .hint { margin: 0; font-size: 12px; color: #64748b; }
+  .reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-family: var(--mono); font-size: 13px; }
+  .reads :global(div) { background: var(--bench-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+  .reads :global(span) { color: #94a3b8; font-size: 12px; }
+  .lower { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .card2 { flex: 1 1 300px; min-width: 0; background: var(--bench-2); border-radius: 12px; padding: 14px 16px; }
+  .tblw { overflow-x: auto; }
+  .sim :global(table) { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .sim :global(th) { text-align: left; color: #94a3b8; font-weight: 400; padding: 6px 8px; background: none; }
+  .sim :global(td) { padding: 6px 8px; border-top: 1px solid var(--bench-line); color: #e2e8f0; white-space: nowrap; }
+  .sim :global(.sim-ok) { color: #34d399; }
+  .sim :global(.sim-bad) { color: #f87171; }
+  .sim :global(.sim-warn) { color: #fbbf24; }
+  .loss { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .loss :global(.tot) { border-top: 1px solid var(--bench-line); padding-top: 4px; color: #fff; }
+  .note { margin: 12px 0 0; font-size: 12px; color: #64748b; }
+  @media (max-width: 700px) { .scopewrap { order: -1; } .scope { height: 360px; } .sim { padding: 14px; margin-left: -8px; margin-right: -8px; } }
+</style>

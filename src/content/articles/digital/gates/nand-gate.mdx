@@ -1,0 +1,210 @@
+---
+title: 'NAND Gate: Truth Table, CMOS Circuit and Uses'
+seoTitle: 'NAND Gate: Truth Table, Symbol, CMOS Circuit, Universal Gate'
+description: 'How a NAND gate works: symbol, truth table, Boolean expression, CMOS transistor circuit, the 7400 IC, and how to build every other gate from NAND alone.'
+focusKeyword: 'nand gate'
+category: digital
+subcategory: gates
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: nand-gate-simulator
+shortAnswer: 'A NAND gate outputs 0 only when all of its inputs are 1, and 1 in every other case. It is an AND gate followed by a NOT, written Y = (A · B)′. NAND is a universal gate: any digital circuit can be built from NAND gates alone, and in CMOS it needs only four transistors.'
+featured:
+  kicker: 'Digital Electronics'
+  line1: 'NAND Gate'
+  line2: 'Truth table, CMOS circuit and uses'
+  art: nand
+image:
+  alt: 'NAND gate featured image with a NAND symbol and input and output timing waveforms'
+prerequisites:
+  - name: 'Logic gates'
+    href: '/digital/logic-gates/'
+learn:
+  - The NAND gate symbol, truth table and Boolean expression
+  - How four CMOS transistors make a NAND gate
+  - How to build NOT, AND, OR, NOR, XOR and XNOR from NAND gates only
+  - Why NAND is preferred over NOR in CMOS chips
+  - How propagation delay in NAND networks can cause glitches
+interview:
+  - q: 'Why is NAND called a universal gate?'
+    a: 'Because NOT, AND and OR can all be built from NAND gates alone, and those three can express any Boolean function. So any digital circuit can be made with only NAND gates.'
+  - q: 'How many NAND gates are needed to make an XOR gate?'
+    a: 'Four. g1 = NAND(A, B), g2 = NAND(A, g1), g3 = NAND(B, g1) and Y = NAND(g2, g3).'
+  - q: 'How many transistors are in a CMOS 2 input NAND gate?'
+    a: 'Four: two PMOS transistors in parallel between VDD and the output, and two NMOS transistors in series between the output and ground.'
+  - q: 'Why is NAND preferred over NOR in CMOS design?'
+    a: 'In a NAND gate the slower PMOS transistors are in parallel and the faster NMOS transistors are in series. In NOR it is the reverse, so the series PMOS stack is slow and must be made much wider. NAND gives smaller, faster gates.'
+  - q: 'What does De Morgan’s theorem say about NAND?'
+    a: '(A · B)′ = A′ + B′. A NAND gate is the same as an OR gate with inverted inputs, which is why NAND networks can implement OR logic.'
+  - q: 'What is a NAND latch?'
+    a: 'Two NAND gates with each output fed back to an input of the other. It stores one bit and forms the basic SR latch, with active low set and reset inputs.'
+faq:
+  - q: 'What is the output of a NAND gate when both inputs are 1?'
+    a: '0. That is the only input combination that gives a 0 output.'
+  - q: 'What IC is a NAND gate?'
+    a: 'The 7400 family, such as the 74HC00 and 74LS00, contains four 2 input NAND gates. The CD4011B is the 4000 series equivalent.'
+  - q: 'How do you make a NOT gate from a NAND gate?'
+    a: 'Connect both inputs together, or tie one input to logic 1. The output is then the inverse of the input.'
+  - q: 'What is NAND flash memory?'
+    a: 'A type of flash memory whose memory cells are connected in series strings, similar to the series transistors in a NAND gate. The name comes from that structure.'
+references:
+  - text: 'Texas Instruments, SN74HC00 Quadruple 2 Input Positive NAND Gates datasheet'
+    url: 'https://www.ti.com/lit/ds/symlink/sn74hc00.pdf'
+  - text: 'Nexperia, 74HC00 and 74HCT00 Quad 2 Input NAND Gate datasheet'
+    url: 'https://assets.nexperia.com/documents/data-sheet/74HC_HCT00.pdf'
+  - text: 'All About Circuits, The NAND Gate, Lessons in Electric Circuits Volume IV'
+    url: 'https://www.allaboutcircuits.com/textbook/digital/chpt-3/multiple-input-gates/'
+prev:
+  name: 'Logic gates'
+  href: '/digital/logic-gates/'
+---
+
+import LogicSim from '../../../../components/sims/LogicSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a NAND gate?
+
+A NAND gate is a [logic gate](/digital/logic-gates/) whose output is 0 only when all of its inputs are 1. For every other input combination the output is 1. The name means NOT AND: it gives exactly the opposite of an AND gate.
+
+NAND matters far more than its simple rule suggests. It is a universal gate, so every digital circuit can be built from NAND gates alone. It is also the cheapest and fastest gate to make in CMOS, which is why NAND is the core cell of chip design libraries. The idea of a single universal gate is old: the Apollo Guidance Computer was built almost entirely from one type of gate, the 3 input NOR.
+
+## Symbol, expression and truth table
+
+The NAND symbol is an AND shape with a small circle, the inversion bubble, on the output. Its Boolean expression is:
+
+$$
+Y = \overline{A \cdot B} = (A \cdot B)'
+$$
+
+| A | B | A · B | Y = (A · B)′ |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | 1 |
+| 0 | 1 | 0 | 1 |
+| 1 | 0 | 0 | 1 |
+| 1 | 1 | 1 | 0 |
+
+A useful way to remember it: any 0 at the input forces the output to 1. Only when every input is 1 does the output fall to 0. The same holds for 3, 4 and 8 input NAND gates.
+
+By De Morgan's theorem, (A · B)′ = A′ + B′. So a NAND gate behaves exactly like an OR gate with inverted inputs, a fact you will use when building other gates from NAND.
+
+## CMOS NAND gate circuit
+
+<figure>
+  <img src="/images/figures/cmos-nand-gate-circuit.webp" alt="CMOS NAND gate transistor circuit with two PMOS transistors P1 and P2 in parallel to VDD and two NMOS transistors N1 and N2 in series to ground" width="1120" height="860" loading="lazy" />
+  <figcaption>Figure 1. CMOS 2 input NAND gate. Four transistors, with no static current in either output state.</figcaption>
+</figure>
+
+A CMOS NAND gate uses four MOSFETs. The two PMOS transistors, P1 and P2, are in parallel between VDD and the output. The two NMOS transistors, N1 and N2, are in series between the output and ground.
+
+- If either input is 0, its PMOS turns on and pulls Y up to VDD, while the series NMOS path is broken. Y = 1.
+- Only if both inputs are 1 do both NMOS turn on, pulling Y to ground, while both PMOS are off. Y = 0.
+
+In each state one network is fully off, so almost no current flows except while switching. This is why CMOS logic uses so little power at rest.
+
+<Callout type="insight">
+NMOS transistors conduct about two to three times better than PMOS of the same size. NAND puts the strong NMOS in series and the weak PMOS in parallel, so it switches evenly with small transistors. A NOR gate does the opposite and needs much wider PMOS, which is why chip designers favour NAND.
+</Callout>
+
+## NAND as a universal gate
+
+<figure>
+  <img src="/images/figures/nand-gate-universal-gate.webp" alt="NOT, AND, OR and XOR gates each built from NAND gates only, using one, two, three and four NAND gates" width="1520" height="920" loading="lazy" />
+  <figcaption>Figure 2. NOT, AND, OR and XOR built only from NAND gates.</figcaption>
+</figure>
+
+| Gate | How to build it with NAND | NAND gates |
+| --- | --- | --- |
+| NOT | Tie both inputs together | 1 |
+| AND | NAND followed by a NAND inverter | 2 |
+| OR | Invert each input, then NAND (De Morgan) | 3 |
+| NOR | OR from NAND, then a NAND inverter | 4 |
+| XOR | g1 = NAND(A, B), then NAND(A, g1) and NAND(B, g1), then NAND of those two | 4 |
+| XNOR | XOR from NAND, then a NAND inverter | 5 |
+
+These counts are the minimum for each function using 2 input NAND gates. A practical benefit is stock: a design built only from 74HC00 chips needs a single part number, and spare gates in one package can fill any role.
+
+## NAND gate IC: the 7400
+
+<figure>
+  <img src="/images/figures/7400-nand-gate-ic-pinout.webp" alt="7400 quad 2 input NAND gate IC pinout: pins 1 to 3 gate 1, 4 to 6 gate 2, GND pin 7, gate 3 on pins 8 to 10, gate 4 on pins 11 to 13, VCC pin 14" width="1120" height="720" loading="lazy" />
+  <figcaption>Figure 3. Pinout of the 7400 quad 2 input NAND gate, shared by the HC, HCT, LS and LVC versions.</figcaption>
+</figure>
+
+The 7400 contains four independent 2 input NAND gates in a 14 pin package, with VCC on pin 14 and ground on pin 7. The 74HC00 runs from 2 to 6 V, the 74HCT00 accepts TTL input levels at 5 V, and the CD4011B is the 4000 series equivalent for supplies up to 18 V. Place a 100 nF decoupling capacitor close to the supply pins; the [decoupling capacitor calculator](https://zentacalculator.com/electronics/decoupling-capacitor/) explains how to size it for faster logic.
+
+## NAND gate simulator
+
+The lab opens in Build from NAND mode with XOR selected. Toggle A and B and follow the levels through each NAND gate. The theory table confirms the network matches the XOR truth table, uses the minimum four gates and has a worst case delay of three gate delays. Now raise the input skew so B arrives late: the badge reports glitches, short false pulses on Y caused by the uneven paths. Switch to Single gate and pick NAND to explore 3 and 4 input versions.
+
+<LogicSim mode="nand" gate="NAND" target="XOR" />
+
+## Timing and glitches
+
+Every NAND gate adds its propagation delay, and different paths through a network have different numbers of gates. When inputs change at slightly different times, or travel through paths of different length, the output can briefly show the wrong value before settling. This short pulse is a glitch, also called a hazard.
+
+<figure>
+  <img src="/images/figures/nand-xor-glitch-timing.webp" alt="Simulated timing diagram of an XOR built from four NAND gates, showing internal nodes g1 to g3 and short glitches on output Y when input B arrives late" width="1440" height="752" loading="lazy" />
+  <figcaption>Figure 4. XOR from four 74HC NAND gates with B arriving 8 ns after A. The output shows short false pulses before it settles.</figcaption>
+</figure>
+
+Glitches are harmless in circuits that only read the output after it settles, such as synchronous logic clocked by a flip flop. They are dangerous when the output drives a clock, a reset or a counter input directly. The usual cure is to register the signal with a flip flop, or to add redundant terms to the logic that cover the hazard.
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a 74HC00 at 5 V with a maximum propagation delay of about 18 ns per gate at 50 pF, used to build XOR
+
+**Find:** the worst case delay through the XOR network and the number of 74HC00 chips needed for four XOR functions
+
+**Solution:**
+
+1. The longest path is g1 → g2 → g4, which is 3 gate delays
+2. Worst case delay: 3 × 18 ns = 54 ns
+3. Each XOR needs 4 NAND gates, so four XORs need 16 gates
+4. Each 74HC00 has 4 gates, so 16 / 4 = 4 chips
+
+**Answer:** about 54 ns worst case delay and four 74HC00 chips. A single 74HC86 quad XOR would do the same job in one chip with one gate delay, so NAND only designs trade speed and parts count for uniformity.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="A 3 input NAND gate has inputs A = 1, B = 1, C = 0. What is the output?" options={['0', '1', 'Undefined', 'Depends on the logic family']} answer={1} explain="Any 0 at the input of a NAND gate forces the output to 1. Only 1, 1, 1 gives 0." />
+
+## Applications of NAND gates
+
+- **SR latches and flip flops.** Two cross coupled NAND gates store a bit; adding more forms gated latches and edge triggered flip flops.
+- **Switch debouncing.** A NAND SR latch gives a clean output from a bouncing changeover switch.
+- **Oscillators.** A NAND gate wired as an inverter with an RC network makes a simple clock oscillator, a classic use of the CD4011B.
+- **Enable and gating.** One NAND input acts as an enable, passing or blocking a signal on the other input.
+- **Complete logic designs.** Address decoders and glue logic are often built entirely from NAND gates.
+
+## Converting AND OR logic to NAND
+
+Any expression written as a sum of products, such as Y = A · B + C · D, converts directly to NAND gates. Draw it as AND gates feeding an OR gate. Now apply De Morgan's theorem: an OR gate with inverted inputs is a NAND gate, and an AND gate with an inverted output is also a NAND gate. Add a bubble to every AND output and to every OR input, and the bubbles cancel in pairs along each wire. The result is two levels of NAND gates: Y = ((A · B)′ · (C · D)′)′.
+
+This two level NAND form has the same number of gates as the AND OR version and only two gate delays, so it is the standard way to implement sum of products logic. Single variable terms need an extra NAND inverter, and any double inversion left on a wire can be removed.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Start from the truth table', d: 'Write the required function as a sum of products.' },
+  { t: 'Convert to NAND', d: 'Replace AND OR logic with two levels of NAND gates, using De Morgan.' },
+  { t: 'Remove double inversions', d: 'Two NAND inverters in a row cancel; delete them to save gates and delay.' },
+  { t: 'Check timing', d: 'Count gate levels on the longest path and multiply by the maximum tpd.' },
+  { t: 'Check for hazards', d: 'Look for glitches where the output drives clocks or resets.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Reading NAND as giving 1 only when inputs are 0.', fix: 'That is NOR. NAND gives 0 only when all inputs are 1.' },
+  { m: 'Leaving unused 7400 gate inputs floating.', fix: 'Tie unused inputs to VCC or ground so the spare gates cannot oscillate.' },
+  { m: 'Feeding a glitchy NAND network into a clock input.', fix: 'Register the signal or remove the hazard before using it as a clock.' },
+  { m: 'Swapping VCC and GND on a 7400.', fix: 'VCC is pin 14 and GND is pin 7. Reversing them destroys the chip.' },
+]} />

@@ -1,0 +1,217 @@
+---
+title: 'Logic Gates: Types, Symbols and Truth Tables'
+seoTitle: 'Logic Gates: Types, Symbols, Truth Tables and Boolean Expressions'
+description: 'All seven logic gates explained: AND, OR, NOT, NAND, NOR, XOR and XNOR, with symbols, truth tables, Boolean expressions, logic ICs, delay and noise margin.'
+focusKeyword: 'logic gates'
+category: digital
+subcategory: gates
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: logic-gates-simulator
+shortAnswer: 'Logic gates are electronic circuits that take one or more binary inputs (0 or 1) and produce one binary output according to a fixed rule. The seven standard gates are AND, OR, NOT, NAND, NOR, XOR and XNOR. Every digital system, from a calculator to a processor, is built from them.'
+featured:
+  kicker: 'Digital Electronics'
+  line1: 'Logic Gates'
+  line2: 'Types, symbols and truth tables'
+  art: logic
+image:
+  alt: 'Logic gates featured image with gate symbols and digital timing waveforms'
+prerequisites:
+  - name: 'Number systems'
+    href: '/digital/'
+learn:
+  - What each of the seven logic gates does, with its symbol and truth table
+  - How to write and read Boolean expressions
+  - How 0 and 1 map to real voltages, and what noise margin means
+  - Why propagation delay limits the speed of digital circuits
+  - Which 74 series ICs contain each gate
+interview:
+  - q: 'Which logic gates are called universal gates and why?'
+    a: 'NAND and NOR. Any Boolean function, and therefore any other gate, can be built using only NAND gates or only NOR gates.'
+  - q: 'What is the difference between XOR and OR?'
+    a: 'OR gives 1 when at least one input is 1, including when both are. XOR gives 1 only when the inputs differ, so with two inputs it gives 0 when both are 1.'
+  - q: 'What is propagation delay?'
+    a: 'The time between an input change and the resulting output change, usually measured between the 50% points of the input and output edges. It ranges from a few nanoseconds for 74LVC parts to over 100 ns for CD4000 series parts at 5 V.'
+  - q: 'What is noise margin?'
+    a: 'The amount of noise a logic signal can pick up and still be read correctly. NMH = VOH(min) − VIH(min) and NML = VIL(max) − VOL(max).'
+  - q: 'Why must unused CMOS inputs never be left floating?'
+    a: 'A floating CMOS input can drift into the undefined region between VIL and VIH, where both transistors partly conduct. This causes random output switching, extra current and heating. Tie unused inputs to VCC or ground.'
+  - q: 'How many rows does the truth table of a 4 input gate have?'
+    a: '2⁴ = 16 rows, one for every combination of inputs.'
+faq:
+  - q: 'How many logic gates are there?'
+    a: 'Seven standard types: AND, OR, NOT, NAND, NOR, XOR and XNOR. A buffer is sometimes counted as an eighth.'
+  - q: 'What is a logic gate made of?'
+    a: 'Modern gates are made of CMOS transistors, pairs of P channel and N channel MOSFETs. Older TTL gates use bipolar transistors.'
+  - q: 'Which gate is called an inverter?'
+    a: 'The NOT gate. It has one input and its output is always the opposite.'
+  - q: 'Can a logic gate have more than two inputs?'
+    a: 'Yes. AND, OR, NAND, NOR, XOR and XNOR gates are available with 3, 4 or 8 inputs, such as the 7410 triple 3 input NAND and the 7430 8 input NAND.'
+references:
+  - text: 'Texas Instruments, SN74HC00 Quadruple 2 Input Positive NAND Gates datasheet'
+    url: 'https://www.ti.com/lit/ds/symlink/sn74hc00.pdf'
+  - text: 'Texas Instruments, SZZA036, Understanding and Interpreting Standard Logic Data Sheets'
+    url: 'https://www.ti.com/lit/pdf/szza036'
+  - text: 'All About Circuits, Digital Signals and Gates, Lessons in Electric Circuits Volume IV'
+    url: 'https://www.allaboutcircuits.com/textbook/digital/chpt-3/digital-signals-gates/'
+next:
+  name: 'NAND gate'
+  href: '/digital/nand-gate/'
+---
+
+import LogicSim from '../../../../components/sims/LogicSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What are logic gates?
+
+Logic gates are the basic building blocks of digital electronics. Each gate takes one or more inputs that are either 0 (low) or 1 (high) and produces a single output that follows a fixed rule. Combine a few gates and you get adders, comparators and multiplexers. Combine millions and you get a microprocessor.
+
+The rules come from Boolean algebra, developed by George Boole in the 1850s and linked to switching circuits by Claude Shannon in 1937. Shannon showed that switches in series behave like AND and switches in parallel behave like OR, and that insight still describes every chip made today.
+
+## The seven logic gates
+
+<figure>
+  <img src="/images/figures/logic-gates-symbols-truth-tables.webp" alt="Symbols and truth tables of the NOT, AND, OR, NAND, NOR, XOR, XNOR and buffer logic gates with their Boolean expressions" width="1520" height="1000" loading="lazy" />
+  <figcaption>Figure 1. Standard gate symbols with their two input truth tables and Boolean expressions. A small circle (bubble) on the output means the result is inverted.</figcaption>
+</figure>
+
+### NOT gate (inverter)
+
+The NOT gate has one input and gives the opposite at its output: 0 becomes 1 and 1 becomes 0. It is written Y = A′ or with a bar over A.
+
+### AND gate
+
+The output is 1 only when all inputs are 1. Think of two switches in series feeding a lamp. It is written Y = A · B.
+
+### OR gate
+
+The output is 1 when at least one input is 1. Think of two switches in parallel. It is written Y = A + B.
+
+### NAND gate
+
+NAND is AND followed by NOT. The output is 0 only when all inputs are 1. It is the most widely used gate in practice and has its own [NAND gate](/digital/nand-gate/) guide.
+
+### NOR gate
+
+NOR is OR followed by NOT. The output is 1 only when all inputs are 0. Like NAND, it is a universal gate.
+
+### XOR gate (exclusive OR)
+
+The output is 1 when the inputs differ. With more than two inputs, XOR gives 1 when an odd number of inputs are 1, which makes it the basis of parity checkers and binary adders.
+
+### XNOR gate (equivalence)
+
+XNOR is XOR followed by NOT. The output is 1 when the inputs are equal, so it works as a one bit comparator.
+
+## Logic gates summary
+
+| Gate | Expression | Output is 1 when | 74 series IC |
+| --- | --- | --- | --- |
+| NOT | Y = A′ | Input is 0 | 7404 (hex) |
+| AND | Y = A · B | All inputs are 1 | 7408 |
+| OR | Y = A + B | Any input is 1 | 7432 |
+| NAND | Y = (A · B)′ | Any input is 0 | 7400 |
+| NOR | Y = (A + B)′ | All inputs are 0 | 7402 |
+| XOR | Y = A ⊕ B | Inputs differ | 7486 |
+| XNOR | Y = (A ⊕ B)′ | Inputs are equal | 74266 |
+
+## From 0 and 1 to real voltages
+
+Inside a circuit, 0 and 1 are voltage ranges. A gate's datasheet guarantees that a high output is at least VOH and a low output at most VOL, and that it will read any input above VIH as 1 and any input below VIL as 0. Voltages between VIL and VIH are undefined.
+
+The gap between what an output guarantees and what an input needs is the noise margin: NMH = VOH − VIH and NML = VIL − VOL. For 74HC logic at 5 V that is roughly 0.9 V at the high side and 1.2 V at the low side, so a signal can pick up that much noise and still be read correctly. 74LS TTL has smaller margins of about 0.7 V and 0.3 V, which is one reason CMOS replaced it.
+
+<Callout type="warning">
+Never leave a CMOS input unconnected. A floating input can sit in the undefined region, making the output oscillate and drawing extra supply current. Tie unused inputs to VCC or ground, directly or through a resistor.
+</Callout>
+
+## Propagation delay
+
+A gate does not respond instantly. The output changes a short time after the input, called the propagation delay, tpd. When gates are connected in a chain, the delays add up along the longest path, and that total sets how fast the circuit can run.
+
+<figure>
+  <img src="/images/figures/nand-gate-timing-diagram.webp" alt="Timing diagram from the simulator showing inputs A and B and the output of a 2 input NAND gate changing 8 ns after each input edge" width="1440" height="476" loading="lazy" />
+  <figcaption>Figure 2. Simulated 74HC00 NAND gate. Each output edge follows the input change by one propagation delay.</figcaption>
+</figure>
+
+| Family | Supply | Typical tpd per gate | Notes |
+| --- | --- | --- | --- |
+| 74LVC | 3.3 V | About 3 ns | Fast, low voltage CMOS |
+| 74HC | 2 to 6 V | About 8 ns at 5 V | General purpose CMOS |
+| 74HCT | 5 V | About 10 ns | CMOS that accepts TTL levels |
+| 74LS | 5 V | About 10 ns | Older bipolar TTL |
+| CD4000B | 3 to 18 V | About 125 ns at 5 V | Slow, wide supply range |
+
+## Logic gates simulator
+
+Click the input switches or any truth table row to change the inputs, and watch the schematic and output LED update. Switch the gate type and the number of inputs to compare truth tables. The timing diagram counts through every input combination using the delay of the logic family you pick, and the levels card shows each family's noise margins. Try the Build from NAND tab to see how one gate type can make all the others.
+
+<LogicSim gate="AND" />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** an alarm must sound (Y = 1) when the system is armed (A = 1) and a door is open (B = 1), or whenever the panic button is pressed (C = 1)
+
+**Find:** the Boolean expression and the gates needed
+
+**Solution:**
+
+1. "Armed and door open" is A · B, an AND gate
+2. "Or panic" adds C with an OR gate
+3. Y = A · B + C
+4. Check: A = 0, B = 1, C = 0 gives Y = 0; A = 1, B = 1, C = 0 gives Y = 1; any input with C = 1 gives Y = 1
+
+**Answer:** Y = A · B + C, built with one 2 input AND gate feeding one 2 input OR gate. To light an alarm LED from the output, size its series resistor with the [LED resistor calculator](https://zentacalculator.com/electronics/led-resistor/).
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="Which gate gives 1 only when its two inputs are different?" options={['OR', 'XNOR', 'XOR', 'NAND']} answer={2} explain="XOR (exclusive OR) outputs 1 for inputs 01 and 10 and 0 when both inputs match." />
+
+## Where logic gates are used
+
+- **Arithmetic.** XOR and AND gates form half and full adders, the heart of every ALU.
+- **Decision logic.** Interlocks, alarms and safety circuits combine sensor signals with AND and OR logic.
+- **Data selection.** Multiplexers, decoders and encoders route data inside processors and memory.
+- **Error checking.** XOR trees generate and check parity bits.
+- **Memory.** Two cross coupled NAND or NOR gates form a latch, the simplest one bit memory.
+
+## Logic gates with switches and relays
+
+Before transistors, engineers built logic with relays and switches, and the idea still helps when you first learn gates. Two switches in series feeding a lamp form an AND gate: the lamp lights only when both are closed. Two switches in parallel form an OR gate. A normally closed relay contact gives a NOT gate, because the lamp goes off when the coil is energised.
+
+This is exactly how [logic gates in PLC ladder logic](https://www.instrumentationblog.in/logic-gates-in-plc-ladder-logic/) are drawn today. Each rung is a chain of contacts in series and parallel that sets an output coil, so an electrician reading a ladder diagram is really reading AND, OR and NOT logic. Understanding gates makes ladder programs, interlocks and safety circuits much easier to follow.
+
+## Combining gates
+
+Real problems rarely need a single gate. Gates are combined so that the output of one feeds the inputs of others, and the whole circuit still follows one Boolean expression. A half adder, for example, uses one XOR gate for the sum and one AND gate for the carry. Boolean algebra and Karnaugh maps help simplify such expressions so the circuit uses fewer gates and fewer levels, which saves cost and delay.
+
+## Reading a logic gate datasheet
+
+A logic IC datasheet lists more than the truth table. Check the supply range first, then the input and output levels (VIH, VIL, VOH, VOL) at your supply voltage. The output current rating tells you how many inputs or what load one output can drive; CMOS inputs draw almost no current, so fan out is limited mainly by speed and capacitance. Propagation delay is given as typical and maximum values at a stated load capacitance, usually 15 or 50 pF, and it rises with larger loads and lower supply voltages. Always design with the maximum delay, not the typical one.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Write the truth table', d: 'List every input combination and the output you want.' },
+  { t: 'Write the Boolean expression', d: 'Take each row where Y = 1 and combine them, then simplify.' },
+  { t: 'Choose the gates', d: 'Pick standard gates, or convert the design to NAND only to reduce IC types.' },
+  { t: 'Pick a logic family', d: 'Match the supply voltage, speed and input levels of the rest of the system.' },
+  { t: 'Check timing and unused inputs', d: 'Add up delays along the longest path and tie off every unused input.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Leaving unused CMOS inputs floating.', fix: 'Tie them to VCC or ground so they sit at a valid level.' },
+  { m: 'Confusing OR with XOR when both inputs are 1.', fix: 'OR gives 1, XOR gives 0. Check the last row of the truth table.' },
+  { m: 'Mixing 3.3 V and 5 V logic without checking levels.', fix: 'Compare VOH of the driver with VIH of the receiver, or use a level shifter.' },
+  { m: 'Using typical propagation delay for timing.', fix: 'Design with the maximum datasheet delay at your load and supply.' },
+]} />
