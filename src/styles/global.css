@@ -21,6 +21,7 @@ body > main { flex: 1 0 auto; }
 a { color: var(--red-dark); }
 a:hover { color: var(--red-deep); }
 img, svg { max-width: 100%; }
+img { height: auto; }
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 12px; z-index: 50; }

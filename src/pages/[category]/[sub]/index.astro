@@ -26,5 +26,5 @@ const list = (await liveArticles()).filter((a) => a.data.category === category &
   .top { padding-top: 24px; }
   .crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 8px; }
   h1 { margin: 0 0 28px; font-size: clamp(30px, 4vw, 42px); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 </style>
