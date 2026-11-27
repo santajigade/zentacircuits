@@ -51,7 +51,7 @@ const schema = [
         <span>Published {fmt(d.pubDate)}</span>
         {d.updatedDate && <span>Updated {fmt(d.updatedDate)}</span>}
         <span>{d.readMinutes} min read</span>
-        <span class="views" data-views hidden><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><b></b> views</span>
+        <span class="views" data-views hidden><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><b></b></span>
       </div>
       <ShareBar url={abs(url)} title={d.title} image={abs(img)} />
       <figure class="feat">
@@ -98,11 +98,11 @@ const schema = [
 </Base>
 <script>
   // Counts one view per article per browser per day (public/api/views.php stores totals outside the web root),
-  // then shows the total in the byline once it reaches 10.
+  // then shows the total in the byline.
   try {
     const p = location.pathname, k = 'zcv:' + p, today = new Date().toDateString();
     const el = document.querySelector<HTMLElement>('[data-views]');
-    const show = (n: number) => { if (el && n >= 10) { el.querySelector('b')!.textContent = n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n); el.hidden = false; } };
+    const show = (n: number) => { if (el && n >= 1) { el.querySelector('b')!.textContent = `${n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : n} ${n === 1 ? 'view' : 'views'}`; el.hidden = false; } };
     if (/^\/[a-z0-9-]+\/[a-z0-9-]+\/$/.test(p) && !navigator.webdriver && localStorage.getItem(k) !== today) {
       localStorage.setItem(k, today);
       fetch('/api/views.php', { method: 'POST', body: new URLSearchParams({ p }) }).then((r) => r.json()).then((j) => show(j[p] ?? 0)).catch(() => {});

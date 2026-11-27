@@ -8,13 +8,23 @@ const c = catBySlug(a.data.category);
   <img src={featuredSrc(a)} alt={a.data.image.alt} width="1200" height="675" loading="lazy" />
   <span class="seg" style={`color:${c.color}`}>{c.short}</span>
   <span class="t">{a.data.title}</span>
-  <span class="m">{a.data.readMinutes} min read{a.data.simulator && <span class="sim">Has simulator</span>}</span>
+  <span class="m">{a.data.readMinutes} min read<span class="vw" data-cardviews={articleUrl(a)} hidden></span>{a.data.simulator && <span class="sim">Has simulator</span>}</span>
 </a>
+<script>
+  // Fills in view counts on every article card with one request per page.
+  const els = [...document.querySelectorAll<HTMLElement>('[data-cardviews]')];
+  const paths = [...new Set(els.map((e) => e.dataset.cardviews!))].slice(0, 50);
+  if (paths.length) fetch('/api/views.php?p=' + encodeURIComponent(paths.join(','))).then((r) => r.json()).then((j) => {
+    els.forEach((e) => { const n = j[e.dataset.cardviews!] ?? 0; if (n < 1) return; e.textContent = `${n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : n} ${n === 1 ? 'view' : 'views'}`; e.hidden = false; });
+  }).catch(() => {});
+</script>
 <style>
   .ac { overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; text-decoration: none; color: var(--ink); }
   img { width: 100%; height: auto; display: block; aspect-ratio: 16 / 9; }
   .seg { padding: 6px 20px 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
   .t { padding: 0 20px; font-weight: 600; font-size: 19px; line-height: 1.35; }
   .m { padding: 0 20px; font-size: 14px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .vw[hidden] { display: none; }
+  .vw::before { content: '·'; margin-right: 10px; }
   .sim { background: var(--red-tint); color: var(--red-deep); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
 </style>
