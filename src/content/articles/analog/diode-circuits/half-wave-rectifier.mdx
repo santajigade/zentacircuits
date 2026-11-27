@@ -1,0 +1,224 @@
+---
+title: 'Half Wave Rectifier: Working, Formulas and Waveforms'
+seoTitle: 'Half Wave Rectifier: Working, Formulas, Ripple and PIV'
+description: 'How a half wave rectifier works, with circuit, waveforms, average and RMS voltage formulas, ripple factor, efficiency, PIV and a capacitor filter example.'
+focusKeyword: 'half wave rectifier'
+category: analog
+subcategory: diode-circuits
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 11
+simulator: half-wave-rectifier-simulator
+shortAnswer: 'A half wave rectifier uses one diode to pass only the positive half of an AC sine wave and block the negative half. The output is pulsating DC with an average of Vm/π, about 0.318 times the peak. It is simple but inefficient, with a ripple factor of 1.21 and a maximum efficiency of 40.6%.'
+featured:
+  kicker: 'Diode Circuits'
+  line1: 'Half Wave Rectifier'
+  line2: 'Working, formulas and waveforms'
+  art: rectifier
+image:
+  alt: 'Half wave rectifier featured image with a diode bridge symbol and rectified sine waveforms'
+prerequisites:
+  - name: 'AC fundamentals'
+    href: '/basics/'
+  - name: 'Diodes'
+    href: '/components/'
+learn:
+  - How one diode converts AC into pulsating DC
+  - The exact formulas for average voltage, RMS voltage, ripple factor and efficiency
+  - Why the peak inverse voltage doubles when you add a capacitor
+  - How to size a reservoir capacitor for a target ripple
+  - How diode drop and winding resistance change real results
+interview:
+  - q: 'What is the average output voltage of a half wave rectifier?'
+    a: 'With an ideal diode and resistive load, Vdc = Vm/π, which is about 0.318 Vm. With a real silicon diode, subtract roughly 0.7 V from the peak before using this formula.'
+  - q: 'Why is the ripple factor of a half wave rectifier so high?'
+    a: 'The output is zero for half of every cycle, so most of its RMS value is AC content. The ripple factor works out to 1.21, which means the AC part is larger than the DC part.'
+  - q: 'What is the PIV of a diode in a half wave rectifier?'
+    a: 'Vm with a resistive load. With a capacitor filter the capacitor holds the cathode near +Vm while the anode swings to −Vm, so the diode must block about 2Vm.'
+  - q: 'What is transformer utilisation factor (TUF) for a half wave rectifier?'
+    a: 'About 0.287. The transformer carries a DC component in its secondary, which can push the core towards saturation, so the transformer must be oversized for the DC power delivered.'
+  - q: 'Where is a half wave rectifier still used?'
+    a: 'In very low current circuits such as signal detectors, AM demodulators, peak detectors and some small auxiliary supplies where cost matters more than efficiency.'
+faq:
+  - q: 'What is the ripple frequency of a half wave rectifier?'
+    a: 'The same as the supply frequency: 50 Hz on 50 Hz mains and 60 Hz on 60 Hz mains, because there is one output pulse per cycle.'
+  - q: 'Why is a half wave rectifier not used in power supplies?'
+    a: 'It wastes half the input waveform, has high ripple, needs a large filter capacitor and puts DC current through the transformer. A bridge rectifier fixes all of these at the cost of three more diodes.'
+  - q: 'Which diode is used in a half wave rectifier?'
+    a: 'For mains frequency supplies, a general purpose rectifier such as the 1N4001 to 1N4007 series is common. Choose one whose current and reverse voltage ratings exceed the circuit values with margin.'
+  - q: 'What happens if the diode is reversed?'
+    a: 'The circuit passes the negative half cycles instead and the output voltage becomes negative. Rectification still happens, only the polarity changes.'
+references:
+  - text: 'All About Circuits, Rectifier Circuits, Lessons in Electric Circuits Volume III'
+    url: 'https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/rectifier-circuits/'
+  - text: 'Sedra and Smith, Microelectronic Circuits, 8th edition, Oxford University Press'
+    url: 'https://global.oup.com/ushe/product/microelectronic-circuits-9780190853464'
+  - text: 'Vishay, 1N4001 to 1N4007 General Purpose Plastic Rectifier datasheet'
+    url: 'https://www.vishay.com/docs/88503/1n4001.pdf'
+next:
+  name: 'Full wave rectifier'
+  href: '/analog/full-wave-rectifier/'
+---
+
+import RectSim from '../../../../components/sims/RectSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a half wave rectifier?
+
+A half wave rectifier is the simplest circuit that turns alternating current into direct current. It uses a single diode in series with the load. The diode conducts when the input is positive and blocks when it is negative, so only one half of each sine wave reaches the load.
+
+The output is not smooth DC. It is a train of positive half sine pulses with gaps between them. Even so, the current through the load always flows in one direction, and that is what rectification means.
+
+Every DC power supply that runs from the mains starts with a rectifier. Learning the half wave version first makes the [full wave and bridge rectifiers](/analog/full-wave-rectifier/) easy to understand, because they only fill in the missing half cycles.
+
+## Half wave rectifier circuit
+
+<figure>
+  <img src="/images/figures/half-wave-rectifier-circuit.webp" alt="Half wave rectifier circuit with AC source, step down transformer, diode D, optional reservoir capacitor C and load resistor RL" width="1120" height="560" loading="lazy" />
+  <figcaption>Figure 1. Half wave rectifier. The transformer sets the voltage level, the diode rectifies and the optional capacitor smooths the output.</figcaption>
+</figure>
+
+The transformer steps the mains voltage down to a useful level and isolates the circuit from the mains. The secondary voltage is usually given as an RMS value. Its peak is Vm = √2 × Vrms, so a 12 V RMS winding peaks at about 17 V. To choose the winding for a target voltage, the [transformer turns ratio calculator](https://zentacalculator.com/electrical/transformer-turns-ratio/) gives the ratio directly.
+
+## How it works
+
+### Positive half cycle
+
+When the top of the secondary is positive, the diode is forward biased once the voltage passes its knee of about 0.7 V for silicon. Current flows through the diode and the load, and the output follows the input minus the diode drop.
+
+### Negative half cycle
+
+When the secondary reverses, the diode is reverse biased and stops conducting. No current flows, so the output is zero. The whole secondary voltage now appears across the diode as reverse voltage.
+
+<figure>
+  <img src="/images/figures/half-wave-rectifier-waveforms.webp" alt="Half wave rectifier waveforms from the simulator: secondary voltage, output without capacitor, output with 1000 µF capacitor and diode current pulses" width="1440" height="1040" loading="lazy" />
+  <figcaption>Figure 2. Simulated waveforms for a 12 V RMS secondary and 100 Ω load. Without a capacitor the output is half sine pulses. With 1000 µF it becomes DC with a sawtooth ripple, and the diode conducts only in short, tall pulses.</figcaption>
+</figure>
+
+## Half wave rectifier formulas
+
+For an ideal diode and a resistive load, the output is v = Vm sin ωt for the positive half and zero for the negative half. Averaging over one full cycle gives:
+
+$$
+V_{dc} = \frac{1}{2\pi}\int_0^{\pi} V_m \sin\theta \, d\theta = \frac{V_m}{\pi} \approx 0.318\,V_m
+$$
+
+The RMS value is:
+
+$$
+V_{rms} = \sqrt{\frac{1}{2\pi}\int_0^{\pi} V_m^2 \sin^2\theta \, d\theta} = \frac{V_m}{2}
+$$
+
+| Quantity | Formula | Value |
+| --- | --- | --- |
+| Average (DC) output | Vdc = Vm / π | 0.318 Vm |
+| RMS output | Vrms = Vm / 2 | 0.5 Vm |
+| Form factor | Vrms / Vdc = π / 2 | 1.57 |
+| Ripple factor | √((Vrms / Vdc)² − 1) | 1.21 |
+| Rectification efficiency | Pdc / Pac = 4 / π² | 40.6% |
+| Peak inverse voltage | Resistive load: Vm, with capacitor: about 2Vm | |
+| Ripple frequency | Same as supply | 50 or 60 Hz |
+| Transformer utilisation factor | | 0.287 |
+
+<Callout type="insight">
+A ripple factor of 1.21 means the AC component of the output is larger than the DC component. That is why a half wave rectifier almost always needs a filter before it can power electronics.
+</Callout>
+
+## Effect of a real diode
+
+A real silicon diode needs about 0.7 V before it conducts, and it has a small series resistance. The transformer winding has resistance too. All of these lower the output. A good quick estimate is to replace Vm with Vm − 0.7 V. For low voltage circuits this matters a lot: from a 3 V peak, the diode alone takes almost a quarter of the voltage. Schottky diodes with a drop of 0.3 to 0.5 V help in such cases.
+
+## Adding a capacitor filter
+
+Put a large capacitor across the load and the output changes completely. During the short part of each cycle when the input is near its peak, the diode conducts and charges the capacitor to about Vm − 0.7 V. For the rest of the cycle the diode is off, and the capacitor supplies the load while its voltage falls slowly.
+
+With a load current I, supply frequency f and capacitance C, the peak to peak ripple is approximately:
+
+$$
+\Delta V \approx \frac{I}{f\,C}
+$$
+
+The DC output is then about Vpeak − ΔV / 2. The energy stored in the capacitor, which you can check with the [capacitor energy calculator](https://zentacalculator.com/electronics/capacitor-energy/), is what carries the load through each gap.
+
+Two side effects follow. First, the diode now conducts in short, high current pulses, often five to ten times the load current. Second, the diode's reverse voltage doubles to about 2Vm, because the capacitor holds the cathode near +Vm while the anode swings down to −Vm.
+
+## Half wave rectifier simulator
+
+Start with no capacitor and read the theory table: Vdc, Vrms, ripple factor and efficiency all match the formulas above. Then add capacitance and watch the ripple shrink, the conduction angle narrow and the diode current peak grow. Switch the PIV channel on to see the reverse voltage double. Try the other topologies with the buttons at the top.
+
+<RectSim topo="half" C={0} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a 12 V RMS secondary at 50 Hz, a silicon diode with 0.7 V drop and a 100 mA load
+
+**Find:** the DC output without a filter, and the ripple and DC output with a 1000 µF capacitor
+
+**Solution:**
+
+1. Vm = 12 × √2 ≈ 16.97 V
+2. Peak at the load: 16.97 − 0.7 ≈ 16.27 V
+3. Without a capacitor: Vdc ≈ 16.27 / π ≈ 5.18 V
+4. With 1000 µF: ΔV ≈ 0.1 / (50 × 0.001) = 2 V peak to peak
+5. Vdc ≈ 16.27 − 2 / 2 ≈ 15.3 V
+6. Diode PIV with the capacitor: about 16.97 + 16.27 ≈ 33 V
+
+**Answer:** about 5.2 V without a filter and about 15.3 V with 2 V of ripple with the capacitor. A 1N4001 (50 V) has enough reverse voltage margin.
+
+</Callout>
+
+The simulator gives slightly lower values because it includes the 0.5 Ω winding resistance and the diode's own resistance.
+
+## Quick check
+
+<QuickCheck q="A half wave rectifier with a capacitor filter runs from a 20 V peak secondary. What reverse voltage must the diode block?" options={['10 V', '20 V', '28 V', 'About 40 V']} answer={3} explain="The capacitor holds the cathode near +20 V while the anode swings to −20 V, so the diode sees about 2Vm = 40 V." />
+
+## Advantages and disadvantages
+
+The half wave rectifier needs only one diode, so it is cheap and easy to build. It works well where the current is tiny, such as in signal and peak detectors.
+
+Its weaknesses are serious for power supplies. Half the input is wasted, the ripple frequency is low so the filter capacitor must be large, and the DC current through the secondary can partly saturate the transformer core. This is why mains supplies use full wave or bridge rectifiers instead.
+
+## Transformer utilisation factor explained
+
+Transformer utilisation factor, or TUF, compares the DC power delivered to the load with the volt-ampere rating the transformer secondary must have. For a half wave rectifier it is only about 0.287, which means a transformer rated at 10 VA can deliver under 3 W of DC.
+
+There are two reasons. The secondary carries current for only half of each cycle, so its RMS current is high compared with the DC current. Worse, that current always flows in one direction, so the core sees a steady DC magnetising force. This pushes the core towards saturation, raises the magnetising current and heats the transformer. Designers therefore either oversize the transformer or, far more often, use a full wave circuit, where the secondary current is pure AC.
+
+## Testing a half wave rectifier on the bench
+
+A digital multimeter and an oscilloscope tell you almost everything. With no capacitor fitted, measure the output on the DC range: it should read close to 0.318 times the peak minus the diode drop. On the AC range the meter shows the ripple content, which for this circuit is larger than the DC reading.
+
+On an oscilloscope, connect the ground clip to the negative output and look at the load. You should see clean half sine pulses at the mains frequency. Flat tops mean the diode or winding is overloaded; no output at all usually means an open diode or blown fuse. With the capacitor fitted, the ripple should look like a sawtooth that repeats every 20 ms on 50 Hz mains. If it repeats every 10 ms, the circuit is actually a full wave design.
+
+## Applications
+
+- Signal demodulation in AM radio receivers
+- Peak detectors and voltage measurement circuits
+- Low current auxiliary supplies inside appliances
+- Voltage multiplier stages, which are built from half wave sections
+- Input protection and polarity protection with a single series diode
+
+## Design steps
+
+<Steps items={[
+  { t: 'Set the output target', d: 'Decide the DC voltage, load current and allowed ripple.' },
+  { t: 'Choose the secondary voltage', d: 'Peak must cover the DC output, half the ripple and the diode drop.' },
+  { t: 'Size the capacitor', d: 'C ≈ I / (f × ΔV). Use the nearest larger standard value.' },
+  { t: 'Rate the diode', d: 'Reverse voltage above 2Vm with margin, and repetitive peak current above the charging pulses.' },
+  { t: 'Check in the simulator', d: 'Confirm ripple, peak diode current and inrush with real part values.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Rating the diode for Vm when a capacitor is fitted.', fix: 'Use about 2Vm for PIV, plus a safety margin of at least 1.5 times.' },
+  { m: 'Ignoring the 0.7 V drop in low voltage designs.', fix: 'Subtract it from the peak, or use a Schottky diode.' },
+  { m: 'Using the RMS secondary voltage as the DC output.', fix: 'Convert to peak first: Vm = √2 × Vrms.' },
+  { m: 'Choosing a capacitor without checking its ripple current rating.', fix: 'Compare the capacitor RMS ripple current from the simulator with the datasheet limit.' },
+]} />

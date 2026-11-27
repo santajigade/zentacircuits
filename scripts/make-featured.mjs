@@ -32,6 +32,16 @@ const ART = {
 <path d="M720 375L720 335L817 335L817 375L915 375L915 335L1012 335L1012 375L1110 375" fill="none" stroke="#A78BFA" stroke-width="4"/>
 <path d="M720 470L817 410L915 470L1012 410L1110 470" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 505L817 535L915 505L1012 535L1110 505" fill="none" stroke="#F472B6" stroke-width="4"/>`,
+  rectifier: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M840 230L915 160L990 230L915 300Z"/><path d="M760 160H915M760 300H915M990 230H1080M840 230H800V320H1080"/></g>
+<g fill="#FFFFFF"><path d="M868 188l18-8-8 18z"/><path d="M944 180l18 8-18 8z" transform="rotate(45 953 188)"/><path d="M868 272l18 8-8-18z"/><path d="M944 280l18-8-18-8z" transform="rotate(-45 953 272)"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 420H1110M720 520H1110M817 360V540M915 360V540M1012 360V540"/></g>
+<path d="M720 470C744 390 768 390 793 470S841 550 866 470S914 390 939 470S987 550 1012 470S1060 390 1085 470L1110 500" fill="none" stroke="#A78BFA" stroke-width="3" stroke-opacity="0.6"/>
+<path d="M720 470C744 390 768 390 793 470C817 390 841 390 866 470C890 390 914 390 939 470C963 390 987 390 1012 470C1036 390 1060 390 1085 470" fill="none" stroke="#F472B6" stroke-width="5"/>
+<path d="M720 400L793 412L800 398L866 410L873 398L939 410L946 398L1012 410L1019 398L1085 410" fill="none" stroke="#34D399" stroke-width="4"/>`,
+  zener: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M915 150V200M915 260V300"/><path d="M895 200h40l-20 32z" fill="#FFFFFF"/><path d="M887 240l8-8h40l8-8"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
+<path d="M720 420C760 370 800 370 840 420S920 470 960 420S1040 370 1110 420" fill="none" stroke="#F472B6" stroke-width="4"/>
+<path d="M720 500H1110" fill="none" stroke="#34D399" stroke-width="6"/>`,
   generic: `<g stroke="#1E293B" stroke-width="2"><path d="M720 200H1110M720 300H1110M720 400H1110M720 500H1110M817 150V540M915 150V540M1012 150V540"/></g>
 <path d="M720 340C760 200 800 200 840 340S920 480 960 340S1040 200 1080 340L1110 380" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 470H790V420H880V470H960V420H1040V470H1110" fill="none" stroke="#FBBF24" stroke-width="4"/>`,

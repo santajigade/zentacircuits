@@ -1,0 +1,218 @@
+---
+title: 'Full Wave Rectifier: Centre Tap and Bridge Explained'
+seoTitle: 'Full Wave Rectifier: Centre Tap vs Bridge, Formulas, PIV'
+description: 'How a full wave rectifier works, centre tap and bridge circuits compared, with Vdc, RMS, ripple factor, PIV formulas and a capacitor filter design example.'
+focusKeyword: 'full wave rectifier'
+category: analog
+subcategory: diode-circuits
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: full-wave-rectifier-simulator
+shortAnswer: 'A full wave rectifier converts both halves of an AC sine wave into pulses of the same polarity. The centre tap type uses two diodes and a centre tapped transformer; the bridge type uses four diodes and a plain winding. The average output is 2Vm/π, twice that of a half wave rectifier, with a ripple factor of 0.48 and 81.2% efficiency.'
+featured:
+  kicker: 'Diode Circuits'
+  line1: 'Full Wave Rectifier'
+  line2: 'Centre tap and bridge explained'
+  art: rectifier
+image:
+  alt: 'Full wave rectifier featured image with a diode bridge and full wave rectified waveforms'
+prerequisites:
+  - name: 'Half wave rectifier'
+    href: '/analog/half-wave-rectifier/'
+learn:
+  - How centre tap and bridge circuits rectify both half cycles
+  - Average, RMS, ripple factor and efficiency formulas for full wave rectification
+  - Why the bridge needs four diodes but only half the diode voltage rating
+  - How to size the filter capacitor for a target ripple
+  - How to pick between centre tap and bridge in a real design
+interview:
+  - q: 'What is the ripple frequency of a full wave rectifier on 50 Hz mains?'
+    a: '100 Hz. There are two output pulses per input cycle, so the ripple frequency is twice the supply frequency.'
+  - q: 'Why does a bridge rectifier have a lower output than a centre tap rectifier from the same winding voltage?'
+    a: 'Current passes through two diodes in series in a bridge, so it loses about 1.4 V instead of 0.7 V. This matters most in low voltage supplies.'
+  - q: 'What is the PIV of each diode in a centre tap and a bridge rectifier?'
+    a: 'Centre tap: about 2Vm, because the off diode sees the full winding voltage plus the output. Bridge: about Vm, because each off diode sits across the output.'
+  - q: 'What is the transformer utilisation factor of a bridge rectifier?'
+    a: 'About 0.812. The secondary current is AC with no DC component, so the transformer is used much better than in a half wave or centre tap circuit.'
+  - q: 'What happens if one diode in a bridge rectifier opens?'
+    a: 'The bridge works as a half wave rectifier. The output drops, the ripple frequency halves to 50 Hz and the ripple grows a lot.'
+  - q: 'What happens if one diode in a bridge rectifier shorts?'
+    a: 'On one half cycle the short connects the transformer straight across a conducting diode, creating a near short circuit. The fuse should blow, or another diode and the transformer can be damaged.'
+faq:
+  - q: 'Is a bridge rectifier a full wave rectifier?'
+    a: 'Yes. A bridge rectifier is one of the two common full wave rectifier circuits. The other is the centre tap rectifier.'
+  - q: 'Which is better, centre tap or bridge?'
+    a: 'The bridge is used in most designs because it needs a simpler transformer and diodes with half the voltage rating. The centre tap wins in low voltage, high current supplies where losing an extra diode drop is costly.'
+  - q: 'Can I buy a bridge rectifier as one part?'
+    a: 'Yes. Bridge modules such as the DB107, KBP, GBU and KBPC series contain all four diodes with AC and DC terminals marked.'
+  - q: 'Why do bridge rectifier diodes get hot with a capacitor filter?'
+    a: 'The diodes only conduct in short pulses near the peaks, so the peak and RMS currents are much higher than the DC load current. Diode loss depends on these pulse currents.'
+references:
+  - text: 'All About Circuits, Rectifier Circuits, Lessons in Electric Circuits Volume III'
+    url: 'https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/rectifier-circuits/'
+  - text: 'Boylestad and Nashelsky, Electronic Devices and Circuit Theory, 11th edition, Pearson'
+    url: 'https://www.pearson.com/en-us/subject-catalog/p/electronic-devices-and-circuit-theory/P200000003195'
+  - text: 'Vishay, 1N4001 to 1N4007 General Purpose Plastic Rectifier datasheet'
+    url: 'https://www.vishay.com/docs/88503/1n4001.pdf'
+prev:
+  name: 'Half wave rectifier'
+  href: '/analog/half-wave-rectifier/'
+next:
+  name: 'Zener diode'
+  href: '/components/zener-diode/'
+---
+
+import RectSim from '../../../../components/sims/RectSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a full wave rectifier?
+
+A full wave rectifier turns both halves of an AC sine wave into output pulses of the same polarity. Where a [half wave rectifier](/analog/half-wave-rectifier/) throws away the negative half cycle, a full wave rectifier flips it over and uses it. The result is twice the average output, half the ripple period and a much better use of the transformer.
+
+There are two common ways to build one. The centre tap rectifier uses two diodes and a transformer with a centre tapped secondary. The bridge rectifier uses four diodes and an ordinary secondary winding. Both give the same output waveform; they differ in cost, diode voltage stress and voltage drop.
+
+## Centre tap full wave rectifier
+
+<figure>
+  <img src="/images/figures/centre-tap-full-wave-rectifier-circuit.webp" alt="Centre tap full wave rectifier circuit with centre tapped transformer, diodes D1 and D2 and load resistor RL" width="1200" height="640" loading="lazy" />
+  <figcaption>Figure 1. Centre tap full wave rectifier. Each diode works with one half of the secondary winding.</figcaption>
+</figure>
+
+The centre tap is the reference point, and each end of the secondary swings in opposite directions. On the positive half cycle the top end is positive, so D1 conducts and D2 is reverse biased. On the negative half cycle the bottom end is positive, so D2 conducts. Current through the load always flows the same way.
+
+The catch is the transformer. A 12 V output needs a 12-0-12 V winding, which is twice the copper, and each half is used only half the time. The off diode also sees the voltage of both halves, so its peak inverse voltage is about 2Vm.
+
+## Bridge rectifier
+
+<figure>
+  <img src="/images/figures/bridge-rectifier-circuit.webp" alt="Bridge rectifier circuit with four diodes D1 to D4 in a diamond, transformer secondary across the AC corners and load across the DC corners" width="1240" height="660" loading="lazy" />
+  <figcaption>Figure 2. Bridge rectifier. Two diodes conduct in series on each half cycle.</figcaption>
+</figure>
+
+In the bridge, the AC winding connects to two corners of a diamond of four diodes and the load connects to the other two. On the positive half cycle, current flows through D2, the load and D4. On the negative half cycle it flows through D1, the load and D3. Either way it passes through the load in the same direction.
+
+Because two diodes conduct at once, the bridge loses about 1.4 V instead of 0.7 V. In return each diode only has to block about Vm, and the transformer needs a single plain winding with no DC current in it.
+
+<figure>
+  <img src="/images/figures/full-wave-rectifier-waveforms.webp" alt="Bridge rectifier waveforms from the simulator: secondary voltage, full wave output without capacitor, output with 1000 µF and diode current pulses at 100 Hz" width="1440" height="1040" loading="lazy" />
+  <figcaption>Figure 3. Simulated bridge rectifier, 12 V RMS secondary and 100 Ω load. With 1000 µF the ripple is about half that of a half wave rectifier with the same capacitor, because the capacitor is recharged twice per cycle.</figcaption>
+</figure>
+
+## Full wave rectifier formulas
+
+For ideal diodes and a resistive load, the output is |Vm sin ωt|. Its average and RMS values are:
+
+$$
+V_{dc} = \frac{2V_m}{\pi} \approx 0.637\,V_m \qquad V_{rms} = \frac{V_m}{\sqrt{2}}
+$$
+
+| Quantity | Half wave | Full wave (both types) |
+| --- | --- | --- |
+| Average output Vdc | Vm / π | 2Vm / π |
+| RMS output | Vm / 2 | Vm / √2 |
+| Form factor | 1.57 | 1.11 |
+| Ripple factor | 1.21 | 0.48 |
+| Rectification efficiency | 40.6% | 81.2% |
+| Ripple frequency | f | 2f |
+
+| Feature | Centre tap | Bridge |
+| --- | --- | --- |
+| Diodes | 2 | 4 |
+| Diodes conducting at once | 1 | 2 |
+| Voltage drop | About 0.7 V | About 1.4 V |
+| Diode PIV | About 2Vm | About Vm |
+| Transformer | Centre tapped, twice the winding | Single winding |
+| Transformer utilisation factor | 0.693 | 0.812 |
+
+<Callout type="insight">
+The bridge trades two extra cheap diodes for a simpler transformer and half the diode voltage stress. That is why almost every mains supply, from phone chargers to industrial DIN rail units, uses a bridge.
+</Callout>
+
+## Capacitor filter for a full wave rectifier
+
+A reservoir capacitor across the load charges to the peak on every half cycle and supplies the load between peaks. Because it is recharged twice per cycle, the ripple is half that of a half wave circuit:
+
+$$
+\Delta V \approx \frac{I}{2fC}
+$$
+
+Rearranged, the capacitor for a target ripple is C ≈ I / (2f × ΔV). The DC output is roughly the peak minus half the ripple. The diode current still flows in short pulses near each peak, so the peak and RMS currents in the diodes and capacitor are several times the load current. Check them against the diode's repetitive peak current and the capacitor's ripple current rating.
+
+## Full wave rectifier simulator
+
+Switch between Centre tap and Bridge and compare the PIV readout: about 34 V against about 17 V from the same 12 V RMS winding. Then set C to None and check that the theory table matches 2Vm/π, Vm/√2, a ripple factor of 0.48 and 81.1% efficiency. Use the Switch on tab to see the inrush current that charges an empty capacitor.
+
+<RectSim topo="bridge" C={1e-3} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a bridge rectifier from a 12 V RMS, 50 Hz secondary, silicon diodes with 0.7 V drop, 500 mA load, 2200 µF capacitor
+
+**Find:** peak output, ripple, DC output and diode PIV
+
+**Solution:**
+
+1. Vm = 12 × √2 ≈ 16.97 V
+2. Peak output: 16.97 − 2 × 0.7 ≈ 15.57 V
+3. Ripple: ΔV ≈ 0.5 / (2 × 50 × 0.0022) ≈ 2.27 V peak to peak
+4. DC output: 15.57 − 2.27 / 2 ≈ 14.4 V
+5. PIV per diode: about Vm ≈ 17 V
+
+**Answer:** about 14.4 V DC with 2.3 V of ripple. A 1N4001 (50 V, 1 A) or a 1 A bridge module is suitable, though a 2 A part runs cooler because of the high pulse currents.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="A bridge rectifier runs from 60 Hz mains. What is the ripple frequency at its output?" options={['30 Hz', '60 Hz', '120 Hz', '240 Hz']} answer={2} explain="A full wave rectifier produces two pulses per input cycle, so the ripple is at 2 × 60 = 120 Hz." />
+
+## Choosing between centre tap and bridge
+
+Choose the bridge for almost any general purpose supply. It works with a standard single winding, the diodes only need about Vm of reverse rating, and the transformer carries no DC.
+
+Choose the centre tap when the output voltage is low and the current is high, for example a 5 V, 20 A supply. Here one diode drop instead of two saves real power and heat. Low voltage SMPS outputs often use a centre tapped secondary with Schottky diodes or synchronous MOSFETs for this reason. You can read how those stages fit together in the [switched mode power supply](/power-electronics/switched-mode-power-supply/) guide.
+
+## Inrush current at switch on
+
+At the moment of switch on, the reservoir capacitor is empty and behaves almost like a short circuit. If power is applied near the peak of the mains wave, the only things limiting the current are the winding resistance, the diode resistance and the capacitor ESR. The first charging pulse can easily reach ten to fifty times the normal load current.
+
+This surge is why rectifier datasheets list a non repetitive peak forward surge current, IFSM. The 1N4001 series, for example, is rated for 30 A for one half cycle. Large supplies add an NTC thermistor or a resistor with a bypass relay in series with the input to limit the surge. Use the Switch on tab of the simulator above to see the first pulses, then reduce the winding resistance and watch the peak climb.
+
+## Testing a bridge rectifier
+
+With the power off, set a multimeter to diode test. Each of the four diodes should read about 0.5 to 0.7 V in one direction and open circuit in the other. A reading near zero in both directions means a shorted diode; open in both directions means an open diode.
+
+On a bridge module, measure from each AC terminal to the positive and negative terminals. Positive lead on an AC pin and negative lead on the + pin should conduct, as should positive lead on the − pin and negative lead on an AC pin. Under power, an open diode shows up on an oscilloscope as missing pulses: the ripple drops to the supply frequency instead of twice it.
+
+## Applications
+
+- Linear DC power supplies for audio, lab and instrumentation equipment
+- The input stage of almost every switched mode power supply
+- Battery chargers and DC motor supplies
+- Welding machines and electroplating supplies, using high current bridges
+- AC signal measurement, where a precision rectifier converts AC to a DC level
+
+## Design steps
+
+<Steps items={[
+  { t: 'Define the output', d: 'DC voltage, maximum load current and acceptable ripple.' },
+  { t: 'Pick the rectifier type', d: 'Bridge for general use, centre tap for low voltage and high current.' },
+  { t: 'Choose the winding voltage', d: 'Peak must cover DC output, half the ripple and one or two diode drops at low mains.' },
+  { t: 'Size the capacitor', d: 'C ≈ I / (2f × ΔV), then check its ripple current and voltage rating.' },
+  { t: 'Rate the diodes', d: 'PIV, average current, repetitive peak current and surge current for switch on.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Using the half wave ripple formula for a bridge.', fix: 'Use ΔV ≈ I / (2fC), since the capacitor recharges twice per cycle.' },
+  { m: 'Forgetting the second diode drop in a bridge.', fix: 'Subtract about 1.4 V from the peak, or more at high current.' },
+  { m: 'Choosing diodes from the DC load current only.', fix: 'Check the peak charging current and the inrush surge rating too.' },
+  { m: 'Grounding one AC terminal of a bridge and the negative output together.', fix: 'Only one point may be earthed; tying both shorts a diode on every half cycle.' },
+]} />

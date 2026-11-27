@@ -9,7 +9,30 @@ const cases = [
   { name: 'Boost 5 V to 12 V, 22 µH, 220 µF, 12 Ω, 300 kHz', p: { ...DEFAULTS, topo: 'boost', vin: 5, d: 7 / 12, L: 22e-6, C: 220e-6, R: 12, fs: 300e3 } },
   { name: 'Boost DCM: 12 V, D 0.4, 4.7 µH, 100 µF, 200 Ω', p: { ...DEFAULTS, topo: 'boost', vin: 12, d: 0.4, L: 4.7e-6, R: 200 } },
 ];
+import * as rect from '../src/sim/rectifier.js';
+const R0 = rect.DEFAULTS;
+const rcases = [
+  { name: 'Half wave, resistive load', p: { ...R0, topo: 'half', C: 0 } },
+  { name: 'Centre tap, resistive load', p: { ...R0, topo: 'ct', C: 0 } },
+  { name: 'Bridge, resistive load', p: { ...R0, topo: 'bridge', C: 0 } },
+  { name: 'Half wave, 4700 µF, 1 kΩ', p: { ...R0, topo: 'half', C: 4700e-6, R: 1000 } },
+  { name: 'Centre tap, 2200 µF, 200 Ω', p: { ...R0, topo: 'ct', C: 2200e-6, R: 200 } },
+  { name: 'Bridge, 1000 µF, 100 Ω', p: { ...R0, topo: 'bridge', C: 1000e-6, R: 100 } },
+  { name: 'Bridge with 9.1 V Zener regulator', p: { ...R0, C: 470e-6, zen: true, rser: 100, R: 220 } },
+];
 let fail = 0;
+for (const c of rcases) {
+  for (const r of rect.accuracy(c.p).rows) {
+    console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${c.name}  ${r.name}: theory ${r.theory.toPrecision(5)} ${r.unit}, sim ${r.sim.toPrecision(5)} ${r.unit}, error ${r.err.toFixed(3)}% (limit ${r.tol}%)`);
+    if (!r.pass) fail++;
+  }
+}
+for (const topo of ['half', 'ct', 'bridge']) {
+  const p = { ...R0, topo, C: 0 }, s = rect.steadyState(p), e = rect.exactNoCap(p);
+  const err = (Math.abs(s.vdc - e.vdc) / e.vdc) * 100, ok = err < 0.1;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  Real diodes ${topo}: exact V dc ${e.vdc.toFixed(4)} V, sim ${s.vdc.toFixed(4)} V, error ${err.toFixed(4)}%`);
+  if (!ok) fail++;
+}
 for (const c of cases) {
   const { rows, ccm } = accuracy(c.p);
   for (const r of rows) {

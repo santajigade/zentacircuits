@@ -1,0 +1,320 @@
+---
+// Live rectifier and Zener regulator lab. Runs in the browser (src/sim/rectifier.js), no server.
+const { topo = 'bridge', C = 470e-6, R = 100, zen = false } = Astro.props as { topo?: 'half' | 'ct' | 'bridge'; C?: number; R?: number; zen?: boolean };
+const caps = [0, 10e-6, 22e-6, 47e-6, 100e-6, 220e-6, 470e-6, 1e-3, 2.2e-3, 4.7e-3, 10e-3];
+const loads = [10, 15, 22, 33, 47, 68, 100, 150, 220, 330, 470, 680, 1000, 2200, 4700, 10000];
+const vzs = [3.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1, 10, 12, 15, 18, 24];
+const rsers = [10, 22, 33, 47, 68, 100, 150, 220, 330, 470, 680, 1000];
+const main = [
+  { k: 'vrms', label: 'Secondary voltage (RMS)', min: 1, max: 50, step: 0.5, val: 12, unit: 'V' },
+  { k: 'f', label: 'Mains frequency', list: [50, 60, 400], val: 50, unit: 'Hz' },
+  { k: 'C', label: 'Reservoir capacitor C', list: caps, val: C, unit: 'F' },
+  { k: 'R', label: 'Load resistance', list: loads, val: R, unit: 'Ω' },
+];
+const parts = [
+  { k: 'vf', label: 'Diode knee voltage Vf', min: 0, max: 1.2, step: 0.01, val: 0.7, unit: 'V' },
+  { k: 'rd', label: 'Diode resistance Rd', min: 0, max: 0.5, step: 0.01, val: 0.05, unit: 'Ω' },
+  { k: 'rs', label: 'Winding resistance Rs', min: 0, max: 5, step: 0.05, val: 0.5, unit: 'Ω' },
+];
+const zparts = [
+  { k: 'vz', label: 'Zener voltage Vz', list: vzs, val: 9.1, unit: 'V' },
+  { k: 'rz', label: 'Zener resistance rz', min: 0.5, max: 50, step: 0.5, val: 5, unit: 'Ω' },
+  { k: 'rser', label: 'Series resistor Rs', list: rsers, val: 100, unit: 'Ω' },
+  { k: 'pz', label: 'Zener power rating', list: [0.5, 1, 5], val: 1, unit: 'W' },
+];
+const name = zen ? 'Zener regulator lab' : 'Rectifier lab';
+---
+<section class="sim" data-rect-sim data-topo={topo} data-pagefind-ignore aria-label={`${name} simulator`}>
+  <div class="top">
+    <div><p class="kick">Simulator</p><p class="ttl">{name}</p></div>
+    <div class="topr"><span class="badge" data-mode>Bridge</span><button type="button" class="tb" data-fs>Full screen</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tb on" data-tab="steady" aria-selected="true">Steady state</button>
+    <button type="button" role="tab" class="tb" data-tab="startup" aria-selected="false">Switch on</button>
+  </div>
+  <div class="body">
+    <div class="panel">
+      <p class="grp">Circuit</p>
+      <div class="seg">
+        <button type="button" class="tb" data-topo="half">Half wave</button>
+        <button type="button" class="tb" data-topo="ct">Centre tap</button>
+        <button type="button" class="tb" data-topo="bridge">Bridge</button>
+      </div>
+      {main.map((s) => (
+        <label class="ctl">
+          <span class="row"><span>{s.label}</span><output data-out={s.k}></output></span>
+          {s.list
+            ? <input type="range" data-k={s.k} data-scale="list" data-list={JSON.stringify(s.list)} data-unit={s.unit} data-def={s.list.indexOf(s.val)} min="0" max={s.list.length - 1} step="1" value={s.list.indexOf(s.val)} />
+            : <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />}
+        </label>
+      ))}
+      <p class="grp">Real parts</p>
+      {parts.map((s) => (
+        <label class="ctl">
+          <span class="row"><span>{s.label}</span><output data-out={s.k}></output></span>
+          <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />
+        </label>
+      ))}
+      <label class="chk"><input type="checkbox" data-k="zen" checked={zen} data-def={zen ? '1' : '0'} /> Add Zener regulator</label>
+      <div class="zen" data-zen hidden={!zen}>
+        {zparts.map((s: any) => (
+          <label class="ctl">
+            <span class="row"><span>{s.label}</span><output data-out={s.k}></output></span>
+            {s.list
+              ? <input type="range" data-k={s.k} data-scale="list" data-list={JSON.stringify(s.list)} data-unit={s.unit} data-def={s.list.indexOf(s.val)} min="0" max={s.list.length - 1} step="1" value={s.list.indexOf(s.val)} />
+              : <input type="range" data-k={s.k} data-scale="lin" data-unit={s.unit} data-def={s.val} min={s.min} max={s.max} step={s.step} value={s.val} />}
+          </label>
+        ))}
+      </div>
+      <div class="btns"><button type="button" class="tb" data-reset>Reset</button><button type="button" class="tb" data-share>Copy link</button><button type="button" class="tb" data-csv>Export CSV</button></div>
+    </div>
+    <div class="scopewrap">
+      <div class="chs">
+        <label style="--c:#A78BFA"><input type="checkbox" data-ch="vs" checked /> V secondary</label>
+        <label style="--c:#F472B6"><input type="checkbox" data-ch="vo" checked /> V rectified</label>
+        <label style="--c:#34D399" data-zch><input type="checkbox" data-ch="vz" checked /> V Zener out</label>
+        <label style="--c:#FBBF24"><input type="checkbox" data-ch="id" checked /> i diode</label>
+        <label style="--c:#22D3EE"><input type="checkbox" data-ch="vr" /> V reverse (PIV)</label>
+      </div>
+      <canvas class="scope" aria-label="Oscilloscope view of the rectifier waveforms" role="img"></canvas>
+      <p class="hint" data-hint>Drag the orange cursors C1 and C2 to measure.</p>
+      <div class="reads" data-reads></div>
+    </div>
+  </div>
+  <div class="lower">
+    <div class="card2">
+      <p class="grp">Theory vs simulated · ideal diodes test</p>
+      <div class="tblw"><table><thead><tr><th>Quantity</th><th>Theory</th><th>Simulated</th><th>Error</th><th>Test</th></tr></thead><tbody data-acc></tbody></table></div>
+    </div>
+    <div class="card2">
+      <p class="grp">Component stress · real parts</p>
+      <div class="loss" data-loss></div>
+    </div>
+  </div>
+  <p class="note">Model: sine source with winding resistance, piecewise linear diodes (Vf plus Rd), reservoir capacitor, resistive load and an optional Zener shunt regulator. Exact backward Euler solution, 1,200 steps per cycle. Real transformers also add leakage inductance and regulation effects.</p>
+</section>
+
+<script>
+  import { steadyState, startup, accuracy } from '../../sim/rectifier.js';
+
+  const fmt = (v: number, unit = '') => {
+    if (!isFinite(v)) return 'n/a';
+    if (Math.abs(v) < 1e-9) v = 0;
+    const a = Math.abs(v);
+    const pre = a === 0 ? ['', 1] : a >= 1e6 ? ['M', 1e-6] : a >= 1e3 ? ['k', 1e-3] : a >= 1 ? ['', 1] : a >= 1e-3 ? ['m', 1e3] : a >= 1e-6 ? ['µ', 1e6] : ['n', 1e9];
+    const x = v * (pre[1] as number);
+    return `${Math.abs(x) >= 100 ? x.toFixed(1) : Math.abs(x) >= 10 ? x.toFixed(2) : x.toFixed(3)} ${pre[0]}${unit}`.trim();
+  };
+  const TOPO: Record<string, string> = { half: 'Half wave', ct: 'Centre tap', bridge: 'Bridge' };
+
+  document.querySelectorAll<HTMLElement>('[data-rect-sim]').forEach((root) => {
+    const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const $$ = <T extends Element>(s: string) => [...root.querySelectorAll<T>(s)];
+    const inputs = $$<HTMLInputElement>('input[data-k]');
+    const canvas = $<HTMLCanvasElement>('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const defTopo = root.dataset.topo!;
+    let topo = defTopo;
+    let tab: 'steady' | 'startup' = 'steady';
+    let cur = [0.2, 0.45];
+    let rec: any = null, res: any = null;
+
+    const valOf = (el: HTMLInputElement) => (el.type === 'checkbox' ? el.checked : el.dataset.scale === 'list' ? JSON.parse(el.dataset.list!)[+el.value] : +el.value);
+    const params = () => { const p: any = { topo }; inputs.forEach((el) => (p[el.dataset.k!] = valOf(el))); return p; };
+    const showVals = (p: any) => inputs.forEach((el) => {
+      const o = root.querySelector(`[data-out="${el.dataset.k}"]`);
+      if (!o) return;
+      o.textContent = el.dataset.k === 'C' && p.C === 0 ? 'None' : el.dataset.k === 'f' ? `${p.f} Hz` : fmt(p[el.dataset.k!], el.dataset.unit);
+    });
+    const fromHash = () => {
+      const m = location.hash.match(/rect=([^&]+)/);
+      if (!m) return;
+      const q = new URLSearchParams(decodeURIComponent(m[1]));
+      if (q.get('topo')) topo = q.get('topo')!;
+      inputs.forEach((el) => { const v = q.get(el.dataset.k!); if (v == null) return; if (el.type === 'checkbox') el.checked = v === '1'; else el.value = v; });
+    };
+
+    function draw() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const W = canvas.clientWidth, H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#0E1828'; ctx.fillRect(0, 0, W, H);
+      if (!rec) return;
+      const on = (k: string) => { const el = root.querySelector<HTMLInputElement>(`[data-ch="${k}"]`); return !!el?.checked && !(k === 'vz' && !params().zen); };
+      const volt = ([['vs', '#A78BFA'], ['vo', '#F472B6'], ['vz', '#34D399']] as const).filter(([k]) => on(k));
+      const bands: { keys: (readonly [string, string])[]; unit: string; zero: boolean }[] = [];
+      if (volt.length) bands.push({ keys: volt as any, unit: 'V', zero: true });
+      if (on('id')) bands.push({ keys: [['id', '#FBBF24']], unit: 'A', zero: true });
+      if (on('vr')) bands.push({ keys: [['vr', '#22D3EE']], unit: 'V', zero: true });
+      const left = 64, right = 12, top = 8, bottom = 22;
+      const pw = W - left - right, n = rec.t.length, t0 = rec.t[0], t1 = rec.t[n - 1];
+      const X = (i: number) => left + ((rec.t[i] - t0) / (t1 - t0)) * pw;
+      const weights = bands.map((b) => (b.unit === 'V' && b.keys.length > 1 ? 2 : 1));
+      const tw = weights.reduce((a, b) => a + b, 0) || 1;
+      let y0 = top;
+      ctx.textAlign = 'left';
+      bands.forEach((b, bi) => {
+        const bandH = ((H - top - bottom) * weights[bi]) / tw;
+        let mn = Infinity, mx = -Infinity;
+        b.keys.forEach(([k]) => { for (const v of rec[k]) { if (v < mn) mn = v; if (v > mx) mx = v; } });
+        if (b.zero) { mn = Math.min(mn, 0); mx = Math.max(mx, 0); }
+        if (mx - mn < 1e-9) { mx += 1e-3; mn -= 1e-3; }
+        const pad = (mx - mn) * 0.08, lo = mn - pad, hi = mx + pad;
+        const Y = (v: number) => y0 + 6 + (1 - (v - lo) / (hi - lo)) * (bandH - 12);
+        ctx.strokeStyle = '#1E293B'; ctx.lineWidth = 1; ctx.beginPath();
+        for (let g = 0; g <= 8; g++) { const x = left + (g * pw) / 8; ctx.moveTo(x, y0); ctx.lineTo(x, y0 + bandH); }
+        ctx.moveTo(left, y0 + bandH); ctx.lineTo(left + pw, y0 + bandH); ctx.stroke();
+        ctx.strokeStyle = '#334155'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(left, Y(0)); ctx.lineTo(left + pw, Y(0)); ctx.stroke(); ctx.setLineDash([]);
+        const stepI = Math.max(1, Math.floor(n / (pw * 2)));
+        b.keys.forEach(([k, col]) => {
+          ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+          for (let i = 0; i < n; i += stepI) { const x = X(i), y = Y(rec[k][i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#94A3B8'; ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.fillText(fmt(mx, b.unit), 4, Y(mx) + 4); if (mn < -1e-6) ctx.fillText(fmt(mn, b.unit), 4, Y(mn) + 4); else ctx.fillText('0', 4, Y(0) + 4);
+        y0 += bandH;
+      });
+      ctx.fillStyle = '#64748B'; ctx.textAlign = 'center'; ctx.font = '11px "IBM Plex Mono", monospace';
+      for (let g = 0; g <= 4; g++) ctx.fillText(fmt(((t1 - t0) * g) / 4, 's'), left + (g * pw) / 4, H - 6);
+      ctx.strokeStyle = '#FB923C'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      cur.forEach((c, i) => { const x = left + c * pw; ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.fillStyle = '#FDBA74'; ctx.fillText(`C${i + 1}`, x + 10, top + 12); });
+      ctx.setLineDash([]);
+      reads();
+    }
+
+    const at = (c: number, k: string) => { const i = Math.min(rec.t.length - 1, Math.round(c * (rec.t.length - 1))); return [rec.t[i] - rec.t[0], rec[k][i]]; };
+    function reads() {
+      if (!rec) return;
+      const p = params(), k = p.zen ? 'vz' : 'vo';
+      const [ta, va] = at(cur[0], k), [tb, vb] = at(cur[1], k), [, ia] = at(cur[0], 'id'), [, ib] = at(cur[1], 'id');
+      const items: [string, string, string?][] = [
+        ['C1 → C2 Δt', fmt(tb - ta, 's')], [`${p.zen ? 'Vout' : 'V rectified'} C1 / C2`, `${fmt(va, 'V')} / ${fmt(vb, 'V')}`, p.zen ? '#34D399' : '#F472B6'], ['ΔV', fmt(vb - va, 'V')], ['i diode C1 / C2', `${fmt(ia, 'A')} / ${fmt(ib, 'A')}`, '#FBBF24'],
+      ];
+      if (tab === 'steady' && res) {
+        items.push(['V dc', fmt(res.vdc, 'V'), '#F472B6'], ['V rms', fmt(res.vrms, 'V')], ['Ripple p-p', fmt(res.ripple, 'V')], ['Ripple factor', res.rf.toFixed(3)], ['Conduction', `${res.cond.toFixed(0)}° · ${res.condMs.toFixed(2)} ms`]);
+        if (!(p.C > 0)) items.push(['Rectification η', `${(res.eta * 100).toFixed(1)} %`, '#34D399']);
+        if (p.zen) items.push(['Zener V out', fmt(res.vz, 'V'), '#34D399'], ['Zener out ripple', fmt(res.vzRipple, 'V')], ['Iz min / max', `${fmt(res.izMin, 'A')} / ${fmt(res.izMax, 'A')}`], ['Load current', fmt(res.iLoad, 'A')]);
+      } else if (res) items.push(['Peak inrush current', fmt(res.inrush, 'A'), '#FBBF24']);
+      $('[data-reads]').innerHTML = items.map(([a, b, c]) => `<div><span>${a}</span><b style="color:${c ?? '#fff'}">${b}</b></div>`).join('');
+    }
+
+    function run() {
+      const p = params();
+      showVals(p);
+      $$<HTMLButtonElement>('[data-topo]').forEach((b) => b.classList.toggle('on', b.dataset.topo === topo));
+      $('[data-zen]').hidden = !p.zen;
+      ($('[data-zch]') as HTMLElement).style.display = p.zen ? '' : 'none';
+      const st = steadyState(p);
+      if (tab === 'steady') { res = st; rec = st.rec; } else { res = startup(p); rec = res.rec; }
+      const badge = $('[data-mode]');
+      if (p.zen) { badge.textContent = st.regulated ? 'Regulating' : 'Out of regulation'; badge.classList.toggle('warn', !st.regulated); }
+      else { badge.textContent = TOPO[topo]; badge.classList.remove('warn'); }
+      const acc = accuracy(p);
+      $('[data-acc]').innerHTML = acc.rows.map((r: any) => {
+        const st2 = r.note ? '<td class="sim-warn">Outside formula range</td>' : `<td class="${r.pass ? 'sim-ok' : 'sim-bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td>`;
+        return `<tr><td>${r.name}</td><td>${fmt(r.theory, r.unit)}</td><td>${fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(2)}%</td>${st2}</tr>`;
+      }).join('');
+      const per = topo === 'half' ? 1 : 2;
+      const capRipple = Math.sqrt(Math.max(0, st.idRms ** 2 - st.idAvg ** 2));
+      const sec = topo === 'ct' ? st.idRms / Math.SQRT2 : st.idRms;
+      const rows: [string, string, string?][] = [
+        ['Peak diode current', fmt(st.idPk, 'A')], ['Average current per diode', fmt(st.idAvg / per, 'A')], ['RMS current per diode', fmt(st.idRms / Math.sqrt(per), 'A')],
+        ['Peak inverse voltage', fmt(st.piv, 'V')], ['Secondary RMS current', fmt(sec, 'A')],
+      ];
+      if (p.C > 0) rows.push(['Capacitor ripple current (RMS)', fmt(capRipple, 'A')]);
+      if (p.zen) { const over = st.pz > p.pz; rows.push(['Zener power (average)', fmt(st.pz, 'W'), over ? 'sim-bad' : 'sim-ok'], ['Series resistor power', fmt(st.pser, 'W')]); }
+      rows.push(['Load power', fmt(st.pLoad, 'W'), 'tot']);
+      $('[data-loss]').innerHTML = rows.map(([a, b, c]) => `<span class="${c === 'tot' ? 'tot' : ''}">${a}</span><b class="${c ?? ''}">${b}${c === 'sim-bad' ? ' · over rating' : ''}</b>`).join('');
+      $('[data-hint]').textContent = tab === 'steady' ? 'Two mains cycles in steady state. Drag the orange cursors C1 and C2 to measure.' : 'Switch on from a discharged capacitor. Watch the inrush current pulses. Drag C1 and C2 to measure.';
+      draw();
+      const q = new URLSearchParams({ topo, ...Object.fromEntries(inputs.map((el) => [el.dataset.k!, el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value])) });
+      history.replaceState(null, '', `#rect=${encodeURIComponent(q.toString())}`);
+    }
+
+    let pending = 0;
+    const schedule = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(run); };
+    inputs.forEach((el) => el.addEventListener('input', schedule));
+    $$<HTMLButtonElement>('[data-topo]').forEach((b) => b.addEventListener('click', () => { topo = b.dataset.topo!; schedule(); }));
+    $$<HTMLInputElement>('[data-ch]').forEach((el) => el.addEventListener('change', draw));
+    $$<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+      tab = b.dataset.tab as any;
+      $$<HTMLButtonElement>('[data-tab]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
+      cur = tab === 'steady' ? [0.2, 0.45] : [0.05, 0.6]; schedule();
+    }));
+    $('[data-reset]').addEventListener('click', () => {
+      topo = defTopo;
+      inputs.forEach((el) => { if (el.type === 'checkbox') el.checked = el.dataset.def === '1'; else el.value = el.dataset.def!; });
+      schedule();
+    });
+    $('[data-share]').addEventListener('click', async (e) => { const b = e.currentTarget as HTMLButtonElement; try { await navigator.clipboard.writeText(location.href); b.textContent = 'Link copied'; } catch { b.textContent = 'Copy failed'; } setTimeout(() => (b.textContent = 'Copy link'), 2000); });
+    $('[data-csv]').addEventListener('click', () => {
+      const rows = ['time_s,v_secondary_V,v_rectified_V,i_diode_A,v_zener_out_V,i_zener_A,v_reverse_V', ...rec.t.map((t: number, i: number) => [t, rec.vs[i], rec.vo[i], rec.id[i], rec.vz[i], rec.iz[i], rec.vr[i]].map((x: number) => x.toPrecision(6)).join(','))];
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })); a.download = `rectifier-${topo}-${tab}.csv`; a.click();
+    });
+    $('[data-fs]').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen?.()));
+    root.addEventListener('fullscreenchange', () => setTimeout(draw, 50));
+
+    let drag = -1;
+    const posOf = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left - 64) / (r.width - 76))); };
+    canvas.addEventListener('pointerdown', (e) => { const p = posOf(e); drag = Math.abs(p - cur[0]) < Math.abs(p - cur[1]) ? 0 : 1; cur[drag] = p; canvas.setPointerCapture(e.pointerId); draw(); });
+    canvas.addEventListener('pointermove', (e) => { if (drag < 0) return; cur[drag] = posOf(e); draw(); });
+    canvas.addEventListener('pointerup', () => (drag = -1));
+
+    new ResizeObserver(() => draw()).observe(canvas);
+    fromHash();
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); run(); } }, { rootMargin: '200px' });
+    io.observe(root);
+  });
+</script>
+
+<style>
+  .sim { background: var(--bench); color: #e2e8f0; border-radius: 20px; padding: 22px; margin: 24px 0 16px; font-size: 15px; line-height: 1.5; }
+  .sim:fullscreen { overflow-y: auto; border-radius: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kick { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #fda4af; }
+  .ttl { margin: 2px 0 0; font-size: 22px; font-weight: 600; color: #fff; }
+  .topr { display: flex; gap: 8px; align-items: center; }
+  .badge { background: #064e3b; color: #6ee7b7; padding: 6px 10px; border-radius: 999px; font-family: var(--mono); font-size: 12px; }
+  .badge.warn { background: #78350f; color: #fcd34d; }
+  .tb { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: var(--bench-2); color: #e2e8f0; font: 500 13px var(--sans); cursor: pointer; }
+  .tb.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .body { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { flex: 1 1 240px; background: var(--bench-2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .grp { margin: 4px 0 0; font-family: var(--mono); font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+  .ctl { display: flex; flex-direction: column; gap: 2px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  output { font-family: var(--mono); color: #fff; }
+  input[type='range'] { width: 100%; accent-color: var(--red); height: 24px; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg .tb { flex: 1 1 auto; }
+  .zen[hidden] { display: none; }
+  .zen { display: flex; flex-direction: column; gap: 10px; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--red); }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scopewrap { flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chs { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; }
+  .chs label { color: var(--c); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .chs input { accent-color: var(--c); }
+  .scope { width: 100%; height: 440px; border-radius: 12px; touch-action: none; cursor: ew-resize; display: block; }
+  .hint { margin: 0; font-size: 12px; color: #64748b; }
+  .reads { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-family: var(--mono); font-size: 13px; }
+  .reads :global(div) { background: var(--bench-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+  .reads :global(span) { color: #94a3b8; font-size: 12px; }
+  .lower { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .card2 { flex: 1 1 300px; min-width: 0; background: var(--bench-2); border-radius: 12px; padding: 14px 16px; }
+  .tblw { overflow-x: auto; }
+  .sim :global(table) { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .sim :global(th) { text-align: left; color: #94a3b8; font-weight: 400; padding: 6px 8px; background: none; }
+  .sim :global(td) { padding: 6px 8px; border-top: 1px solid var(--bench-line); color: #e2e8f0; white-space: nowrap; }
+  .sim :global(.sim-ok) { color: #34d399; }
+  .sim :global(.sim-bad) { color: #f87171; }
+  .sim :global(.sim-warn) { color: #fbbf24; }
+  .loss { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+  .loss :global(.tot) { border-top: 1px solid var(--bench-line); padding-top: 4px; color: #fff; }
+  .note { margin: 12px 0 0; font-size: 12px; color: #64748b; }
+  @media (max-width: 700px) { .scopewrap { order: -1; } .scope { height: 360px; } .sim { padding: 14px; margin-left: -8px; margin-right: -8px; } }
+</style>

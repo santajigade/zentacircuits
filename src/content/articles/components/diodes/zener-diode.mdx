@@ -1,0 +1,218 @@
+---
+title: 'Zener Diode: Working, Characteristics and Regulator'
+seoTitle: 'Zener Diode: Working, V-I Curve and Voltage Regulator Design'
+description: 'How a Zener diode works in reverse breakdown, its V-I characteristics and key ratings, and how to design a Zener voltage regulator with a worked example.'
+focusKeyword: 'zener diode'
+category: components
+subcategory: diodes
+author: santaji-gadepatil
+pubDate: 2026-11-27
+readMinutes: 12
+simulator: zener-regulator-simulator
+shortAnswer: 'A Zener diode is a silicon diode built to work in reverse breakdown. Once the reverse voltage reaches its Zener voltage Vz, it conducts and holds the voltage almost constant over a wide range of current. With a series resistor it forms a simple shunt voltage regulator or a voltage reference.'
+featured:
+  kicker: 'Components'
+  line1: 'Zener Diode'
+  line2: 'Working, characteristics and regulator'
+  art: zener
+image:
+  alt: 'Zener diode featured image with a Zener symbol, a rippled input waveform and a flat regulated output'
+prerequisites:
+  - name: 'Full wave rectifier'
+    href: '/analog/full-wave-rectifier/'
+  - name: 'Half wave rectifier'
+    href: '/analog/half-wave-rectifier/'
+learn:
+  - What happens inside a Zener diode in reverse breakdown
+  - How to read the V-I curve and the main datasheet ratings
+  - How to calculate the series resistor for a Zener regulator
+  - How to check Zener and resistor power in the worst case
+  - Why a Zener regulator suits small loads and references
+interview:
+  - q: 'What is the difference between Zener breakdown and avalanche breakdown?'
+    a: 'Zener breakdown happens in heavily doped junctions below about 5 V, where a strong electric field pulls electrons straight out of their bonds. Avalanche breakdown happens in lightly doped junctions above about 5 V, where carriers gain enough energy to knock out more carriers in a chain. Both are reversible if power stays within limits.'
+  - q: 'Why do 5.6 V Zener diodes have the best temperature stability?'
+    a: 'Zener breakdown has a negative temperature coefficient and avalanche breakdown a positive one. Around 5 to 6 V both effects are present and largely cancel, so the voltage drifts very little with temperature.'
+  - q: 'How do you calculate the series resistor in a Zener regulator?'
+    a: 'Rs = (Vin(min) − Vz) / (IL(max) + Iz(min)). This keeps enough current flowing into the Zener at the lowest input and highest load so it stays in regulation.'
+  - q: 'What is the dynamic resistance of a Zener diode?'
+    a: 'The slope rz = ΔVz / ΔIz in the breakdown region. A smaller rz means the voltage changes less with current. Datasheets give it at the test current Izt.'
+  - q: 'Why is a Zener regulator inefficient?'
+    a: 'The series resistor drops the difference between input and output, and the Zener wastes all the current the load is not using. At light load most of the input power becomes heat.'
+  - q: 'How does a forward biased Zener behave?'
+    a: 'Like an ordinary silicon diode, conducting at about 0.7 V.'
+faq:
+  - q: 'What is a Zener diode used for?'
+    a: 'Voltage regulation for small loads, voltage references, overvoltage clamping, waveform clipping and protecting inputs from voltage spikes.'
+  - q: 'How do I identify the cathode of a Zener diode?'
+    a: 'The band on the body marks the cathode, the same as an ordinary diode. In a regulator, the cathode connects to the positive side.'
+  - q: 'Can a Zener diode replace a voltage regulator IC?'
+    a: 'For tens of milliamps, yes. For higher currents or better regulation, a linear regulator IC or a Zener driving a transistor is much better.'
+  - q: 'What happens if a Zener diode is overloaded?'
+    a: 'It overheats. A Zener usually fails short, which can pull the supply down or blow the series resistor.'
+references:
+  - text: 'Vishay, 1N4728A to 1N4764A Zener Diodes datasheet'
+    url: 'https://www.vishay.com/docs/85816/1n4728a.pdf'
+  - text: 'All About Circuits, Zener Diodes, Lessons in Electric Circuits Volume III'
+    url: 'https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/zener-diodes/'
+  - text: 'onsemi, Zener Theory and Design Considerations handbook, HBD854'
+    url: 'https://www.onsemi.com/pub/Collateral/HBD854-D.PDF'
+prev:
+  name: 'Full wave rectifier'
+  href: '/analog/full-wave-rectifier/'
+---
+
+import RectSim from '../../../../components/sims/RectSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a Zener diode?
+
+A Zener diode is a silicon PN junction diode designed to operate in reverse breakdown. An ordinary rectifier diode must never reach breakdown in normal use. A Zener is made for it: its doping is set so that breakdown happens at a precise, repeatable voltage called the Zener voltage, Vz.
+
+Forward biased, a Zener behaves like any silicon diode and conducts at about 0.7 V. Reverse biased below Vz, it passes only a tiny leakage current. Once the reverse voltage reaches Vz, it conducts, and the voltage across it stays nearly constant while the current changes over a wide range. That one property makes it a simple voltage regulator and reference.
+
+Zeners are available from about 2.4 V to over 200 V, in standard steps such as 3.3, 5.1, 6.2, 9.1, 12 and 15 V, with power ratings from 0.25 W to 5 W and more.
+
+## How breakdown works
+
+Two physical effects cause reverse breakdown, and which one dominates depends on doping.
+
+**Zener effect.** In heavily doped junctions the depletion layer is very thin, so even a few volts create an intense electric field. The field pulls electrons directly out of their covalent bonds by quantum tunnelling. This dominates below about 5 V.
+
+**Avalanche effect.** In lightly doped junctions the depletion layer is wider. Free carriers accelerate across it and gain enough energy to knock out more electrons, which knock out more again. This dominates above about 5 V.
+
+Both are called Zener diodes in practice, and both are fully reversible as long as the power limit is respected. The two effects have opposite temperature coefficients, which is why parts near 5.6 V have the smallest drift with temperature.
+
+## V-I characteristics
+
+<figure>
+  <img src="/images/figures/zener-diode-iv-characteristics.webp" alt="Zener diode V-I characteristic curve showing forward conduction near 0.7 V and a sharp reverse breakdown at minus Vz between Iz min and Iz max" width="1120" height="720" loading="lazy" />
+  <figcaption>Figure 1. Zener diode V-I curve. In the breakdown region the voltage stays close to Vz between the minimum and maximum Zener currents.</figcaption>
+</figure>
+
+The useful region sits between two currents. Below the knee current Izk the curve rounds off and the voltage is not well defined. Above the maximum current Izm the diode overheats. Between them, the voltage changes only by the current times the small dynamic resistance rz.
+
+## Key Zener diode ratings
+
+| Rating | Symbol | Meaning |
+| --- | --- | --- |
+| Zener voltage | Vz | Breakdown voltage at the test current, often ±5% tolerance |
+| Test current | Izt | Current at which Vz and rz are specified |
+| Knee current | Izk | Minimum current for reliable regulation |
+| Dynamic resistance | rz | Slope ΔVz / ΔIz; lower is better |
+| Power rating | Pz | Maximum dissipation, Pz = Vz × Iz |
+| Maximum current | Izm | Pz / Vz |
+| Temperature coefficient | | Change of Vz with temperature, in %/°C or mV/°C |
+
+For example, the 1N4739A from the common 1 W series is a 9.1 V Zener specified at 28 mA with a dynamic resistance of about 5 Ω.
+
+## Zener diode as a voltage regulator
+
+<figure>
+  <img src="/images/figures/zener-regulator-circuit.webp" alt="Zener voltage regulator circuit with series resistor Rs, Zener diode Dz in reverse bias and load resistor RL, showing currents Is, Iz and IL" width="1120" height="520" loading="lazy" />
+  <figcaption>Figure 2. Zener shunt regulator. The series resistor drops the extra voltage and the Zener absorbs the current the load does not use.</figcaption>
+</figure>
+
+The Zener sits in parallel with the load, cathode to the positive side, and a series resistor Rs connects it to an unregulated input. The current through Rs is:
+
+$$
+I_s = \frac{V_{in} - V_z}{R_s} = I_z + I_L
+$$
+
+If the input rises, Is rises and the Zener takes the extra current while the output barely moves. If the load draws more, the Zener takes less. Regulation holds as long as Iz stays above its minimum.
+
+The series resistor must be small enough to keep the Zener in regulation at the worst case, which is the lowest input and the highest load:
+
+$$
+R_s = \frac{V_{in(min)} - V_z}{I_{L(max)} + I_{z(min)}}
+$$
+
+Then check the other worst case, the highest input with no load, where the Zener takes all the current:
+
+$$
+P_z = V_z \times \frac{V_{in(max)} - V_z}{R_s}
+$$
+
+For quick sizing, the [Zener resistor calculator](https://zentacalculator.com/electronics/zener-resistor/) applies these formulas for you.
+
+## Zener regulator simulator
+
+This lab feeds a 9.1 V Zener regulator from a bridge rectifier and capacitor. Raise the load current by lowering the load resistance until the badge changes to Out of regulation. Then increase the secondary voltage and watch the Zener power climb past its rating. The theory table checks the output voltage, Zener current and ripple reduction against the exact formulas.
+
+<RectSim zen C={470e-6} R={220} />
+
+<figure>
+  <img src="/images/figures/zener-regulator-waveforms.webp" alt="Simulated Zener regulator waveforms: rippled capacitor voltage at the input, nearly flat regulated output and varying Zener current" width="1440" height="740" loading="lazy" />
+  <figcaption>Figure 3. Simulated input and output of the regulator. About 1 V of input ripple is reduced to about 50 mV at the output, because the Zener current absorbs the change.</figcaption>
+</figure>
+
+The ripple reduction follows a simple divider. The input ripple is split between Rs and the parallel combination of rz and RL, so a small rz and a larger Rs give a cleaner output.
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** an unregulated input of 13 V to 17 V, a 9.1 V, 1 W Zener with Iz(min) of 5 mA, load current 0 to 40 mA
+
+**Find:** the series resistor, its power rating and the worst case Zener power
+
+**Solution:**
+
+1. Rs = (13 − 9.1) / (0.040 + 0.005) ≈ 86.7 Ω, so choose 82 Ω
+2. Highest input current: (17 − 9.1) / 82 ≈ 96 mA
+3. With no load the Zener takes all of it: Pz = 9.1 × 0.096 ≈ 0.88 W
+4. Resistor power: (17 − 9.1)² / 82 ≈ 0.76 W
+
+**Answer:** an 82 Ω, 2 W resistor. The 1 W Zener survives at 0.88 W but runs hot, so a 5 W part or a lighter minimum load gives a better margin.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="In a Zener regulator, when is the Zener power highest?" options={['Lowest input, full load', 'Highest input, full load', 'Highest input, no load', 'Lowest input, no load']} answer={2} explain="At the highest input the most current flows through Rs, and with no load all of it goes through the Zener." />
+
+## Boosting the current with a transistor
+
+A plain Zener regulator wastes current, because the Zener must carry the full load current whenever the load is removed. Adding an NPN transistor as an emitter follower solves this. The Zener and its resistor now only supply the transistor's base current, which is the load current divided by the transistor gain. The output is about Vz − 0.7 V, and the Zener power drops to a small fraction of its earlier value.
+
+This series pass regulator was the standard design before three terminal regulator ICs arrived, and it is still used where a simple, rugged supply is needed. Inside a 78xx regulator IC, a bandgap reference does the Zener's job and an error amplifier makes the regulation far tighter.
+
+## Choosing a Zener diode
+
+Start with the voltage, then look at tolerance. Common parts are ±5%, so a 5.1 V Zener may give anywhere from 4.85 V to 5.36 V. For a reference you can tighten this by buying ±2% or ±1% parts, or by trimming afterwards.
+
+Next comes the power rating with margin, because a Zener near its limit runs hot and its voltage drifts. Derate to about half the rated power for long life. Finally, consider temperature. Low voltage Zeners drift downward as they warm and high voltage ones drift upward. A part near 5.6 V, or a dedicated reference IC, gives the best stability.
+
+## Testing a Zener diode
+
+A multimeter diode test only checks the forward junction, which reads about 0.7 V like any diode. To check Vz, feed the Zener from a bench supply set above Vz through a resistor that limits the current to around Izt, with the cathode towards the positive. The voltage across it should read close to its rated value.
+
+## Other applications
+
+- **Voltage reference.** A Zener biased at a constant current gives a stable reference for comparators and ADCs.
+- **Overvoltage clamp.** A Zener across a supply rail conducts if the rail rises too far, often with a fuse to make a crowbar.
+- **Waveform clipping.** Back to back Zeners limit an AC signal to ±(Vz + 0.7 V).
+- **Transistor regulator.** A Zener drives the base of an emitter follower to supply far more current, as in many simple supplies.
+- **Input protection.** Small Zeners and TVS diodes shield sensor and logic inputs from spikes.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Choose Vz', d: 'Pick the standard Zener voltage closest to the required output.' },
+  { t: 'Find the worst cases', d: 'Lowest and highest input voltage, smallest and largest load current.' },
+  { t: 'Calculate Rs', d: 'Use the lowest input and highest load, then round down to a standard value.' },
+  { t: 'Check power', d: 'Zener power at highest input and no load; resistor power at highest input.' },
+  { t: 'Verify regulation', d: 'Confirm Iz never falls below Iz(min), including on the ripple troughs.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Fitting the Zener with the cathode to ground.', fix: 'A regulator needs reverse bias: cathode to the positive rail.' },
+  { m: 'Sizing Rs from the average input voltage.', fix: 'Use the lowest input including the ripple trough, or regulation drops out.' },
+  { m: 'Checking Zener power only at full load.', fix: 'Check at highest input with the load removed, the true worst case.' },
+  { m: 'Using a plain Zener regulator for hundreds of milliamps.', fix: 'Add a pass transistor or use a regulator IC.' },
+]} />
