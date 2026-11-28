@@ -1,5 +1,5 @@
 // Quality gate for every article. The build fails if any rule breaks.
-// Rules: no em or en dash, 1,200+ words of body text, slug under 60 characters,
+// Rules: no em or en dash, 1,200+ words of body text, SEO slug (max 40 characters, 4 words, no stop words or years),
 // outbound links only to allowed sites, 3+ references, description and title lengths.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, basename } from 'node:path';
@@ -17,7 +17,13 @@ for (const f of files) {
   const rel = f.slice(root.length);
   const slug = basename(f).replace(/\.mdx?$/, '');
   if (/[–—]/.test(src)) errors.push(`${rel}: contains an em or en dash`);
-  if (slug.length >= 60) errors.push(`${rel}: slug is ${slug.length} characters (limit 59)`);
+  // SEO slug rules: short, lowercase hyphenated keyword, no filler or stop words, no years.
+  if (slug.length > 40) errors.push(`${rel}: slug is ${slug.length} characters (limit 40)`);
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) errors.push(`${rel}: slug must be lowercase words joined by single hyphens`);
+  if (slug.split('-').length > 4) errors.push(`${rel}: slug has ${slug.split('-').length} words (limit 4)`);
+  const STOP = ['a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'how', 'what', 'why', 'is', 'are', 'guide', 'tutorial', 'working', 'types', 'explained', 'complete', 'best', 'basics', 'introduction'];
+  const bad = slug.split('-').filter((w) => STOP.includes(w) || /^(19|20)\d\d$/.test(w));
+  if (bad.length) errors.push(`${rel}: slug contains filler or stop words: ${bad.join(', ')}`);
   if (seen.has(slug)) errors.push(`${rel}: slug "${slug}" is already used by ${seen.get(slug)}`); seen.set(slug, rel);
   const catSlug = (src.match(/^category:\s*(\S+)/m) || [])[1];
   const catLine = cats.split('\n').find((l) => l.includes(`slug: '${catSlug}'`)) || '';
