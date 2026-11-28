@@ -11,7 +11,7 @@ const ALLOWED = ['zentacircuits.com', 'zentacalculator.com', 'zentaengineering.c
   'wikipedia.org', 'britannica.com', 'openstax.org', 'mit.edu', 'nist.gov', 'nasa.gov', 'ieee.org', 'iec.ch', 'iso.org', 'ietf.org',
   'ti.com', 'analog.com', 'nxp.com', 'nexperia.com', 'onsemi.com', 'st.com', 'infineon.com', 'microchip.com', 'renesas.com', 'vishay.com',
   'rohm.com', 'toshiba.semicon-storage.com', 'murata.com', 'tdk.com', 'kemet.com', 'littelfuse.com', 'bourns.com', 'digikey.com', 'mouser.com',
-  'allaboutcircuits.com', 'electronics-tutorials.ws', 'khanacademy.org', 'hyperphysics.phy-astr.gsu.edu', 'nptel.ac.in', 'bis.gov.in', 'arduino.cc', 'raspberrypi.com'];
+  'allaboutcircuits.com', 'khanacademy.org', 'hyperphysics.phy-astr.gsu.edu', 'nptel.ac.in', 'bis.gov.in', 'arduino.cc', 'raspberrypi.com'];
 const AUTHORITY_TLD = /\.(gov|edu)(\.[a-z]{2})?$|\.ac\.[a-z]{2}$/;
 const files = [];
 const walk = (d) => readdirSync(d).forEach((f) => { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : /\.mdx?$/.test(f) && files.push(p); });
