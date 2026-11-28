@@ -1,0 +1,43 @@
+date,focus_keyword,url,category,subcategory,simulator,lab,notes,status
+2026-11-30,and gate,/digital/and-gate/,digital,gates,Logic lab,Ready,,planned
+2026-11-30,or gate,/digital/or-gate/,digital,gates,Logic lab,Ready,,planned
+2026-11-30,nor gate,/digital/nor-gate/,digital,gates,Logic lab,Ready,"Universal gate, pairs with NAND",planned
+2026-12-01,not gate,/digital/not-gate/,digital,gates,Logic lab,Ready,Include CMOS inverter,planned
+2026-12-01,xnor gate,/digital/xnor-gate/,digital,gates,Logic lab,Ready,,planned
+2026-12-01,de morgan's law,/digital/de-morgans-law/,digital,boolean-algebra,Logic lab,Ready,Use NAND build mode,planned
+2026-12-02,low pass filter,/analog/low-pass-filter/,analog,filters,RC / RL / RLC lab,Ready,"RC and RL versions, Bode plot",planned
+2026-12-02,high pass filter,/analog/high-pass-filter/,analog,filters,RC / RL / RLC lab,Ready,,planned
+2026-12-02,band pass filter,/analog/band-pass-filter/,analog,filters,RC / RL / RLC lab,Ready,"Series RLC, output across R",planned
+2026-12-03,ohms law,/basics/ohms-law/,basics,laws,DC circuit lab,New,Biggest keyword. Build the DC circuit lab in this run,planned
+2026-12-03,voltage divider,/basics/voltage-divider/,basics,network-analysis,DC circuit lab,New,"High KD, needs best-in-class depth",planned
+2026-12-03,series and parallel circuits,/basics/series-and-parallel-circuits/,basics,network-analysis,DC circuit lab,New,,planned
+2026-12-04,thevenin's theorem,/basics/thevenins-theorem/,basics,theorems,DC circuit lab,Extend,,planned
+2026-12-04,superposition theorem,/basics/superposition-theorem/,basics,theorems,DC circuit lab,Extend,,planned
+2026-12-04,kirchhoff's law,/basics/kirchhoffs-law/,basics,laws,DC circuit lab,Extend,Cover KCL and KVL,planned
+2026-12-05,bridge rectifier,/analog/bridge-rectifier/,analog,diode-circuits,Rectifier lab,Ready,Trim the bridge part of the full wave article and cross-link both ways,planned
+2026-12-05,voltage multiplier,/analog/voltage-multiplier/,analog,diode-circuits,Rectifier lab,Extend,Add voltage doubler mode to the rectifier engine,planned
+2026-12-05,schottky diode,/components/schottky-diode/,components,diodes,Rectifier lab,Ready,Compare 0.3 V vs 0.7 V diode losses,planned
+2026-12-06,diode,/components/diode/,components,diodes,Diode I-V lab,New,Pillar page linking all diode articles. Build the diode I-V lab in this run,planned
+2026-12-06,light emitting diode,/components/light-emitting-diode/,components,diodes,Diode I-V lab,New,Link the LED resistor calculator,planned
+2026-12-06,photodiode,/components/photodiode/,components,diodes,Diode I-V lab,New,Industrial sensing angle,planned
+2026-12-07,op amp,/analog/op-amp/,analog,op-amp-circuits,Op amp lab,New,Pillar page. Build the op amp lab in this run,planned
+2026-12-07,inverting amplifier,/analog/inverting-amplifier/,analog,op-amp-circuits,Op amp lab,New,,planned
+2026-12-07,non inverting amplifier,/analog/non-inverting-amplifier/,analog,op-amp-circuits,Op amp lab,New,,planned
+2026-12-08,voltage follower,/analog/voltage-follower/,analog,op-amp-circuits,Op amp lab,Ready,,planned
+2026-12-08,summing amplifier,/analog/summing-amplifier/,analog,op-amp-circuits,Op amp lab,Ready,,planned
+2026-12-08,differential amplifier,/analog/differential-amplifier/,analog,op-amp-circuits,Op amp lab,Ready,"Link instrumentation, 4 to 20 mA",planned
+2026-12-09,schmitt trigger,/analog/schmitt-trigger/,analog,op-amp-circuits,Op amp lab,Extend,Add hysteresis mode,planned
+2026-12-09,comparator circuit,/analog/comparator-circuit/,analog,op-amp-circuits,Op amp lab,Extend,,planned
+2026-12-09,op amp integrator,/analog/op-amp-integrator/,analog,op-amp-circuits,Op amp lab,Extend,,planned
+2026-12-10,buck boost converter,/power-electronics/buck-boost-converter/,power-electronics,dc-dc-converters,DC-DC lab,Extend,Add buck-boost topology to src/sim/buck.js with tests,planned
+2026-12-10,flyback converter,/power-electronics/flyback-converter/,power-electronics,smps,DC-DC lab,Extend,Buck-boost plus turns ratio,planned
+2026-12-10,pulse width modulation,/power-electronics/pulse-width-modulation/,power-electronics,dc-dc-converters,DC-DC lab,Ready,"Full form in URL, PWM in title. Link PWM duty cycle calculator",planned
+2026-12-11,flip flop,/digital/flip-flop/,digital,sequential,Sequential logic lab,New,Pillar page. Build the sequential logic lab in this run,planned
+2026-12-11,sr flip flop,/digital/sr-flip-flop/,digital,sequential,Sequential logic lab,New,Cover SR latch too,planned
+2026-12-11,d flip flop,/digital/d-flip-flop/,digital,sequential,Sequential logic lab,New,,planned
+2026-12-12,jk flip flop,/digital/jk-flip-flop/,digital,sequential,Sequential logic lab,Ready,,planned
+2026-12-12,shift register,/digital/shift-register/,digital,counters-registers,Sequential logic lab,Ready,,planned
+2026-12-12,binary counter,/digital/binary-counter/,digital,counters-registers,Sequential logic lab,Ready,,planned
+2026-12-13,half adder,/digital/half-adder/,digital,combinational,Logic lab,Extend,Add adder mode to the logic lab,planned
+2026-12-13,full adder,/digital/full-adder/,digital,combinational,Logic lab,Extend,,planned
+2026-12-13,multiplexer,/digital/multiplexer/,digital,combinational,Logic lab,Extend,,planned
