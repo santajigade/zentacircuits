@@ -22,7 +22,8 @@ for (const f of files) {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) errors.push(`${rel}: slug must be lowercase words joined by single hyphens`);
   if (slug.split('-').length > 4) errors.push(`${rel}: slug has ${slug.split('-').length} words (limit 4)`);
   const STOP = ['a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'how', 'what', 'why', 'is', 'are', 'guide', 'tutorial', 'working', 'types', 'explained', 'complete', 'best', 'basics', 'introduction'];
-  const bad = slug.split('-').filter((w) => STOP.includes(w) || /^(19|20)\d\d$/.test(w));
+  const kwWords = (((src.match(/^---\n([\s\S]*?)\n---/) || [])[1] || '').match(/^focusKeyword:\s*'([^']*)'/m)?.[1] ?? '').toLowerCase().replace(/'/g, '').split(/[\s-]+/);
+  const bad = slug.split('-').filter((w) => (STOP.includes(w) && !kwWords.includes(w)) || /^(19|20)\d\d$/.test(w));
   if (bad.length) errors.push(`${rel}: slug contains filler or stop words: ${bad.join(', ')}`);
   if (seen.has(slug)) errors.push(`${rel}: slug "${slug}" is already used by ${seen.get(slug)}`); seen.set(slug, rel);
   const catSlug = (src.match(/^category:\s*(\S+)/m) || [])[1];
