@@ -1,6 +1,6 @@
 ---
 // Live series RC and RLC lab: time response and Bode plot. Runs in the browser (src/sim/rlc.js), no server.
-const { circ = 'rlc', R = 100, L = 10e-3, C = 1e-6, src = 'step' } = Astro.props as { circ?: 'rc' | 'rlc'; R?: number; L?: number; C?: number; src?: 'step' | 'square' | 'sine' };
+const { circ = 'rlc', R = 100, L = 10e-3, C = 1e-6, src = 'step' } = Astro.props as { circ?: 'rc' | 'rl' | 'rlc'; R?: number; L?: number; C?: number; src?: 'step' | 'square' | 'sine' };
 const Rs = [1.0, 2.2, 4.7, 10.0, 22.0, 47.0, 50, 100.0, 200, 220.0, 470.0, 500, 1000.0, 2200.0, 4700.0, 10000.0, 22000.0, 47000.0, 100000.0, 220000.0, 470000.0, 1000000.0], Ls = [1e-06, 2.2e-06, 4.7e-06, 1e-05, 2.2e-05, 4.7e-05, 0.0001, 0.00022, 0.00047, 0.001, 0.0022, 0.0047, 0.01, 0.022, 0.047, 0.1, 0.22, 0.47, 1.0], Cs = [1e-09, 2.2e-09, 4.7e-09, 1e-08, 2.2e-08, 4.7e-08, 1e-07, 2.2e-07, 4.7e-07, 1e-06, 2.2e-06, 4.7e-06, 1e-05, 2.2e-05, 4.7e-05, 0.0001, 0.00022, 0.00047, 0.001];
 const fsrcs = [10, 20, 50, 100, 200, 500, 1000, 1591.549, 2000, 5000, 10000, 20000, 50000, 100000];
 const near = (list: number[], v: number) => list.reduce((b, x, i) => (Math.abs(Math.log(x / v)) < Math.abs(Math.log(list[b] / v)) ? i : b), 0);
@@ -9,9 +9,9 @@ const sl = [
   { k: 'fsrc', label: 'Source frequency', list: fsrcs, val: 1000, unit: 'Hz' },
   { k: 'R', label: 'Resistance R', list: Rs, val: R, unit: 'Ω' },
   { k: 'L', label: 'Inductance L', list: Ls, val: L, unit: 'H', rlc: true },
-  { k: 'C', label: 'Capacitance C', list: Cs, val: C, unit: 'F' },
+  { k: 'C', label: 'Capacitance C', list: Cs, val: C, unit: 'F', needc: true },
 ];
-const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
+const name = circ === 'rc' ? 'RC circuit lab' : circ === 'rl' ? 'RL circuit lab' : 'RLC circuit lab';
 ---
 <section class="sim" data-rlc-sim data-circ={circ} data-src={src} data-pagefind-ignore aria-label={`${name} simulator`}>
   <div class="top">
@@ -25,13 +25,13 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
   <div class="body">
     <div class="panel">
       <p class="grp">Circuit</p>
-      <div class="seg"><button type="button" class="tb" data-circ="rc">Series RC</button><button type="button" class="tb" data-circ="rlc">Series RLC</button></div>
+      <div class="seg"><button type="button" class="tb" data-circ="rc">Series RC</button><button type="button" class="tb" data-circ="rl">Series RL</button><button type="button" class="tb" data-circ="rlc">Series RLC</button></div>
       <p class="grp">Source</p>
       <div class="seg"><button type="button" class="tb" data-src="step">Step</button><button type="button" class="tb" data-src="square">Square</button><button type="button" class="tb" data-src="sine">Sine</button></div>
       <p class="grp">Output for Bode plot</p>
-      <div class="seg"><button type="button" class="tb" data-out="vC">V C</button><button type="button" class="tb" data-out="vR">V R</button><button type="button" class="tb" data-out="vL" data-rlc>V L</button><button type="button" class="tb" data-out="i">Current</button></div>
+      <div class="seg"><button type="button" class="tb" data-out="vC" data-needc>V C</button><button type="button" class="tb" data-out="vR">V R</button><button type="button" class="tb" data-out="vL" data-rlc>V L</button><button type="button" class="tb" data-out="i">Current</button></div>
       {sl.map((s) => (
-        <label class="ctl" data-rlc={s.rlc ? '' : undefined}>
+        <label class="ctl" data-rlc={s.rlc ? '' : undefined} data-needc={s.needc ? '' : undefined}>
           <span class="row"><span>{s.label}</span><output data-out-v={s.k}></output></span>
           {s.list
             ? <input type="range" data-k={s.k} data-scale="list" data-list={JSON.stringify(s.list)} data-unit={s.unit} data-def={near(s.list, s.val)} min="0" max={s.list.length - 1} step="1" value={near(s.list, s.val)} />
@@ -44,7 +44,7 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
     <div class="scopewrap">
       <div class="chs" data-tchs>
         <label style="--c:#A78BFA"><input type="checkbox" data-ch="vs" checked /> V source</label>
-        <label style="--c:#F472B6"><input type="checkbox" data-ch="vC" checked /> V C</label>
+        <label style="--c:#F472B6" data-needc><input type="checkbox" data-ch="vC" checked /> V C</label>
         <label style="--c:#34D399"><input type="checkbox" data-ch="vR" /> V R</label>
         <label style="--c:#FBBF24" data-rlc><input type="checkbox" data-ch="vL" /> V L</label>
         <label style="--c:#22D3EE"><input type="checkbox" data-ch="i" checked /> Current</label>
@@ -87,7 +87,7 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
     const inputs = $$<HTMLInputElement>('input[data-k]');
     const canvas = $<HTMLCanvasElement>('canvas');
     const ctx = canvas.getContext('2d')!;
-    const def = { circ: root.dataset.circ!, src: root.dataset.src!, out: 'vC' };
+    const def = { circ: root.dataset.circ!, src: root.dataset.src!, out: root.dataset.circ === 'rl' ? 'vR' : 'vC' };
     const st = { ...def };
     let tab: 'time' | 'freq' = 'time';
     let cur = [0.2, 0.45];
@@ -112,7 +112,7 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
 
     function drawTime(W: number, H: number) {
       const p = P();
-      const on = (k: string) => !!root.querySelector<HTMLInputElement>(`[data-ch="${k}"]`)?.checked && !(k === 'vL' && p.circ === 'rc');
+      const on = (k: string) => !!root.querySelector<HTMLInputElement>(`[data-ch="${k}"]`)?.checked && !(k === 'vL' && p.circ === 'rc') && !(k === 'vC' && p.circ === 'rl');
       const volt = ['vs', 'vC', 'vR', 'vL'].filter(on);
       const bands: { keys: string[]; unit: string; w: number }[] = [];
       if (volt.length) bands.push({ keys: volt, unit: 'V', w: 2 });
@@ -136,7 +136,7 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
         y0 += bh;
       });
       // Time constant markers for an RC step response.
-      if (p.circ === 'rc' && p.src === 'step') {
+      if (p.circ !== 'rlc' && p.src === 'step') {
         const tau = params(p).tau; ctx.fillStyle = '#64748B'; ctx.textAlign = 'center';
         for (let k = 1; k <= 5; k++) { const x = left + ((k * tau - t0) / (t1 - t0)) * pw; if (x > left + pw) break; ctx.strokeStyle = '#475569'; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, H - bottom); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`${k}τ`, x, top + 24); }
       }
@@ -148,7 +148,7 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
     }
 
     function drawFreq(W: number, H: number) {
-      const p = P(), c = params(p), fk = p.circ === 'rc' ? c.fc : c.f0;
+      const p = P(), c = params(p), fk = p.circ !== 'rlc' ? c.fc : c.f0;
       const pw = W - left - right, n = bode.f.length, lf0 = Math.log10(bode.f[0]), lf1 = Math.log10(bode.f[n - 1]);
       const X = (f: number) => left + ((Math.log10(f) - lf0) / (lf1 - lf0)) * pw;
       const bh = (H - top - bottom) / 2;
@@ -188,15 +188,16 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
       const items: [string, string, string?][] = [];
       if (tab === 'time' && rec) {
         const at = (u: number, k: string) => { const i = Math.min(rec.t.length - 1, Math.round(u * (rec.t.length - 1))); return [rec.t[i] - rec.t[0], rec[k][i]]; };
-        const [ta, va] = at(cur[0], 'vC'), [tb, vb] = at(cur[1], 'vC'), [, ia] = at(cur[0], 'i'), [, ib] = at(cur[1], 'i');
-        items.push(['C1 → C2 Δt', fmt(tb - ta, 's')], ['V C at C1 / C2', `${fmt(va, 'V')} / ${fmt(vb, 'V')}`, '#F472B6'], ['Current C1 / C2', `${fmt(ia, 'A')} / ${fmt(ib, 'A')}`, '#22D3EE']);
-        if (p.circ === 'rc') items.push(['Elapsed in τ', `${((tb - ta) / c.tau).toFixed(2)} τ`]);
+        const vk = p.circ === 'rl' ? 'vR' : 'vC';
+        const [ta, va] = at(cur[0], vk), [tb, vb] = at(cur[1], vk), [, ia] = at(cur[0], 'i'), [, ib] = at(cur[1], 'i');
+        items.push(['C1 → C2 Δt', fmt(tb - ta, 's')], [`${p.circ === 'rl' ? 'V R' : 'V C'} at C1 / C2`, `${fmt(va, 'V')} / ${fmt(vb, 'V')}`, p.circ === 'rl' ? '#34D399' : '#F472B6'], ['Current C1 / C2', `${fmt(ia, 'A')} / ${fmt(ib, 'A')}`, '#22D3EE']);
+        if (p.circ !== 'rlc') items.push(['Elapsed in τ', `${((tb - ta) / c.tau).toFixed(2)} τ`]);
       }
       if (tab === 'freq' && bode) {
         const f = bode.f[0] * (bode.f[bode.f.length - 1] / bode.f[0]) ** cur[0], z = H(p, f);
         items.push(['Frequency at C1', fmt(f, 'Hz')], ['Gain at C1', `${(20 * Math.log10(mag(z)) - (p.out === 'i' ? 20 * Math.log10(1 / p.R) : 0)).toFixed(2)} dB`, '#F472B6'], ['Phase at C1', `${phase(z).toFixed(1)}°`, '#22D3EE']);
       }
-      if (p.circ === 'rc') items.push(['Time constant τ', fmt(c.tau, 's'), '#FBBF24'], ['Cutoff fc', fmt(c.fc, 'Hz'), '#FBBF24']);
+      if (p.circ !== 'rlc') items.push(['Time constant τ', fmt(c.tau, 's'), '#FBBF24'], ['Cutoff fc', fmt(c.fc, 'Hz'), '#FBBF24']);
       else { items.push(['Resonance f0', fmt(c.f0, 'Hz'), '#FBBF24'], ['Q factor', c.Q.toFixed(3)], ['Damping ratio ζ', c.zeta.toFixed(3)], ['Bandwidth', fmt(c.bw, 'Hz')]); if (c.fd) items.push(['Ringing fd', fmt(c.fd, 'Hz')]); }
       $('[data-reads]').innerHTML = items.map(([a, b, col]) => `<div><span>${a}</span><b style="color:${col ?? '#fff'}">${b}</b></div>`).join('');
     }
@@ -206,16 +207,20 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
       inputs.forEach((el) => { const o = root.querySelector(`[data-out-v="${el.dataset.k}"]`); if (o) o.textContent = el.dataset.k === 'fsrc' ? fmt(p.fsrc, 'Hz') : fmt(p[el.dataset.k!], el.dataset.unit); });
       ([['circ', st.circ], ['src', st.src], ['out', st.out]] as const).forEach(([k, v]) => $$<HTMLButtonElement>(`[data-${k}]`).forEach((b) => b.tagName === 'BUTTON' && b.classList.toggle('on', b.getAttribute(`data-${k}`) === v)));
       $$<HTMLElement>('[data-rlc]').forEach((e) => (e.style.display = p.circ === 'rc' ? 'none' : ''));
+      $$<HTMLElement>('[data-needc]').forEach((e) => (e.style.display = p.circ === 'rl' ? 'none' : ''));
       if (p.circ === 'rc' && st.out === 'vL') { st.out = 'vC'; return run(); }
+      if (p.circ === 'rl' && st.out === 'vC') { st.out = 'vR'; return run(); }
       $('[data-mode]').textContent = c.type;
       if (tab === 'time') rec = timeResponse(p).rec; else bode = sweep(p);
       const acc = accuracy(p);
       $('[data-acc]').innerHTML = acc.rows.map((r: any) => `<tr><td>${r.name}</td><td>${r.unit === '°' ? r.theory.toFixed(2) + '°' : r.unit === '%' ? r.theory.toFixed(2) + ' %' : fmt(r.theory, r.unit)}</td><td>${r.unit === '°' ? r.sim.toFixed(2) + '°' : r.unit === '%' ? r.sim.toFixed(2) + ' %' : fmt(r.sim, r.unit)}</td><td>${r.err.toFixed(3)}%</td><td class="${r.pass ? 'sim-ok' : 'sim-bad'}">${r.pass ? '✓ Pass' : '✗ Fail'}</td></tr>`).join('');
-      const w = 2 * Math.PI * p.fsrc, xl = w * p.L, xc = 1 / (w * p.C), z = Math.hypot(p.R, (p.circ === 'rc' ? 0 : xl) - xc);
-      const rows: [string, string][] = [['Reactance XC at source f', fmt(xc, 'Ω')]];
-      if (p.circ === 'rlc') rows.push(['Reactance XL at source f', fmt(xl, 'Ω')]);
-      rows.push(['Impedance |Z| at source f', fmt(z, 'Ω')], ['Phase of Z', `${((Math.atan2((p.circ === 'rc' ? 0 : xl) - xc, p.R) * 180) / Math.PI).toFixed(1)}°`]);
+      const w = 2 * Math.PI * p.fsrc, xl = p.circ === 'rc' ? 0 : w * p.L, xc = p.circ === 'rl' ? 0 : 1 / (w * p.C), z = Math.hypot(p.R, xl - xc);
+      const rows: [string, string][] = [];
+      if (p.circ !== 'rl') rows.push(['Reactance XC at source f', fmt(xc, 'Ω')]);
+      if (p.circ !== 'rc') rows.push(['Reactance XL at source f', fmt(xl, 'Ω')]);
+      rows.push(['Impedance |Z| at source f', fmt(z, 'Ω')], ['Phase of Z', `${((Math.atan2(xl - xc, p.R) * 180) / Math.PI).toFixed(1)}°`]);
       if (p.circ === 'rlc') rows.push(['Characteristic impedance √(L/C)', fmt(Math.sqrt(p.L / p.C), 'Ω')], ['Critical resistance 2√(L/C)', fmt(2 * Math.sqrt(p.L / p.C), 'Ω')], ['Peak energy in C (step)', fmt(0.5 * p.C * (p.V * (1 + (c.fd ? Math.exp((-Math.PI * c.zeta) / Math.sqrt(1 - c.zeta ** 2)) : 0))) ** 2, 'J')]);
+      else if (p.circ === 'rl') rows.push(['Final current V / R', fmt(p.V / p.R, 'A')], ['Energy in L at final current', fmt(0.5 * p.L * (p.V / p.R) ** 2, 'J')]);
       else rows.push(['Energy in C when charged', fmt(0.5 * p.C * p.V * p.V, 'J')]);
       $('[data-loss]').innerHTML = rows.map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('');
       $('[data-tchs]').hidden = tab !== 'time'; $('[data-fchs]').hidden = tab !== 'freq';
@@ -230,7 +235,9 @@ const name = circ === 'rc' ? 'RC circuit lab' : 'RLC circuit lab';
     let pending = 0;
     const schedule = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(run); };
     inputs.forEach((el) => el.addEventListener('input', schedule));
-    (['circ', 'src', 'out'] as const).forEach((k) => $$<HTMLButtonElement>(`button[data-${k}]`).forEach((b) => b.addEventListener('click', () => { st[k] = b.getAttribute(`data-${k}`)!; schedule(); })));
+    const rlChannels = () => { if (st.circ === 'rl') ['vR', 'vL'].forEach((k) => { const el = root.querySelector<HTMLInputElement>(`[data-ch="${k}"]`); if (el) el.checked = true; }); };
+    (['circ', 'src', 'out'] as const).forEach((k) => $$<HTMLButtonElement>(`button[data-${k}]`).forEach((b) => b.addEventListener('click', () => { st[k] = b.getAttribute(`data-${k}`)!; if (k === 'circ') rlChannels(); schedule(); })));
+    rlChannels();
     $$<HTMLInputElement>('[data-ch]').forEach((el) => el.addEventListener('change', draw));
     $$<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
       tab = b.dataset.tab as any;

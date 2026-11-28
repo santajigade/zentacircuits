@@ -35,3 +35,10 @@ const curves = [[10, '#F472B6', 'R = 10 Ω, Q = 10'], [31.6, '#FBBF24', 'R = 31.
 const idx = fr.map((f, i) => i).filter((i) => fr[i] >= 159 && fr[i] <= 15900);
 writeFileSync(out + 'rlc-resonance-curve.svg', chart({ title: 'Current in a series RLC circuit vs frequency, V = 10 V', xs: idx.map((i) => fr[i]), logx: true, series: curves.map((c) => ({ ...c, y: idx.map((i) => c.y[i]) })), ylab: ['1000 mA', '0'], xlab: 'frequency, 159 Hz to 15.9 kHz (log scale), f0 = 1.59 kHz', marks: [{ x: 1591.5, t: 'f0' }], yr: [0, 1050] }));
 console.log('ok');
+// RL current rise and decay
+{
+  const p = { ...DEFAULTS, circ: 'rl', R: 100, L: 10e-3, V: 10 }, r = timeResponse(p).rec, tus = r.t.map((t) => t * 1e6);
+  writeFileSync(out + 'rl-circuit-current-rise.svg', chart({ title: 'RL circuit step response, R = 100 Ω, L = 10 mH, V = 10 V (τ = 100 µs)', xs: tus, series: [{ y: r.i.map((v) => v * 100), c: '#22D3EE', name: 'Current × 100 (A)' }, { y: r.vL, c: '#FBBF24', name: 'Inductor voltage (V)' }], ylab: ['10', '0'], xlab: 'time, 0 to 500 µs', marks: [1, 2, 3, 4].map((k) => ({ x: 100 * k, t: `${k}τ` })).concat([{ y: 6.32, t: '63.2%', right: true }]), yr: [0, 10.4], legY: 150 }));
+  const pq = { ...p, src: 'square', fsrc: 2000 }, q = timeResponse(pq).rec;
+  writeFileSync(out + 'rl-circuit-square-wave-response.svg', chart({ title: 'RL circuit driven by a 2 kHz square wave (τ = 100 µs)', xs: q.t.map((t) => t * 1e6), series: [{ y: q.vs, c: '#A78BFA', name: 'Source voltage' }, { y: q.vR, c: '#34D399', name: 'Resistor voltage (∝ current)' }, { y: q.vL, c: '#FBBF24', name: 'Inductor voltage' }], ylab: ['10 V', '−10 V'], xlab: 'time, two periods (1 ms)', yr: [-10.5, 10.5], legY: 270 }));
+}

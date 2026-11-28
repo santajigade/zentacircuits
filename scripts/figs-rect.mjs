@@ -41,3 +41,30 @@ plot('Zener regulator after a bridge rectifier, 9.1 V Zener', [
   { unit: 'A', lines: [{ y: z.iz, c: '#22D3EE', name: 'Zener current' }] },
 ], 'zener-regulator-waveforms.svg');
 console.log('figures written');
+// Smoothing capacitor figures
+{
+  const p = { ...DEFAULTS, topo: 'bridge', vrms: 12, R: 100 };
+  const caps = [[100e-6, '#22D3EE', '100 µF'], [470e-6, '#FBBF24', '470 µF'], [2200e-6, '#F472B6', '2200 µF']];
+  const recs = caps.map(([C]) => steadyState({ ...p, C }).rec);
+  plot('Bridge rectifier output with three smoothing capacitors, 100 Ω load', [
+    { unit: 'V', lines: caps.map(([, c, name], k) => ({ y: recs[k].vo, c, name: `C = ${name}` })) },
+  ], 'smoothing-capacitor-ripple-comparison.svg');
+  const r = recs[1], iL = r.vo.map((v) => v / p.R), iC = r.id.map((v, i) => v - iL[i]);
+  plot('Currents with 470 µF: the capacitor charges in short pulses', [
+    { unit: 'A', lines: [{ y: r.id, c: '#FBBF24', name: 'Diode (charging) current' }, { y: iL, c: '#34D399', name: 'Load current' }] },
+    { unit: 'A', lines: [{ y: iC, c: '#22D3EE', name: 'Capacitor current' }] },
+  ], 'smoothing-capacitor-charging-current.svg');
+  // Ripple vs capacitance: textbook estimate vs simulation
+  const Cs = [47e-6, 100e-6, 220e-6, 470e-6, 1e-3, 2.2e-3, 4.7e-3, 10e-3];
+  const pts = Cs.map((C) => { const s = steadyState({ ...p, C }); return { C, sim: s.ripple, th: (s.vdc / p.R) / (2 * p.f * C) }; });
+  const W = 720, H = 420, L = 80, R = 690, T = 50, B = 360, lx = (c) => L + ((Math.log10(c) - Math.log10(30e-6)) / (Math.log10(15e-3) - Math.log10(30e-6))) * (R - L), ly = (v) => B - ((Math.log10(v) - Math.log10(0.01)) / (Math.log10(20) - Math.log10(0.01))) * (B - T);
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W * 2}" height="${H * 2}"><rect width="${W}" height="${H}" fill="#0E1828"/><text x="${W / 2}" y="28" text-anchor="middle" font-family="Open Sans, DejaVu Sans, sans-serif" font-size="15" fill="#fff">Ripple vs capacitance, bridge rectifier, 12 V RMS, 100 Ω (log scales)</text>`;
+  for (const c of [1e-4, 1e-3, 1e-2]) s += `<path d="M${lx(c)} ${T}V${B}" stroke="#1E293B"/><text x="${lx(c)}" y="${B + 18}" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="11" fill="#94A3B8">${c >= 1e-3 ? c * 1e3 + ' mF' : c * 1e6 + ' µF'}</text>`;
+  for (const v of [0.01, 0.1, 1, 10]) s += `<path d="M${L} ${ly(v)}H${R}" stroke="#1E293B"/><text x="${L - 8}" y="${ly(v) + 4}" text-anchor="end" font-family="DejaVu Sans Mono, monospace" font-size="11" fill="#94A3B8">${v} V</text>`;
+  s += `<path d="${pts.map((q, i) => `${i ? 'L' : 'M'}${lx(q.C).toFixed(1)} ${ly(q.th).toFixed(1)}`).join('')}" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s += `<path d="${pts.map((q, i) => `${i ? 'L' : 'M'}${lx(q.C).toFixed(1)} ${ly(q.sim).toFixed(1)}`).join('')}" fill="none" stroke="#F472B6" stroke-width="2.4"/>` + pts.map((q) => `<circle cx="${lx(q.C)}" cy="${ly(q.sim)}" r="4.5" fill="#F472B6"/>`).join('');
+  s += `<g font-family="Open Sans, DejaVu Sans, sans-serif" font-size="12"><text x="${R - 8}" y="${T + 18}" text-anchor="end" fill="#F472B6">Simulated ripple (p-p)</text><text x="${R - 8}" y="${T + 36}" text-anchor="end" fill="#94A3B8">Estimate ΔV = I / (2fC)</text></g>`;
+  s += `<text x="${W / 2}" y="${H - 18}" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="11" fill="#94A3B8">capacitance, 47 µF to 10 mF</text></svg>`;
+  writeFileSync(out + 'smoothing-capacitor-ripple-vs-capacitance.svg', s);
+  console.log(pts.map((q) => `${(q.C * 1e6).toFixed(0)}uF sim ${q.sim.toFixed(3)} est ${q.th.toFixed(3)}`).join('\n'));
+}

@@ -1,0 +1,215 @@
+---
+title: 'RL Circuit: Time Constant, Current Rise and Flyback'
+seoTitle: 'RL Circuit: Time Constant L/R, Current Rise and Decay, Filter'
+description: 'How an RL circuit works: the time constant τ = L/R, current rise and decay equations, inductive kickback and flyback diodes, and the RL filter cutoff.'
+focusKeyword: 'rl circuit'
+category: basics
+subcategory: transients
+author: santaji-gadepatil
+pubDate: 2026-11-28
+readMinutes: 12
+simulator: rl-circuit-simulator
+shortAnswer: 'An RL circuit is a resistor and an inductor connected to a source. The inductor resists changes in current, so after a voltage step the current rises exponentially to V / R with a time constant τ = L / R. It reaches 63.2% after one τ and about 99% after five. In AC circuits the same pair forms a filter with a cutoff frequency fc = R / (2πL).'
+featured:
+  kicker: 'Basics'
+  line1: 'RL Circuit'
+  line2: 'Time constant, current rise and flyback'
+  art: rl
+image:
+  alt: 'RL circuit featured image with a resistor and inductor and exponential current rise curves'
+prerequisites:
+  - name: 'RC circuit'
+    href: '/basics/rc-circuit/'
+learn:
+  - What the time constant τ = L / R means for current in an inductor
+  - The exact current rise and decay equations
+  - Why switching off an inductor creates a voltage spike, and how a flyback diode stops it
+  - How an RL circuit behaves as a low pass or high pass filter
+  - Where RL behaviour shows up in relays, motors and power converters
+interview:
+  - q: 'What is the time constant of an RL circuit?'
+    a: 'τ = L / R, in seconds when L is in henries and R in ohms. It is the time for the current to complete 63.2% of its change.'
+  - q: 'Why does an inductor oppose a change in current?'
+    a: 'A changing current changes the magnetic field, and by Faraday and Lenz the changing field induces a voltage v = L di/dt that opposes the change. The faster the change, the larger the opposing voltage.'
+  - q: 'What happens when the current in an inductor is suddenly switched off?'
+    a: 'The inductor tries to keep the current flowing and produces a very large voltage, L di/dt, across the opening contact or transistor. This can cause arcing or destroy a semiconductor unless a flyback diode or snubber gives the current a path.'
+  - q: 'How does a larger resistor change an RL time constant?'
+    a: 'It makes τ = L / R smaller, so the current settles faster, but to a lower final value V / R. This is the opposite of an RC circuit, where a larger R slows things down.'
+  - q: 'What is the cutoff frequency of an RL low pass filter?'
+    a: 'fc = R / (2πL), with the output taken across the resistor. At fc the output is 70.7% of the input and lags by 45°.'
+faq:
+  - q: 'What is an RL circuit used for?'
+    a: 'Relay and solenoid drivers, motor windings, current limiting in power converters, simple filters and timing in inductive loads.'
+  - q: 'Is the voltage across an inductor highest at the start?'
+    a: 'Yes. At the instant of a step the current is zero, so the full supply appears across the inductor. It then decays to zero as the current reaches V / R.'
+  - q: 'What is the energy stored in an inductor?'
+    a: 'E = ½ L I². A 0.5 H relay coil carrying 0.1 A stores 2.5 mJ, which is released when the current is switched off.'
+  - q: 'Why do relay coils need a diode?'
+    a: 'The diode across the coil gives the coil current a safe path when the driving transistor turns off, clamping the voltage spike that would otherwise damage the transistor.'
+references:
+  - text: 'OpenStax, University Physics Volume 2, Section 14.5 RL Circuits'
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/14-5-rl-circuits'
+  - text: 'All About Circuits, Voltage and Current Calculations, Lessons in Electric Circuits Volume I'
+    url: 'https://www.allaboutcircuits.com/textbook/direct-current/chpt-16/voltage-current-calculations/'
+  - text: 'Horowitz and Hill, The Art of Electronics, 3rd edition, Cambridge University Press, Chapter 1'
+    url: 'https://artofelectronics.net/'
+prev:
+  name: 'RC circuit'
+  href: '/basics/rc-circuit/'
+next:
+  name: 'RLC circuit'
+  href: '/basics/rlc-circuit/'
+---
+
+import RLCSim from '../../../../components/sims/RLCSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is an RL circuit?
+
+An RL circuit is a resistor (R) and an inductor (L) connected to a voltage source. It is the magnetic twin of the [RC circuit](/basics/rc-circuit/). A capacitor resists changes in voltage; an inductor resists changes in current. Put an inductor in series with a resistor and the current can no longer jump. It rises and falls along an exponential curve with a predictable time constant.
+
+RL behaviour is everywhere in practical electronics. Every relay coil, solenoid, motor winding and transformer primary is an inductor with some resistance. Understanding the RL circuit explains why relays pull in a little late, why transistors driving coils need a diode, and why power converters use inductors to smooth current.
+
+<figure>
+  <img src="/images/figures/rl-circuit-diagram.webp" alt="Series RL circuit with DC source V, switch S, resistor R, inductor L and current i" width="1120" height="540" loading="lazy" />
+  <figcaption>Figure 1. Series RL circuit. When the switch closes, the current rises gradually because the inductor opposes the change.</figcaption>
+</figure>
+
+## The time constant τ = L / R
+
+The time constant of an RL circuit is the inductance divided by the resistance:
+
+$$
+\tau = \frac{L}{R}
+$$
+
+With L = 10 mH and R = 100 Ω, τ = 100 µs. A 0.5 H relay coil with 120 Ω of winding resistance has τ ≈ 4.2 ms. After each τ the current covers 63.2% of the change still remaining, the same percentages as in an RC circuit: 63.2% after 1τ, 86.5% after 2τ, 95.0% after 3τ and 99.3% after 5τ. The [RL time constant calculator](https://zentacalculator.com/electronics/rl-time-constant/) works it out for any pair of values.
+
+Notice one important difference from RC. Increasing R makes an RL circuit faster, because τ = L / R gets smaller. The current then settles to a lower final value, V / R.
+
+## Current rise after a step
+
+When the switch closes, the current starts at zero because an inductor's current cannot change instantly. At that instant the whole supply voltage appears across the inductor. As the current grows, more voltage drops across R and less is left across L, so the rate of rise slows:
+
+$$
+i(t) = \frac{V}{R}\left(1 - e^{-t/\tau}\right) \qquad v_L(t) = V\,e^{-t/\tau}
+$$
+
+<figure>
+  <img src="/images/figures/rl-circuit-current-rise.webp" alt="RL circuit step response from the simulator: current rising to 63.2 percent of its final value at one time constant while the inductor voltage decays" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 2. Simulated step response with R = 100 Ω and L = 10 mH. The current reaches 63.2% of V / R at 100 µs while the inductor voltage falls from 10 V towards zero.</figcaption>
+</figure>
+
+## Current decay and inductive kickback
+
+If the source is replaced by a short, the current decays along the mirror curve:
+
+$$
+i(t) = I_0\,e^{-t/\tau}
+$$
+
+The danger comes when the circuit is simply opened. The inductor stores energy E = ½ L I² in its magnetic field and will try to keep the current flowing. With nowhere to go, the current falls almost instantly, and the induced voltage v = L di/dt becomes enormous. A small relay coil switched off by a transistor can produce hundreds of volts for a fraction of a microsecond, enough to break down the transistor or arc across a switch contact. The [inductor energy calculator](https://zentacalculator.com/electronics/inductor-energy/) shows how much energy has to go somewhere.
+
+<Callout type="warning">
+Always give an inductive load a path for its current when it is switched off. A flyback diode across a DC relay coil, a TVS diode across a solenoid driver, or an RC snubber across an AC contact keeps the spike to a safe level.
+</Callout>
+
+With a flyback diode, the coil current circulates through the diode and the coil resistance after turn off, decaying with the time constant L / R. The voltage is clamped to one diode drop above the supply. The trade off is a slower release, because the current takes longer to decay. Where fast release matters, a Zener in series with the diode lets the current fall faster while still limiting the voltage.
+
+## Square wave response
+
+Drive an RL circuit with a square wave and the current follows the same rounded edges you see in an RC circuit. The resistor voltage, which is proportional to current, rises and falls exponentially. The inductor voltage shows sharp spikes at each edge that decay with τ. When τ is much longer than the half period, the current barely changes and settles to a triangle around its average, which is exactly how the inductor in a [buck converter](/power-electronics/buck-converter/) smooths a switched voltage into steady current.
+
+<figure>
+  <img src="/images/figures/rl-circuit-square-wave-response.webp" alt="RL circuit driven by a 2 kHz square wave from the simulator, showing source voltage, resistor voltage and inductor voltage spikes" width="1440" height="780" loading="lazy" />
+  <figcaption>Figure 3. Steady state response to a 2 kHz square wave. The resistor voltage tracks the current; the inductor voltage spikes on every edge.</figcaption>
+</figure>
+
+## RL filter: low pass and high pass
+
+In AC terms an inductor has a reactance XL = 2πfL that rises with frequency. In a series RL circuit the source voltage splits between R and XL:
+
+- **Output across R (low pass).** At low frequency XL is small, so most of the voltage appears across R. At high frequency the inductor blocks the current and the output falls.
+- **Output across L (high pass).** The opposite: low frequencies are shorted by L and high frequencies appear across it.
+
+The cutoff frequency, where XL equals R, is:
+
+$$
+f_c = \frac{R}{2\pi L}
+$$
+
+At fc the output is 3 dB down with a 45° phase shift, and beyond it a first order RL filter rolls off at 20 dB per decade. The [reactance calculator](https://zentacalculator.com/electronics/reactance/) gives XL at any frequency. In signal circuits RC filters are more common because capacitors are cheaper and closer to ideal; RL filters appear where current is high, such as power line filters and converter outputs.
+
+## RL circuit simulator
+
+The lab starts in Series RL mode with a step input. Read the τ markers: the resistor voltage, which tracks the current, reaches 63.2% of its final value at 1τ, while the inductor voltage decays. The theory table checks τ, the cutoff frequency and the phase at fc. Switch to Square to see the inductor spikes, and open the Frequency response tab with V R or V L as the output for the low pass and high pass curves.
+
+<RLCSim circ="rl" R={100} L={10e-3} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a 12 V relay coil with R = 120 Ω and L = 0.5 H, which pulls in at 70 mA
+
+**Find:** the final current, the time constant, the pull in delay and the stored energy
+
+**Solution:**
+
+1. Final current: 12 / 120 = 0.1 A
+2. τ = 0.5 / 120 ≈ 4.17 ms
+3. 70 mA is 70% of the final current, so t = −4.17 × ln(1 − 0.7) ≈ 5.0 ms
+4. Stored energy: ½ × 0.5 × 0.1² = 2.5 mJ
+
+**Answer:** the coil current settles at 100 mA, the relay pulls in about 5 ms after the voltage is applied, and 2.5 mJ must be dissipated by a flyback diode when it is switched off.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="An RL circuit has L = 20 mH and R = 40 Ω. What is its time constant?" options={['0.8 ms', '0.5 ms', '2 ms', '800 ms']} answer={1} explain="τ = L / R = 0.02 / 40 = 0.0005 s = 0.5 ms." />
+
+## RC circuit vs RL circuit
+
+| Feature | RC circuit | RL circuit |
+| --- | --- | --- |
+| Time constant | τ = RC | τ = L / R |
+| Quantity that cannot jump | Capacitor voltage | Inductor current |
+| Effect of larger R | Slower | Faster |
+| Stored energy | ½ C V² | ½ L I² |
+| Low pass output | Across C | Across R |
+| Typical use | Timing, signal filters | Relays, motors, power filters |
+
+## Where RL circuits are used
+
+- **Relay and solenoid drivers.** The coil is an RL load; its time constant sets the pull in delay and its stored energy sets the flyback diode rating.
+- **Motor windings.** Current in a DC motor rises with the winding's L / R, which limits how fast torque can change.
+- **Switching converters.** The inductor in buck and boost converters relies on RL behaviour to smooth current.
+- **Inrush and current limiting.** Series inductors and chokes limit how quickly current can rise.
+- **EMI filters.** Common mode chokes and series inductors block high frequency noise on power lines.
+
+## Measuring τ on a real coil
+
+Measuring L / R directly is easy with a function generator and an oscilloscope. Put a small known resistor in series with the coil and feed a slow square wave. The voltage across the resistor is proportional to the coil current. Measure the time it takes to reach 63.2% of its final value; that is τ, with the series resistor and the generator's output resistance added to the coil's own resistance. Multiply τ by the total resistance to estimate the inductance. Remember that inductance of an iron cored coil changes with current, so test near the real operating current.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Find L and R', d: 'Read them from the datasheet or measure the coil.' },
+  { t: 'Calculate τ and the final current', d: 'τ = L / R and I = V / R.' },
+  { t: 'Check the timing', d: 'Use the exponential to find when the current crosses the level you care about.' },
+  { t: 'Plan the turn off', d: 'Add a flyback diode, TVS or snubber sized for ½ L I² and the peak current.' },
+  { t: 'Verify', d: 'Run the values in the simulator and confirm with a scope on the bench.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Switching a coil off with no flyback path.', fix: 'Add a diode or TVS across the coil before the first power up.' },
+  { m: 'Assuming a larger resistor slows an RL circuit.', fix: 'τ = L / R, so a larger R makes it faster but lowers the final current.' },
+  { m: 'Using the RC formula for an inductor.', fix: 'The RL time constant is L / R, not L × R.' },
+  { m: 'Ignoring core saturation.', fix: 'Iron cored inductance drops at high current; check the saturation rating.' },
+]} />

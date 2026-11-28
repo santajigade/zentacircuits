@@ -1,0 +1,212 @@
+---
+title: 'XOR Gate: Truth Table, Expression and Half Adder'
+seoTitle: 'XOR Gate: Truth Table, Boolean Expression, Half Adder, Parity'
+description: 'How an XOR gate works: symbol, truth table, Boolean expression, 3 input parity, building XOR from NAND, the 74HC86 IC, half adders and other uses.'
+focusKeyword: 'xor gate'
+category: digital
+subcategory: gates
+author: santaji-gadepatil
+pubDate: 2026-11-28
+readMinutes: 12
+simulator: xor-gate-simulator
+shortAnswer: 'An XOR (exclusive OR) gate outputs 1 when its two inputs are different and 0 when they are the same. Its expression is Y = A ⊕ B = A·B′ + A′·B. With more inputs, XOR gives 1 when an odd number of inputs are 1, which makes it the core of binary adders, parity checkers and comparators.'
+featured:
+  kicker: 'Digital Electronics'
+  line1: 'XOR Gate'
+  line2: 'Truth table, expression and half adder'
+  art: xor
+image:
+  alt: 'XOR gate featured image with an XOR symbol and input and output timing waveforms'
+prerequisites:
+  - name: 'Logic gates'
+    href: '/digital/logic-gates/'
+  - name: 'NAND gate'
+    href: '/digital/nand-gate/'
+learn:
+  - The XOR gate symbol, truth table and Boolean expression
+  - Why multi input XOR is an odd parity detector
+  - The algebra rules that make XOR so useful
+  - How XOR builds half adders, full adders and comparators
+  - How to build XOR from NAND gates and which IC to use
+interview:
+  - q: 'What is the Boolean expression of an XOR gate?'
+    a: 'Y = A ⊕ B = A·B′ + A′·B. The output is 1 when exactly one of the two inputs is 1.'
+  - q: 'How does a 3 input XOR gate behave?'
+    a: 'It outputs 1 when an odd number of inputs are 1, so 1 for one or three ones and 0 for zero or two ones. That makes it an odd parity function.'
+  - q: 'How many NAND gates are needed to make an XOR gate?'
+    a: 'Four: g1 = NAND(A, B), g2 = NAND(A, g1), g3 = NAND(B, g1) and Y = NAND(g2, g3).'
+  - q: 'What is a half adder?'
+    a: 'A circuit that adds two single bits. An XOR gate produces the sum, A ⊕ B, and an AND gate produces the carry, A · B.'
+  - q: 'How can an XOR gate be used as a controlled inverter?'
+    a: 'Because A ⊕ 0 = A and A ⊕ 1 = A′, one input acts as a control. When it is 0 the other signal passes unchanged; when it is 1 the signal is inverted.'
+  - q: 'What is the difference between XOR and XNOR?'
+    a: 'XNOR is the inverse of XOR. It outputs 1 when the inputs are equal, so it works as a one bit equality comparator.'
+faq:
+  - q: 'What does XOR stand for?'
+    a: 'Exclusive OR. It is like OR, but it excludes the case where both inputs are 1.'
+  - q: 'Which IC is an XOR gate?'
+    a: 'The 7486 family, such as the 74HC86 and 74LS86, contains four 2 input XOR gates. The CD4070B is the 4000 series equivalent.'
+  - q: 'What is the symbol for XOR in Boolean algebra?'
+    a: 'A plus sign inside a circle, ⊕. In programming languages it is usually the caret, ^.'
+  - q: 'Is XOR a universal gate?'
+    a: 'No. XOR alone cannot build every function, because it cannot make AND or OR. Only NAND and NOR are universal.'
+references:
+  - text: 'Texas Instruments, SN74HC86 Quadruple 2 Input Exclusive OR Gates datasheet'
+    url: 'https://www.ti.com/lit/ds/symlink/sn74hc86.pdf'
+  - text: 'All About Circuits, The Exclusive OR Function, Lessons in Electric Circuits Volume IV'
+    url: 'https://www.allaboutcircuits.com/textbook/digital/chpt-7/the-exclusive-or-function-xor/'
+  - text: 'All About Circuits, Digital Signals and Gates, Lessons in Electric Circuits Volume IV'
+    url: 'https://www.allaboutcircuits.com/textbook/digital/chpt-3/digital-signals-gates/'
+prev:
+  name: 'NAND gate'
+  href: '/digital/nand-gate/'
+---
+
+import LogicSim from '../../../../components/sims/LogicSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is an XOR gate?
+
+An XOR gate, short for exclusive OR, is a [logic gate](/digital/logic-gates/) whose output is 1 when its inputs are different and 0 when they are the same. It answers a simple question: are these two bits unequal?
+
+That question turns out to be at the heart of binary arithmetic. When you add two bits, the sum bit is exactly the XOR of the inputs. XOR also detects errors through parity, compares numbers, inverts signals on command and scrambles data in encryption. Few gates do as much useful work.
+
+## Symbol, expression and truth table
+
+<figure>
+  <img src="/images/figures/xor-gate-symbol-truth-table.webp" alt="XOR gate symbol with inputs A and B and output Y, with the 2 input truth table and the 3 input odd parity truth table" width="1440" height="660" loading="lazy" />
+  <figcaption>Figure 1. XOR symbol and truth tables. The extra curved line at the input side distinguishes XOR from OR.</figcaption>
+</figure>
+
+The XOR symbol is an OR shape with an extra curved line across the inputs. Its Boolean expression is:
+
+$$
+Y = A \oplus B = A\cdot\overline{B} + \overline{A}\cdot B
+$$
+
+The expression reads directly from the truth table: the output is 1 when A is 1 and B is 0, or when A is 0 and B is 1.
+
+| A | B | Y = A ⊕ B |
+| --- | --- | --- |
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+
+Compare it with OR. The two gates agree on the first three rows and differ only on the last: OR gives 1 when both inputs are 1, XOR gives 0. That single difference is the meaning of exclusive.
+
+## XOR with three or more inputs
+
+XOR chains naturally. A 3 input XOR is simply (A ⊕ B) ⊕ C, and the order does not matter. The output is 1 whenever an odd number of inputs are 1. In other words, multi input XOR is an odd parity detector: it tells you whether a group of bits contains an odd or even number of ones. This is exactly how parity bits are generated and checked in serial links and memory.
+
+## Useful XOR identities
+
+| Rule | Meaning |
+| --- | --- |
+| A ⊕ 0 = A | XOR with 0 passes the signal unchanged |
+| A ⊕ 1 = A′ | XOR with 1 inverts the signal |
+| A ⊕ A = 0 | A value XORed with itself is always 0 |
+| A ⊕ B = B ⊕ A | Order of inputs does not matter |
+| (A ⊕ B) ⊕ C = A ⊕ (B ⊕ C) | Grouping does not matter |
+| (A ⊕ B) ⊕ B = A | XOR twice with the same key returns the original |
+
+The first two rules make XOR a controlled inverter. The last rule is the basis of simple encryption: XOR data with a key to scramble it, and XOR again with the same key to recover it.
+
+## XOR gate as a half adder
+
+Adding two single bits gives four cases: 0 + 0 = 0, 0 + 1 = 1, 1 + 0 = 1 and 1 + 1 = 10 in binary. The right hand bit, the sum, is 1 only when the inputs differ, which is XOR. The left hand bit, the carry, is 1 only when both inputs are 1, which is AND.
+
+<figure>
+  <img src="/images/figures/xor-gate-half-adder.webp" alt="Half adder circuit with an XOR gate producing the sum S = A XOR B and an AND gate producing the carry C = A AND B" width="1120" height="560" loading="lazy" />
+  <figcaption>Figure 2. A half adder: one XOR gate for the sum and one AND gate for the carry.</figcaption>
+</figure>
+
+Two half adders and an OR gate make a full adder, which also accepts a carry in. Chain full adders bit by bit and you have the adder inside every processor's arithmetic logic unit.
+
+## Timing of an XOR gate
+
+Like any gate, XOR needs time to respond. The 74HC86 has a typical propagation delay of roughly 8 to 10 ns at 5 V, so its output follows each input change a few nanoseconds later. In an adder chain these delays add up from bit to bit, which is why fast adders use carry lookahead logic instead of waiting for each carry to ripple through.
+
+<figure>
+  <img src="/images/figures/xor-gate-timing-diagram.webp" alt="Timing diagram from the simulator showing inputs A and B counting through all combinations and the XOR output going high when they differ" width="1440" height="476" loading="lazy" />
+  <figcaption>Figure 3. Simulated XOR gate. The output is high only while A and B differ, one gate delay after each input change.</figcaption>
+</figure>
+
+## XOR gate simulator
+
+The lab opens on an XOR gate. Toggle A and B, or click a truth table row, and watch the output LED. Change the number of inputs to 3 or 4 and confirm that the output is 1 whenever an odd number of inputs are high. Switch to Build from NAND and choose XOR to see the four gate version, then raise the input skew to watch glitches appear on the output.
+
+<LogicSim gate="XOR" />
+
+## Building XOR from other gates
+
+XOR is not a basic CMOS gate the way NAND and NOR are, so it is often built from them. The classic [NAND gate](/digital/nand-gate/) version uses four gates and has a delay of three gate levels. A direct sum of products version uses two inverters, two AND gates and one OR gate. Inside chips, XOR is usually made with transmission gates, which take fewer transistors and switch faster than either gate level version.
+
+For discrete designs, use a ready made XOR IC. The 74HC86 and 74LS86 contain four 2 input XOR gates in a 14 pin package with the same pinout as the 7400, and the CD4070B is the 4000 series part for supplies up to 18 V.
+
+## From half adder to full adder
+
+A half adder can only add two bits, so it works for the lowest bit of a number. Every other bit position must also add the carry coming in from the bit to its right. A full adder handles three inputs: A, B and the carry in, Cin. Its sum is a three input XOR, S = A ⊕ B ⊕ Cin, which is 1 when an odd number of the three inputs are 1. Its carry out is 1 when at least two of the inputs are 1, written Cout = A·B + Cin·(A ⊕ B).
+
+In practice a full adder is built from two half adders. The first adds A and B; the second adds that partial sum to Cin. The two partial carries go through an OR gate to make Cout. Line up four full adders and connect each carry out to the next carry in, and you have a 4 bit ripple carry adder like the classic 74HC283.
+
+## XOR in comparators and control
+
+Feeding two binary numbers bit by bit into XOR gates tells you exactly which bits differ. If every XOR output is 0, the numbers are equal, so a row of XOR gates followed by a NOR gate makes an equality comparator. The same idea finds the changed bits between two readings, a common trick in fault detection and in reading rotary encoders.
+
+The controlled inverter property is just as handy. In an adder and subtractor circuit, the B inputs pass through XOR gates whose other inputs connect to a single SUB line. With SUB at 0, B passes unchanged and the circuit adds. With SUB at 1, every bit of B is inverted and SUB also feeds the carry in, which together form the two's complement, so the same adder subtracts.
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** the 7 bit data word 1011001 is to be sent with an even parity bit, so that the total number of ones including the parity bit is even
+
+**Find:** the parity bit
+
+**Solution:**
+
+1. XOR all the data bits: 1 ⊕ 0 ⊕ 1 ⊕ 1 ⊕ 0 ⊕ 0 ⊕ 1
+2. Work left to right: 1, 1, 0, 1, 1, 1, 0
+3. The result is 0, so the word already has an even number of ones (four)
+4. The receiver XORs all 8 bits; a result of 1 means a single bit error occurred
+
+**Answer:** the even parity bit is 0, and the transmitted byte is 10110010.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="What is the output of a 3 input XOR gate with A = 1, B = 1, C = 1?" options={['0', '1', 'Undefined', 'Same as an OR gate']} answer={1} explain="Three is an odd number of ones, so the XOR output is 1. Step by step: 1 ⊕ 1 = 0, then 0 ⊕ 1 = 1." />
+
+## Applications of XOR gates
+
+- **Binary adders.** XOR produces the sum bit in half and full adders.
+- **Parity generation and checking.** XOR trees create and verify parity bits in serial links and memory.
+- **Comparators.** XNOR, the inverse of XOR, outputs 1 when two bits are equal; a row of them compares two binary numbers.
+- **Controlled inverters.** One input inverts or passes the other, useful for polarity selection and two's complement subtraction.
+- **Gray code and encoders.** Converting between binary and Gray code is a chain of XOR operations.
+- **Encryption and checksums.** Stream ciphers and CRC calculations rely on repeated XOR.
+- **Phase detectors.** An XOR gate fed with two square waves gives an output whose average is proportional to their phase difference, used in simple phase locked loops.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Confirm XOR is the right function', d: 'Check that the output should be 1 only when inputs differ, or for an odd count of ones.' },
+  { t: 'Choose the input count', d: 'Use cascaded 2 input gates for wider parity functions.' },
+  { t: 'Pick the IC', d: '74HC86 for 2 to 6 V CMOS, 74LS86 for TTL, CD4070B for up to 18 V.' },
+  { t: 'Check timing', d: 'Add the delays along the longest chain, especially in adders and parity trees.' },
+  { t: 'Tie off unused inputs', d: 'Connect unused CMOS inputs to VCC or ground.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Treating XOR like OR when both inputs are 1.', fix: 'XOR gives 0 for 1 and 1; only OR gives 1.' },
+  { m: 'Thinking a 3 input XOR means exactly one input is 1.', fix: 'It means an odd number of inputs are 1, including all three.' },
+  { m: 'Calling XOR a universal gate.', fix: 'Only NAND and NOR are universal; XOR cannot make AND or OR alone.' },
+  { m: 'Ignoring glitches in XOR networks built from NAND.', fix: 'Register the output or use a real XOR gate when it drives clocks or counters.' },
+]} />

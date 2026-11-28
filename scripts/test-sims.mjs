@@ -32,6 +32,8 @@ const L0 = rlc.DEFAULTS;
 const lcases = [
   { name: 'RC 1 kΩ, 1 µF', p: { ...L0, circ: 'rc', R: 1000, C: 1e-6 } },
   { name: 'RC low pass, 1 kHz sine', p: { ...L0, circ: 'rc', R: 1000, C: 1e-6, src: 'sine' } },
+  { name: 'RL 100 Ω, 10 mH', p: { ...L0, circ: 'rl', R: 100, L: 10e-3 } },
+  { name: 'RL high pass, sine, inductor voltage', p: { ...L0, circ: 'rl', R: 1000, L: 1e-3, src: 'sine', fsrc: 100000, out: 'vL' } },
   { name: 'RLC Q = 10', p: { ...L0, R: 10 } },
   { name: 'RLC Q = 1', p: { ...L0, R: 100 } },
   { name: 'RLC critically damped', p: { ...L0, R: 200 } },

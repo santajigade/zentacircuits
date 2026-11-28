@@ -59,6 +59,19 @@ const ART = {
 <path d="M720 380H817V340H915V380H1012V340H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
 <path d="M720 450H768V410H817V450H866V410H915V450H963V410H1012V450H1060V410H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
 <path d="M720 480H866V520H915V480H1060V520H1110" fill="none" stroke="#FBBF24" stroke-width="5"/>`,
+  rl: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M740 190H830M910 190H1000V205M1000 275V290H740V190"/><rect x="830" y="176" width="80" height="28" rx="4"/><path d="M1000 205q20 9 0 17q20 9 0 17q20 9 0 17q20 9 0 19"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
+<path d="M720 540C760 420 800 390 860 375S980 362 1110 360" fill="none" stroke="#22D3EE" stroke-width="5"/>
+<path d="M720 360C760 480 800 510 860 525S980 538 1110 540" fill="none" stroke="#FBBF24" stroke-width="4"/>`,
+  smoothing: `<g fill="none" stroke="#FFFFFF" stroke-width="3"><path d="M740 180H1060M740 300H1060M900 180V228M900 252V300"/><path d="M870 228H930" stroke-width="5"/><path d="M870 252Q900 242 930 252" stroke-width="5"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 380H1110M720 460H1110M720 540H1110M817 340V550M915 340V550M1012 340V550"/></g>
+<path d="M720 540C740 380 760 380 780 540C800 380 820 380 840 540C860 380 880 380 900 540" fill="none" stroke="#A78BFA" stroke-width="3" stroke-opacity="0.7"/>
+<path d="M720 400L760 395L775 380L840 392L855 378L920 390L935 377L1000 389L1015 376L1080 388L1110 384" fill="none" stroke="#F472B6" stroke-width="5"/>`,
+  xor: `<g fill="none" stroke="#FFFFFF" stroke-width="4"><path d="M745 170H822M745 230H822M940 200H1000"/><path d="M810 150Q880 150 940 200Q880 250 810 250Q838 200 810 150Z"/><path d="M790 150Q818 200 790 250"/></g>
+<g stroke="#1E293B" stroke-width="2"><path d="M720 330V550M817 330V550M915 330V550M1012 330V550M1110 330V550"/></g>
+<path d="M720 380H817V340H915V380H1012V340H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 450H768V410H817V450H866V410H915V450H963V410H1012V450H1060V410H1110" fill="none" stroke="#A78BFA" stroke-width="4"/>
+<path d="M720 520H768V480H866V520H963V480H1060V520H1110" fill="none" stroke="#FBBF24" stroke-width="5"/>`,
   generic: `<g stroke="#1E293B" stroke-width="2"><path d="M720 200H1110M720 300H1110M720 400H1110M720 500H1110M817 150V540M915 150V540M1012 150V540"/></g>
 <path d="M720 340C760 200 800 200 840 340S920 480 960 340S1040 200 1080 340L1110 380" fill="none" stroke="#22D3EE" stroke-width="5"/>
 <path d="M720 470H790V420H880V470H960V420H1040V470H1110" fill="none" stroke="#FBBF24" stroke-width="4"/>`,

@@ -6,10 +6,13 @@ export const DEFAULTS = { circ: 'rlc', out: 'vC', src: 'step', V: 10, fsrc: 1000
 const TWO_PI = 2 * Math.PI;
 
 export const isRC = (p) => p.circ === 'rc';
+export const isRL = (p) => p.circ === 'rl';
+export const firstOrder = (p) => isRC(p) || isRL(p);
 
 /** Characteristic values. */
 export function params(p) {
   if (isRC(p)) { const tau = p.R * p.C; return { tau, fc: 1 / (TWO_PI * tau), slow: tau, type: 'First order' }; }
+  if (isRL(p)) { const tau = p.L / p.R; return { tau, fc: 1 / (TWO_PI * tau), slow: tau, type: 'First order' }; }
   const w0 = 1 / Math.sqrt(p.L * p.C), zeta = (p.R / 2) * Math.sqrt(p.C / p.L), Q = (1 / p.R) * Math.sqrt(p.L / p.C);
   const alpha = p.R / (2 * p.L);
   let slow, type, fd = 0;
@@ -28,12 +31,14 @@ const vsrc = (p, t) => {
 function deriv(p, t, vC, i) {
   const vs = vsrc(p, t);
   if (isRC(p)) { const ic = (vs - vC) / p.R; return [ic / p.C, 0, ic]; }
+  if (isRL(p)) return [0, (vs - p.R * i) / p.L, i];
   return [i / p.C, (vs - p.R * i - vC) / p.L, i];
 }
 
 function outputs(p, t, vC, i) {
   const vs = vsrc(p, t);
   if (isRC(p)) { const ir = (vs - vC) / p.R; return { vs, vC, vR: ir * p.R, vL: 0, i: ir }; }
+  if (isRL(p)) return { vs, vC: 0, vR: p.R * i, vL: vs - p.R * i, i };
   return { vs, vC, vR: p.R * i, vL: vs - p.R * i - vC, i };
 }
 
@@ -62,7 +67,7 @@ export function timeResponse(p) {
   const c = params(p);
   if (p.src === 'step') {
     let W = 5 * c.slow;
-    if (!isRC(p) && c.fd) W = Math.min(W, 12 / c.fd);
+    if (!firstOrder(p) && c.fd) W = Math.min(W, 12 / c.fd);
     const rec = blank(); integrate(p, [0, 0], 0, W, N, rec); return { rec, window: W };
   }
   const T = 1 / p.fsrc, n = 2000;
@@ -74,14 +79,15 @@ export function timeResponse(p) {
   const b = P([0, 0]), a1 = P([1, 0]), a2 = P([0, 1]);
   const A = [[a1[0] - b[0], a2[0] - b[0]], [a1[1] - b[1], a2[1] - b[1]]];
   const m = [[1 - A[0][0], -A[0][1]], [-A[1][0], 1 - A[1][1]]], det = m[0][0] * m[1][1] - m[0][1] * m[1][0];
-  const x0 = isRC(p) ? [b[0] / m[0][0], 0] : [(b[0] * m[1][1] - m[0][1] * b[1]) / det, (m[0][0] * b[1] - m[1][0] * b[0]) / det];
+  const x0 = isRC(p) ? [b[0] / m[0][0], 0] : isRL(p) ? [0, b[1] / m[1][1]] : [(b[0] * m[1][1] - m[0][1] * b[1]) / det, (m[0][0] * b[1] - m[1][0] * b[0]) / det];
   const rec = blank(); integrate(p, x0, 0, 2 * T, 2 * n, rec); return { rec, window: 2 * T };
 }
 
 /** Complex transfer function from source to the chosen output at frequency f. */
 export function H(p, f, out = p.out) {
   const w = TWO_PI * f;
-  const zr = p.R, zi = (isRC(p) ? 0 : w * p.L) - 1 / (w * p.C);
+  if (isRL(p) && out === 'vC') out = 'vR';
+  const zr = p.R, zi = (isRC(p) ? 0 : w * p.L) - (isRL(p) ? 0 : 1 / (w * p.C));
   const d = zr * zr + zi * zi, ir = zr / d, ii = -zi / d; // I = 1 / Z
   if (out === 'i') return [ir, ii];
   if (out === 'vR') return [ir * p.R, ii * p.R];
@@ -93,7 +99,7 @@ export const phase = (z) => (Math.atan2(z[1], z[0]) * 180) / Math.PI;
 
 /** Bode data over 6 decades centred on fc or f0. */
 export function sweep(p, n = 600) {
-  const c = params(p), fc = isRC(p) ? c.fc : c.f0, f = [], db = [], ph = [];
+  const c = params(p), fc = firstOrder(p) ? c.fc : c.f0, f = [], db = [], ph = [];
   for (let k = 0; k < n; k++) {
     const x = fc * 10 ** (-3 + (6 * k) / (n - 1)), z = H(p, x);
     f.push(x); db.push(20 * Math.log10(Math.max(mag(z), 1e-12)) - (p.out === 'i' ? 20 * Math.log10(1 / p.R) : 0)); ph.push(phase(z));
@@ -105,14 +111,15 @@ const bisectLog = (g, lo, hi) => { for (let k = 0; k < 100; k++) { const m = Mat
 
 /** Numeric measurements from simulation and sweep, for the accuracy table. */
 export function measure(p) {
-  const c = params(p), r = timeResponse({ ...p, src: 'step' }).rec, t = r.t, v = r.vC, V = p.V;
+  const c = params(p), r = timeResponse({ ...p, src: 'step' }).rec, t = r.t, v = isRL(p) ? r.vR : r.vC, V = p.V;
   const res = {};
   // Time to reach 63.2% of the final value (interpolated).
   const target = V * (1 - Math.exp(-1));
   for (let k = 1; k < t.length; k++) if (v[k] >= target) { res.t63 = t[k - 1] + ((target - v[k - 1]) / (v[k] - v[k - 1])) * (t[k] - t[k - 1]); break; }
-  if (isRC(p)) {
-    res.fc = bisectLog((f) => mag(H(p, f, 'vC')) - Math.SQRT1_2 > 0 ? -1 : 1, c.fc / 1e3, c.fc * 1e3);
-    res.phaseFc = phase(H(p, c.fc, 'vC'));
+  if (firstOrder(p)) {
+    const lp = isRL(p) ? 'vR' : 'vC'; // low pass output
+    res.fc = bisectLog((f) => mag(H(p, f, lp)) - Math.SQRT1_2 > 0 ? -1 : 1, c.fc / 1e3, c.fc * 1e3);
+    res.phaseFc = phase(H(p, c.fc, lp));
     return res;
   }
   // Resonance: peak of |I| (golden section on log f), bandwidth from the two half power points.
@@ -142,10 +149,10 @@ export function accuracy(p) {
   const row = (name, th, sim, unit, tol) => { const err = th ? (Math.abs(sim - th) / Math.abs(th)) * 100 : Math.abs(sim); return { name, theory: th, sim, unit, tol, err, pass: isFinite(sim) && err <= tol }; };
   const sineRow = () => {
     if (p.src !== 'sine' || p.rest) return;
-    const r = timeResponse(p).rec, k = p.out === 'i' ? 'i' : p.out, y = r[k];
+    const r = timeResponse(p).rec, k = p.out === 'i' ? 'i' : isRL(p) && p.out === 'vC' ? 'vR' : p.out, y = r[k];
     rows.push(row(`Output amplitude at ${p.fsrc} Hz`, p.V * mag(H(p, p.fsrc)), Math.max(...y), p.out === 'i' ? 'A' : 'V', 0.05));
   };
-  if (isRC(p)) {
+  if (firstOrder(p)) {
     rows.push(row('Time constant τ (63.2%)', c.tau, m.t63, 's', 0.1));
     rows.push(row('Cutoff frequency fc', c.fc, m.fc, 'Hz', 0.01));
     rows.push(row('Phase at fc', -45, m.phaseFc, '°', 0.01));

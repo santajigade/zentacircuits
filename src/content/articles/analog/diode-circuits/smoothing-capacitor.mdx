@@ -1,0 +1,210 @@
+---
+title: 'Smoothing Capacitor: Ripple, Sizing and Selection'
+seoTitle: 'Smoothing Capacitor: Ripple Voltage Formula and How to Size It'
+description: 'How a smoothing capacitor turns rectified pulses into DC: ripple voltage formula, how to size the capacitor, ripple current, voltage rating and inrush.'
+focusKeyword: 'smoothing capacitor'
+category: analog
+subcategory: diode-circuits
+author: santaji-gadepatil
+pubDate: 2026-11-28
+readMinutes: 12
+simulator: smoothing-capacitor-simulator
+shortAnswer: 'A smoothing capacitor (reservoir or filter capacitor) sits across the output of a rectifier. It charges to the peak voltage on each pulse and supplies the load between pulses, turning pulsating DC into steady DC with a small ripple. For a full wave rectifier the ripple is roughly ΔV = I / (2fC), so the capacitor needed is C ≈ I / (2f × ΔV).'
+featured:
+  kicker: 'Diode Circuits'
+  line1: 'Smoothing Capacitor'
+  line2: 'Ripple, sizing and selection'
+  art: smoothing
+image:
+  alt: 'Smoothing capacitor featured image with a capacitor symbol, rectified pulses and a smoothed DC output'
+prerequisites:
+  - name: 'Full wave rectifier'
+    href: '/analog/full-wave-rectifier/'
+  - name: 'Half wave rectifier'
+    href: '/analog/half-wave-rectifier/'
+learn:
+  - How a smoothing capacitor charges and discharges on every cycle
+  - The ripple voltage formula and why it is a safe overestimate
+  - How to size the capacitor for a target ripple
+  - Why bigger capacitors raise diode peak current, ripple current and inrush
+  - How to choose voltage rating, ripple current rating and capacitor type
+interview:
+  - q: 'What is the ripple voltage formula for a full wave rectifier with a smoothing capacitor?'
+    a: 'ΔV ≈ I / (2fC), where I is the load current, f the mains frequency and C the capacitance. For a half wave rectifier it is I / (fC), because the capacitor is recharged only once per cycle.'
+  - q: 'Why does a larger smoothing capacitor increase the diode peak current?'
+    a: 'With less ripple, the rectified voltage rises above the capacitor voltage for a shorter time near each peak. The same charge must be delivered in a narrower pulse, so the peak current rises.'
+  - q: 'What is ripple current in a smoothing capacitor?'
+    a: 'The RMS value of the AC current flowing in and out of the capacitor. It heats the capacitor through its ESR, and electrolytic capacitors have a maximum ripple current rating that must not be exceeded.'
+  - q: 'Why is a bleeder resistor used across a smoothing capacitor?'
+    a: 'To discharge the capacitor after power off so that it does not hold a dangerous voltage. High voltage supplies always need one.'
+  - q: 'What voltage rating should a smoothing capacitor have?'
+    a: 'Above the highest peak voltage it can see, at maximum mains voltage and no load, with margin. A common rule is at least 1.25 to 1.5 times that peak.'
+faq:
+  - q: 'What is the difference between a smoothing capacitor and a filter capacitor?'
+    a: 'They are the same thing. Reservoir capacitor, smoothing capacitor and filter capacitor all describe the capacitor across a rectifier output.'
+  - q: 'Can a smoothing capacitor be too big?'
+    a: 'Yes. A very large capacitor draws a high inrush current at switch on, raises diode and transformer stress, and costs more, while the ripple improvement becomes small.'
+  - q: 'Which type of capacitor is used for smoothing?'
+    a: 'Aluminium electrolytic capacitors, because they give large capacitance at low cost. A small film or ceramic capacitor in parallel helps with high frequency noise.'
+  - q: 'What is a good ripple voltage?'
+    a: 'For a supply feeding a linear regulator, the ripple troughs must stay above the regulator input plus its dropout voltage. Ripple of 5% to 10% of the DC voltage is a common starting point.'
+references:
+  - text: 'All About Circuits, Ripple Voltage and Filter Capacitors, Lessons in Electric Circuits Volume III'
+    url: 'https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/rectifier-circuits/'
+  - text: 'Sedra and Smith, Microelectronic Circuits, 8th edition, Oxford University Press, Section 4.5'
+    url: 'https://global.oup.com/ushe/product/microelectronic-circuits-9780190853464'
+  - text: 'Cornell Dubilier, Aluminum Electrolytic Capacitor Application Guide'
+    url: 'https://www.cde.com/resources/technical-papers/AEappGuide.pdf'
+prev:
+  name: 'Full wave rectifier'
+  href: '/analog/full-wave-rectifier/'
+next:
+  name: 'Zener diode'
+  href: '/components/zener-diode/'
+---
+
+import RectSim from '../../../../components/sims/RectSim.astro';
+import Callout from '../../../../components/mdx/Callout.astro';
+import Steps from '../../../../components/mdx/Steps.astro';
+import Mistakes from '../../../../components/mdx/Mistakes.astro';
+import QuickCheck from '../../../../components/mdx/QuickCheck.astro';
+
+## What is a smoothing capacitor?
+
+A smoothing capacitor is a large capacitor connected across the output of a rectifier. On its own, a [full wave rectifier](/analog/full-wave-rectifier/) delivers a train of half sine pulses that drop to zero twice every cycle. That is DC in the sense that it never reverses, but no electronic circuit can run from it. The smoothing capacitor fills in the gaps and turns those pulses into a steady voltage with only a small ripple.
+
+The same part goes by several names: reservoir capacitor, filter capacitor or bulk capacitor. Every linear power supply and every mains powered switched mode supply has one, and choosing it well decides how clean the output is, how hot the diodes run and how long the supply lasts.
+
+<figure>
+  <img src="/images/figures/smoothing-capacitor-circuit.webp" alt="Smoothing capacitor circuit: bridge rectifier output with capacitor C in parallel with load RL, showing diode current, capacitor current and load current" width="1240" height="560" loading="lazy" />
+  <figcaption>Figure 1. The smoothing capacitor sits in parallel with the load. Diode current refills it near each peak; between peaks it supplies the load on its own.</figcaption>
+</figure>
+
+## How a smoothing capacitor works
+
+Each cycle has two phases.
+
+**Charging.** As the rectified voltage rises near its peak, it climbs above the capacitor voltage. The diodes conduct and current flows both into the load and into the capacitor, topping it up to the peak voltage minus the diode drops.
+
+**Discharging.** Once the rectified voltage falls past its peak, it drops below the capacitor voltage. The diodes turn off and the capacitor alone feeds the load, so its voltage sags slowly until the next pulse arrives.
+
+The result is a DC output with a sawtooth shaped ripple on top. The bigger the capacitor, or the lighter the load, the slower it sags and the smaller the ripple.
+
+<figure>
+  <img src="/images/figures/smoothing-capacitor-ripple-comparison.webp" alt="Simulated bridge rectifier output with 100 µF, 470 µF and 2200 µF smoothing capacitors, showing the ripple shrinking as capacitance increases" width="1440" height="440" loading="lazy" />
+  <figcaption>Figure 2. Simulated output of a bridge rectifier from 12 V RMS into 100 Ω. Ripple falls from about 7.3 V with 100 µF to 2.4 V with 470 µF and 0.55 V with 2200 µF.</figcaption>
+</figure>
+
+## Ripple voltage formula
+
+If we assume the capacitor supplies a constant load current I for the whole gap between pulses, its voltage falls by ΔV = I × t / C. The gap is about one ripple period, which is 1 / (2f) for a full wave or bridge rectifier and 1 / f for a half wave rectifier:
+
+$$
+\Delta V \approx \frac{I}{2fC} \;\text{(full wave)} \qquad \Delta V \approx \frac{I}{fC} \;\text{(half wave)}
+$$
+
+The DC output is roughly the peak minus half the ripple: Vdc ≈ Vpeak − ΔV / 2.
+
+<figure>
+  <img src="/images/figures/smoothing-capacitor-ripple-vs-capacitance.webp" alt="Chart of ripple voltage against capacitance from 47 µF to 10 mF on log scales, comparing simulated ripple with the I over 2fC estimate" width="1440" height="840" loading="lazy" />
+  <figcaption>Figure 3. Simulated ripple against capacitance. The textbook estimate (dashed) always sits a little above the real ripple, so it is a safe design value.</figcaption>
+</figure>
+
+<Callout type="insight">
+The formula overestimates the ripple, by around 20% in this example. The capacitor does not discharge for the whole half cycle, because part of each cycle is spent recharging it. That makes I / (2fC) a safe, conservative design rule.
+</Callout>
+
+## Sizing a smoothing capacitor
+
+Rearrange the ripple formula to find the capacitance for a chosen ripple:
+
+$$
+C \approx \frac{I}{2f\,\Delta V}
+$$
+
+Then pick the next standard value up, and allow for tolerance. Aluminium electrolytics are often −20% / +20%, and they lose capacitance as they age, so a little extra margin is wise. The [capacitor energy calculator](https://zentacalculator.com/electronics/capacitor-energy/) shows how much energy the chosen value stores at the peak voltage.
+
+## The hidden cost of a bigger capacitor
+
+A larger capacitor gives less ripple, but it does not come free. Because the ripple is smaller, the rectified voltage only rises above the capacitor voltage for a short moment near each peak. The diodes must deliver a whole half cycle of charge in that narrow window, so their current flows in short, tall pulses.
+
+| Capacitor | V dc | Ripple p-p | Conduction per pulse | Peak diode current | Capacitor ripple current |
+| --- | --- | --- | --- | --- | --- |
+| 100 µF | 12.1 V | 7.3 V | 73° | 0.50 A | 0.18 A |
+| 470 µF | 14.3 V | 2.4 V | 41° | 1.03 A | 0.30 A |
+| 1000 µF | 14.7 V | 1.2 V | 35° | 1.15 A | 0.34 A |
+| 2200 µF | 14.8 V | 0.55 V | 34° | 1.19 A | 0.34 A |
+
+These values come from the simulator for a bridge rectifier from 12 V RMS into 100 Ω, a load current of about 0.15 A. Going from 470 µF to 2200 µF cuts the ripple by more than four times, while the peak diode current is already about eight times the load current. The winding resistance limits how narrow and tall the pulses can get, which is why the last row barely changes.
+
+<figure>
+  <img src="/images/figures/smoothing-capacitor-charging-current.webp" alt="Simulated diode charging current pulses, steady load current and alternating capacitor current with a 470 µF smoothing capacitor" width="1440" height="740" loading="lazy" />
+  <figcaption>Figure 4. With 470 µF the diodes conduct in pulses of about 1 A to supply a 0.14 A load. The capacitor current swings positive while charging and negative while feeding the load.</figcaption>
+</figure>
+
+## Choosing the right capacitor
+
+**Voltage rating.** Find the highest peak voltage the capacitor can see: maximum mains voltage, no load, with the transformer's light load voltage rise. Choose a rating at least 1.25 to 1.5 times that value. A 12 V RMS winding peaks near 17 V, and closer to 19 V at high mains and no load, so a 25 V capacitor is the minimum and 35 V gives comfortable margin.
+
+**Ripple current rating.** The capacitor current is not small. It flows in and out every cycle, heating the capacitor through its equivalent series resistance (ESR). Compare the RMS ripple current from the simulator with the datasheet rating at 100 or 120 Hz, corrected for temperature.
+
+**Temperature and life.** Electrolytic life roughly doubles for every 10 °C drop in temperature. A 105 °C rated part, mounted away from heat sinks, lasts far longer than an 85 °C part. The [capacitor lifetime calculator](https://zentacalculator.com/electronics/capacitor-lifetime/) estimates the life at your operating temperature.
+
+**Bleeder resistor.** In high voltage supplies, add a resistor across the capacitor so it discharges within a few seconds after power off.
+
+## Smoothing capacitor simulator
+
+The lab opens with a bridge rectifier, a 470 µF capacitor and a 100 Ω load. Step through the capacitor values and watch the ripple, the conduction angle and the peak diode current in the Component stress table. Lower the load resistance to draw more current and see the ripple grow. Use the Switch on tab to see the inrush current that charges an empty capacitor, and switch to Half wave to see the ripple double.
+
+<RectSim topo="bridge" C={470e-6} R={100} />
+
+## Worked example
+
+<Callout type="example" title="Worked example">
+
+**Given:** a bridge rectifier from a 12 V RMS, 50 Hz winding, load current about 0.5 A, maximum ripple 1.5 V peak to peak
+
+**Find:** the smoothing capacitor and its ratings
+
+**Solution:**
+
+1. C ≈ I / (2f × ΔV) = 0.5 / (2 × 50 × 1.5) ≈ 3,330 µF
+2. Choose a 3,300 µF capacitor, or 4,700 µF to allow for −20% tolerance and ageing
+3. Peak voltage at no load and high mains: about 19 V, so choose a 35 V rating
+4. In the simulator, even 2,200 µF gives about 1.5 V of ripple at this load, confirming that the formula is conservative
+5. Ripple current is about 0.85 A RMS, so check the datasheet rating at 100 Hz
+
+**Answer:** a 3,300 µF or 4,700 µF, 35 V, 105 °C electrolytic rated for at least 1 A of ripple current.
+
+</Callout>
+
+## Quick check
+
+<QuickCheck q="A bridge rectifier on 60 Hz mains feeds 1 A through a 4,700 µF smoothing capacitor. What is the approximate ripple?" options={['0.89 V', '1.77 V', '3.55 V', '0.18 V']} answer={1} explain="ΔV ≈ I / (2fC) = 1 / (2 × 60 × 0.0047) ≈ 1.77 V peak to peak." />
+
+## Inrush current at switch on
+
+An empty capacitor looks like a short circuit at the moment of switch on. If power arrives near the peak of the mains wave, only the winding, diode and capacitor resistances limit the first charging pulse, which can reach tens or hundreds of amperes in a large supply. The larger the capacitor, the longer this surge lasts. Small supplies rely on the transformer's resistance; larger ones add an NTC thermistor or a resistor that is bypassed by a relay once the capacitor is charged. Always check that the rectifier's surge current rating covers the first pulse.
+
+## Going further: CRC and LC filters
+
+When a single capacitor cannot reach the ripple you need, add a second stage. A CRC (pi) filter places a resistor and a second capacitor after the first, trading a small voltage drop for much lower ripple. An LC filter uses an inductor instead of the resistor, losing very little voltage. The [LC filter calculator](https://zentacalculator.com/electronics/lc-filter/) helps size it. For sensitive circuits the usual answer is a regulator after the smoothing capacitor, such as a [Zener regulator](/components/zener-diode/) for small loads or a linear regulator IC.
+
+## Design steps
+
+<Steps items={[
+  { t: 'Set the ripple target', d: 'Keep the ripple troughs above what the next stage needs.' },
+  { t: 'Calculate C', d: 'C ≈ I / (2f × ΔV) for full wave, I / (f × ΔV) for half wave.' },
+  { t: 'Choose the voltage rating', d: 'At least 1.25 to 1.5 times the highest peak at high mains and no load.' },
+  { t: 'Check ripple current and temperature', d: 'Compare the RMS capacitor current with the datasheet rating.' },
+  { t: 'Check diodes and inrush', d: 'Confirm repetitive peak and surge current ratings of the rectifier.' },
+]} />
+
+## Common mistakes
+
+<Mistakes items={[
+  { m: 'Using the half wave formula for a bridge, or the other way round.', fix: 'Full wave ripple uses 2f; half wave uses f.' },
+  { m: 'Rating the capacitor for the RMS secondary voltage.', fix: 'Rate it for the peak, √2 times the RMS plus mains tolerance.' },
+  { m: 'Ignoring ripple current.', fix: 'An overheated electrolytic dries out and fails early; check its ripple current rating.' },
+  { m: 'Fitting an oversized capacitor without checking inrush.', fix: 'Confirm the rectifier surge rating or add inrush limiting.' },
+]} />

@@ -103,3 +103,36 @@ timingSvg(t1, '2 input NAND (74HC00, tpd 8 ns): output changes one delay after t
 const t2 = timing({ mode: 'nand', type: 'XOR', tpd: 8e-9, skew: 8e-9, hold: 48e-9 });
 timingSvg(t2, 'XOR from four NAND gates, B arriving 8 ns late: glitches on Y', 'nand-xor-glitch-timing.svg', [...t2.ins, ...t2.nodes], ['A', 'B', 'g1', 'g2', 'g3', 'Y']);
 console.log('ok', t2.glitches);
+// XOR figures
+{
+  // Symbol with 2 and 3 input truth tables
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" width="1440" height="660"><rect width="720" height="330" fill="#fff"/>`;
+  const gx = 80, gy = 110;
+  s += `<path d="M${gx - 40} ${gy - 16}H${gx + 6}M${gx - 40} ${gy + 16}H${gx + 6}M${gx + 70} ${gy}H${gx + 110}" stroke="${K}" stroke-width="2.5"/>` + sym('xor', false, gx, gy, 64);
+  s += T(gx - 50, gy - 11, 'A', K, 15, 'end') + T(gx - 50, gy + 21, 'B', K, 15, 'end') + T(gx + 118, gy + 5, 'Y', '#BE123C', 15, 'start') + T(gx + 35, gy + 70, 'Y = A ⊕ B', '#334155', 15, 'middle', M);
+  s += T(gx + 35, gy + 100, 'Output is 1 when the', '#475569', 12) .replace('text-anchor="middle"', 'text-anchor="middle"') + T(gx + 35, gy + 118, 'inputs are different', '#475569', 12);
+  const table = (x0, y0, n) => {
+    const tt = truthTable('XOR', n), cols = [...['A', 'B', 'C'].slice(0, n), 'Y']; let o = '';
+    cols.forEach((c, i) => (o += T(x0 + 20 + i * 40, y0, c, '#475569', 13, 'middle', M)));
+    o += `<path d="M${x0} ${y0 + 7}H${x0 + cols.length * 40}" stroke="#CBD5E1"/>`;
+    tt.forEach((r, j) => [...r.x, r.y].forEach((v, i) => (o += T(x0 + 20 + i * 40, y0 + 26 + j * 20, v, i === cols.length - 1 && v ? '#BE123C' : K, 13, 'middle', M))));
+    return o;
+  };
+  s += T(360, 40, '2 input', '#BE123C', 14, 'middle') + table(300, 64, 2) + T(560, 40, '3 input (odd parity)', '#BE123C', 14, 'middle') + table(480, 64, 3);
+  writeFileSync(out + 'xor-gate-symbol-truth-table.svg', s + '</svg>');
+  // Half adder
+  let h = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" width="1120" height="560"><rect width="560" height="280" fill="#fff"/>`;
+  const W2 = (d) => `<path d="${d}" fill="none" stroke="${K}" stroke-width="2.2"/>`;
+  h += W2('M60 80H190M60 200H190') + W2('M120 80V188H246M150 200V92H246');
+  h += W2('M220 80H252M220 200H246') ;
+  h = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" width="1120" height="560"><rect width="560" height="280" fill="#fff"/>`;
+  h += W2('M60 90H256M60 190H246M120 90V206H246M160 190V106H256') + `<circle cx="120" cy="90" r="3.5" fill="${K}"/><circle cx="160" cy="190" r="3.5" fill="${K}"/>`;
+  h += W2('M250 74H256') + sym('xor', false, 250, 98, 50) + sym('and', false, 246, 198, 50) + W2('M320 98H430M316 198H430');
+  h = h.replace('M60 90H256', 'M60 90H120M120 90H256'); // keep wires tidy
+  h += T(48, 95, 'A', K, 16, 'end') + T(48, 195, 'B', K, 16, 'end') + T(440, 103, 'Sum S = A ⊕ B', '#BE123C', 14, 'start') + T(440, 203, 'Carry C = A · B', '#BE123C', 14, 'start');
+  h += T(280, 262, 'Half adder: one XOR gate makes the sum bit, one AND gate makes the carry.', '#475569', 12);
+  writeFileSync(out + 'xor-gate-half-adder.svg', h + '</svg>');
+  // Timing from the engine
+  const tx = timing({ mode: 'gate', type: 'XOR', n: 2, tpd: 8e-9, hold: 32e-9 });
+  timingSvg(tx, '2 input XOR (74HC86, tpd about 8 ns): Y is 1 when A and B differ', 'xor-gate-timing-diagram.svg', [...tx.ins, tx.out], ['A', 'B', 'Y']);
+}
