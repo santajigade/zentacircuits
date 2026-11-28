@@ -3,12 +3,13 @@ import { articleUrl, featuredSrc, type Article } from '../lib/content';
 import { catBySlug } from '../data/categories';
 const { a } = Astro.props as { a: Article };
 const c = catBySlug(a.data.category);
+const date = (a.data.updatedDate ?? a.data.pubDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
 ---
 <a class="ac card" href={articleUrl(a)}>
   <img src={featuredSrc(a)} alt={a.data.image.alt} width="1200" height="675" loading="lazy" />
   <span class="seg" style={`color:${c.color}`}>{c.short}</span>
   <span class="t">{a.data.title}</span>
-  <span class="m">{a.data.readMinutes} min read<span class="vw" data-cardviews={articleUrl(a)} hidden></span>{a.data.simulator && <span class="sim">Has simulator</span>}</span>
+  <span class="m"><time datetime={(a.data.updatedDate ?? a.data.pubDate).toISOString()}>{date}</time><span class="dot">·</span>{a.data.readMinutes} min read<span class="vw" data-cardviews={articleUrl(a)} hidden></span>{a.data.simulator && <span class="sim">Has simulator</span>}</span>
 </a>
 <script>
   // Fills in view counts on every article card with one request per page.
@@ -24,6 +25,7 @@ const c = catBySlug(a.data.category);
   .seg { padding: 6px 20px 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
   .t { padding: 0 20px; font-weight: 600; font-size: 19px; line-height: 1.35; }
   .m { padding: 0 20px; font-size: 14px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .dot { margin: 0 -4px; color: #94a3b8; }
   .vw[hidden] { display: none; }
   .vw::before { content: '·'; margin-right: 10px; }
   .sim { background: var(--red-tint); color: var(--red-deep); padding: 4px 10px; border-radius: 999px; font-weight: 600; }

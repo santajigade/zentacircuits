@@ -21,7 +21,7 @@ const url = articleUrl(a);
 const img = featuredSrc(a);
 const toc = headings.filter((h) => h.depth === 2);
 const more = all.filter((x) => x.id !== a.id && x.data.subcategory === d.subcategory && x.data.category === d.category).slice(0, 4);
-const fmt = (x: Date) => x.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmt = (x: Date) => x.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
 const abs = (p: string) => new URL(p, SITE.url).href;
 const schema = [
   { '@context': 'https://schema.org', '@type': 'TechArticle', headline: d.title, description: d.description, image: [abs(img)],
