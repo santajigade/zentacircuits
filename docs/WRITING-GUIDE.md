@@ -15,7 +15,10 @@ Rules for every article. The build (`npm run build`) enforces many of them and m
 2. At least 1,200 words of body text (the checker counts prose, not tables or frontmatter). Aim for 1,250 to 1,450.
 3. Facts must come from real sources. Every number in a worked example, table or caption must be computed by code (the simulator engine or a short Node script), never guessed.
 4. References: at least 3, each a real page with a working URL (datasheets from TI, Nexperia, Vishay, onsemi; OpenStax; All About Circuits; publisher pages of standard textbooks). Fetch each URL to confirm it exists before using it.
-5. Outbound links inside the article body may only be natural text hyperlinks to these sites: zentacalculator.com, zentaengineering.com, instrumentationblog.in, kleevme.ae, kleevusa.com. For zentacalculator.com, use only URLs listed in `docs/zentacalculator-urls.txt`. For the others, confirm the page exists with a web search or fetch. No link boxes, no lists of links. Other sites appear only in `references`.
+5. Outbound links: only natural text hyperlinks on relevant words inside sentences, never link boxes or lists of links. Two kinds are allowed:
+   - Own sites, 2 or 3 per article where relevant: zentacalculator.com, zentaengineering.com, instrumentationblog.in, kleevme.ae, kleevusa.com. For zentacalculator.com use only URLs in `docs/zentacalculator-urls.txt`; confirm other own-site pages exist with a fetch or search.
+   - High-authority sources, 2 to 4 per article: semiconductor makers' datasheets and application notes (TI, Analog Devices, NXP, Nexperia, onsemi, ST, Infineon, Microchip, Vishay and similar), standards bodies (IEEE, IEC, NIST, BIS), university and government sites (.edu, .gov, .ac.in, NPTEL), OpenStax, Wikipedia, All About Circuits. Link the exact page that supports the sentence, and fetch it first to confirm it exists. The allowed host list is in `scripts/check-content.mjs`; add a host there only if it is a genuine primary or authoritative source.
+   Never link to direct competitors' tutorial pages, forums, or low-quality blogs.
 6. Internal links: 2 or 3 natural links to related ZentaCircuits articles. Set `prev` and `next` so articles in a cluster form a chain, and update the neighbouring article's `prev`/`next` to point back.
 7. Never change the slug of a published article.
 

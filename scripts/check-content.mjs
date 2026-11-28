@@ -1,11 +1,18 @@
 // Quality gate for every article. The build fails if any rule breaks.
 // Rules: no em or en dash, 1,200+ words of body text, SEO slug (max 40 characters, 4 words, no stop words or years),
-// outbound links only to allowed sites, 3+ references, description and title lengths.
+// outbound links only to own sites or high-authority sources, 3+ references, description and title lengths.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, basename } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
-const ALLOWED = ['zentacircuits.com', 'zentacalculator.com', 'zentaengineering.com', 'instrumentationblog.in', 'kleevme.ae', 'kleevusa.com', 'linkedin.com'];
+// Own sites, plus high-authority sources (standards bodies, government and education, semiconductor makers,
+// reference publishers). Any .gov, .edu or .ac.* host is also accepted.
+const ALLOWED = ['zentacircuits.com', 'zentacalculator.com', 'zentaengineering.com', 'instrumentationblog.in', 'kleevme.ae', 'kleevusa.com', 'linkedin.com',
+  'wikipedia.org', 'britannica.com', 'openstax.org', 'mit.edu', 'nist.gov', 'nasa.gov', 'ieee.org', 'iec.ch', 'iso.org', 'ietf.org',
+  'ti.com', 'analog.com', 'nxp.com', 'nexperia.com', 'onsemi.com', 'st.com', 'infineon.com', 'microchip.com', 'renesas.com', 'vishay.com',
+  'rohm.com', 'toshiba.semicon-storage.com', 'murata.com', 'tdk.com', 'kemet.com', 'littelfuse.com', 'bourns.com', 'digikey.com', 'mouser.com',
+  'allaboutcircuits.com', 'electronics-tutorials.ws', 'khanacademy.org', 'hyperphysics.phy-astr.gsu.edu', 'nptel.ac.in', 'bis.gov.in', 'arduino.cc', 'raspberrypi.com'];
+const AUTHORITY_TLD = /\.(gov|edu)(\.[a-z]{2})?$|\.ac\.[a-z]{2}$/;
 const files = [];
 const walk = (d) => readdirSync(d).forEach((f) => { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : /\.mdx?$/.test(f) && files.push(p); });
 walk(join(root, 'src/content/articles'));
@@ -39,7 +46,7 @@ for (const f of files) {
   const noRefs = src.replace(/references:\n(?:\s+.*\n)+?(?=\S)/, '');
   for (const m of noRefs.matchAll(/https?:\/\/([^/\s)"']+)/g)) {
     const host = m[1].replace(/^www\./, '');
-    if (!ALLOWED.some((a) => host === a || host.endsWith('.' + a))) errors.push(`${rel}: outbound link to ${host} is not on the allowed list`);
+    if (!ALLOWED.some((a) => host === a || host.endsWith('.' + a)) && !AUTHORITY_TLD.test(host)) errors.push(`${rel}: outbound link to ${host} is not on the allowed list`);
   }
   const refs = (fm.match(/references:\n((?:\s+- .*\n?(?:\s{4,}.*\n?)*)+)/) || [])[1] || '';
   if ((refs.match(/- text:/g) || []).length < 3) errors.push(`${rel}: needs 3 or more references`);
